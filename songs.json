@@ -1,0 +1,44 @@
+[
+  {
+    "id": "song001",
+    "title": "在小V派對裡夢想",
+    "artist": "氣球小V",
+    "audioUrl": "songs/song001/audio.mp3",
+    "videoUrl": "songs/song001/video.mp4",
+    "youtubeId": "nxatS80IKpM",
+    "bpm": 110,
+    "duration": 122,
+    "cover": "",
+    "beatmapUrl": "songs/song001/beatmap.json",
+    "lyrics": [
+      {
+        "t": 4,
+        "text": "在小V派對裡夢想 🎈"
+      },
+      {
+        "t": 14,
+        "text": "跟著節奏一起跳！"
+      },
+      {
+        "t": 36,
+        "text": "副歌要來了——"
+      },
+      {
+        "t": 52,
+        "text": "魔法降臨！衝！"
+      },
+      {
+        "t": 68,
+        "text": "再來一段！"
+      },
+      {
+        "t": 84,
+        "text": "最強高潮！🌟"
+      },
+      {
+        "t": 100,
+        "text": "最後衝刺！"
+      }
+    ]
+  }
+]
