@@ -1002,6 +1002,13 @@ body.portrait-game #s-admin {
 <button id="fs-btn" onclick="toggleFullscreen()" title="全螢幕">🔲</button>
 </div><!-- #root -->
 <script>
+// ═══ 全域資源宣告（必須在最前面）═══
+var AVATAR_KEYS = ['boy1', 'girl1', 'boy2', 'girl2', 'cat1', 'cat2', 'fat1', 'girl3', 'curl1', 'boy3', 'girl4', 'girl5', 'curl2', 'dog1', 'dog2', 'dog3', 'dog4'];
+var AVATARS = AVATAR_KEYS.map(function(key) {
+  return { key: key, src: 'assets/avatars/' + key + '.png' };
+});
+var SONGS = [];
+
 
 // ═══════════════════════════════════════════════════════
 //  EMBEDDED DATA  (injected by build script)
@@ -1079,8 +1086,8 @@ var DEFAULT_SONGS = [{
   id: "song001",
   title: "在小V派對裡夢想",
   artist: "氣球小V",
-  audioUrl: EMBEDDED_MP3,
-  videoUrl: EMBEDDED_MP4,        // set to "songs/song001.mp4" if you upload MP4 to GitHub
+  audioUrl: "songs/song001/audio.mp3",
+  videoUrl: "songs/song001/video.mp4",
   youtubeId: "nxatS80IKpM",  // shown if videoUrl is empty AND user clicks ▶ MV
   bpm: 110,
   duration: 122,
