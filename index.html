@@ -825,7 +825,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.1.0</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.1.1</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1095,8 +1095,8 @@ var DEFAULT_SONGS = [{
   title: "在小V派對裡夢想",
   artist: "氣球小V",
   audioUrl: "songs/song001/audio.mp3",
-  videoUrl: "songs/song001/video.mp4",
-  youtubeId: "nxatS80IKpM",  // shown if videoUrl is empty AND user clicks ▶ MV
+  videoUrl: "",
+  youtubeId: "Ba_DPuAf0qU",  // shown if videoUrl is empty AND user clicks ▶ MV
   bpm: 110,
   duration: 122,
   cover: "",
@@ -1226,7 +1226,7 @@ function loadSongs() {
         title: '在小V派對裡夢想',
         artist: '氣球小V',
         audioUrl: 'songs/song001/audio.mp3',
-        videoUrl: 'songs/song001/video.mp4',
+        videoUrl: '',
         bpm: 110,
         duration: 122,
         cover: '',
