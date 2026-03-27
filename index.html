@@ -547,9 +547,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 ════════════════════════════════════ */
 #s-lb {
   background: linear-gradient(160deg,#fff5fb 0%,#fafffe 100%);
-  gap: 0;
-  padding: 0;
-  /* 必須明確設定高度才能捲動，inset:0 不夠 */
+  /* 覆蓋 .screen 的 display:flex，改成 block 才能正確計算 scrollHeight */
+  display: block !important;
   position: absolute;
   inset: 0;
   overflow-x: hidden;
@@ -557,9 +556,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   -webkit-overflow-scrolling: touch !important;
   scroll-behavior: smooth;
   overscroll-behavior-y: contain;
-  flex-direction: column;
-  align-items: stretch;
-  /* 確保 touch 事件能正常傳遞 */
   touch-action: pan-y !important;
 }
 /* Inner wrapper for s-lb content */
@@ -569,7 +565,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   align-items: center;
   gap: 10px;
   padding: 16px 16px 120px 16px;
-  min-height: 100%;
+  /* min-height: auto 讓內容自然撐高，不受父層高度限制 */
+  min-height: auto;
   width: 100%;
   box-sizing: border-box;
 }
@@ -835,7 +832,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.1.4</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.1.5</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
