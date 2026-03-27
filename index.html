@@ -837,7 +837,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.1.2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.1.4</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1308,53 +1308,26 @@ function loadSRT(url) {
 var mvLoaded = false;
 
 function setupBackground(song) {
-  var bgVid = document.getElementById('bg-video');
+  var bgVid  = document.getElementById('bg-video');
   var ytFrame = document.getElementById('yt-player');
-  var mvBtn = document.getElementById('mv-btn');
+  var mvBtn  = document.getElementById('mv-btn');
 
+  // 全部先隱藏，等 321 GO 倒數結束（startLoop）才播
+  bgVid.src = '';
   bgVid.style.display = 'none';
+  ytFrame.src = '';
   ytFrame.style.display = 'none';
   mvBtn.style.display = 'none';
   mvLoaded = false;
 
   if (song.videoUrl) {
-    // 本機 MP4 檔
     bgVid.src = song.videoUrl;
-    bgVid.style.display = 'block';
-    bgVid.load();
-    bgVid.play().catch(function(){});
-
+    bgVid.load(); // 預先緩衝，但不播
   } else if (song.youtubeId) {
-    // YouTube：遊戲開始時自動載入 iframe
-    // 瀏覽器要求「使用者手勢」才能 autoplay 有聲影片
-    // 但 mute=1 可以繞過，讓 MV 靜音自動播
-    // 玩家可以點 MV 按鈕開聲音
+    // 只記住 vid，等 startLoop → syncYouTubeToAudio 才載入
     var vid = song.youtubeId.trim()
-      .replace(/.*shorts\//,'')
-      .replace(/.*v=/,'')
-      .replace(/[?&].*/,'')
-      .trim();
-
-    var params = [
-      'autoplay=1',
-      'controls=0',
-      'mute=1',          // 靜音才能自動播
-      'loop=1',
-      'playlist=' + vid, // loop 需要 playlist 參數
-      'rel=0',
-      'modestbranding=1',
-      'playsinline=1',
-      'enablejsapi=0'
-    ].join('&');
-
-    ytFrame.src = 'https://www.youtube.com/embed/' + vid + '?' + params;
-    ytFrame.style.display = 'block';
-    mvLoaded = true;
-
-    // 顯示「🔊 開聲音」按鈕
-    mvBtn.style.display = 'block';
-    mvBtn.textContent = '🔊';
-    mvBtn.title = '開啟 MV 聲音';
+      .replace(/.*shorts\//,'').replace(/.*v=/,'').replace(/[?&].*/,'').trim();
+    ytFrame.dataset.vid = vid;
   }
 }
 
@@ -1445,19 +1418,119 @@ function startAudio(offset) {
   audioSource.connect(audioCtx.destination);
   audioSource.start(0, offset);
   audioStartTime = audioCtx.currentTime - offset;
+
+  // 音樂開始的同時，讓 YouTube MV 從頭同步播放
+  syncYouTubeToAudio(offset);
 }
+
+function syncYouTubeToAudio(offset) {
+  var ytFrame = document.getElementById('yt-player');
+  var bgVid   = document.getElementById('bg-video');
+  var mvBtn   = document.getElementById('mv-btn');
+  var song = selectedSong;
+  if (!song) return;
+
+  if (song.videoUrl && bgVid.src) {
+    // 本機 MP4：現在才開始播
+    bgVid.style.display = 'block';
+    bgVid.currentTime = offset || 0;
+    bgVid.play().catch(function(){});
+
+  } else if (ytFrame.dataset.vid) {
+    // YouTube：現在才載入 + 播放
+    var vid = ytFrame.dataset.vid;
+    var startSec = Math.floor(offset || 0);
+    var params = [
+      'autoplay=1', 'controls=0', 'mute=1',
+      'loop=1', 'playlist=' + vid,
+      'rel=0', 'modestbranding=1',
+      'playsinline=1', 'enablejsapi=1',
+      'start=' + startSec
+    ].join('&');
+    ytFrame.src = 'https://www.youtube.com/embed/' + vid + '?' + params;
+    ytFrame.style.display = 'block';
+    mvLoaded = true;
+
+    // 顯示 🔊 按鈕讓玩家可以開聲音
+    mvBtn.style.display = 'block';
+    mvBtn.textContent = '🔊';
+    mvBtn.title = '開啟 MV 聲音';
+  }
+}
+// ── YouTube iframe 控制（postMessage API）──────────────
+function ytCmd(cmd) {
+  var ytFrame = document.getElementById('yt-player');
+  if (!ytFrame || ytFrame.style.display === 'none') return;
+  try {
+    ytFrame.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func: cmd, args: [] }),
+      '*'
+    );
+  } catch(e) {}
+}
+function ytPlay()  { ytCmd('playVideo'); }
+function ytPause() { ytCmd('pauseVideo'); }
+
+
+// ── YouTube MV 控制 helper ────────────────────────────
+function ytPause() {
+  var ytFrame = document.getElementById('yt-player');
+  if (!ytFrame || ytFrame.style.display === 'none') return;
+  var vid = ytFrame.dataset.vid;
+  if (!vid) return;
+  // 暫停：載入靜態版本（autoplay=0）
+  ytFrame.src = 'https://www.youtube.com/embed/' + vid +
+    '?autoplay=0&controls=0&mute=1&rel=0&modestbranding=1&playsinline=1';
+}
+
+function ytResume(offsetSec) {
+  var ytFrame = document.getElementById('yt-player');
+  if (!ytFrame || ytFrame.style.display === 'none') return;
+  var vid = ytFrame.dataset.vid;
+  if (!vid) return;
+  // 從指定秒數繼續播
+  var startSec = Math.floor(offsetSec || 0);
+  var params = [
+    'autoplay=1', 'controls=0', 'mute=1',
+    'loop=1', 'playlist=' + vid,
+    'rel=0', 'modestbranding=1', 'playsinline=1',
+    'start=' + startSec
+  ].join('&');
+  ytFrame.src = 'https://www.youtube.com/embed/' + vid + '?' + params;
+}
+
+function ytStop() {
+  var ytFrame = document.getElementById('yt-player');
+  if (!ytFrame) return;
+  var vid = ytFrame.dataset.vid;
+  if (!vid) return;
+  ytFrame.src = 'https://www.youtube.com/embed/' + vid +
+    '?autoplay=0&controls=0&mute=1&rel=0&modestbranding=1&playsinline=1';
+}
+
 function stopAudio() {
   if (audioSource) { try { audioSource.stop(); } catch(e){} audioSource = null; }
+
+  // 停止 YouTube（清空 src 最可靠）
+  var ytFrame = document.getElementById('yt-player');
+  if (ytFrame && ytFrame.dataset.vid) {
+    // 用靜止版本取代，避免閃爍
+    var vid = ytFrame.dataset.vid;
+    ytFrame.src = 'https://www.youtube.com/embed/' + vid +
+      '?autoplay=0&controls=0&mute=1&rel=0&modestbranding=1&playsinline=1';
+  }
 }
 function pauseAudio() {
   if (!audioCtx || !audioSource) return;
   audioPauseOffset = audioCtx.currentTime - audioStartTime;
   stopAudio();
+  ytPause();  // 暫停 YouTube MV
 }
 function resumeAudio() {
   if (!audioCtx) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
   startAudio(audioPauseOffset);
+  // startAudio 裡已有 syncYouTubeToAudio，所以不需再呼叫 ytResume
 }
 // THE KEY FUNCTION: game time always = audio clock
 function getGameTimeSec() {
@@ -1883,8 +1956,10 @@ function togglePause() {
   document.getElementById('pause-ov').classList.toggle('off', !G.paused);
   if (G.paused) {
     pauseAudio();
+    ytPause();   // MV 同步暫停
   } else {
     resumeAudio();
+    ytPlay();    // MV 同步繼續
     G.lastRafTs = performance.now();
     requestAnimationFrame(loop);
   }
@@ -1915,6 +1990,7 @@ function endGame() {
   G.running = false;
   cancelAnimationFrame(G.raf);
   stopAudio();
+  ytStop();  // 遊戲結束，停止 MV
   var tot = G.perf + G.good + G.miss;
   var acc = tot === 0 ? 100 : Math.round((G.perf + G.good*0.5) / tot * 100);
   // Grade system: 7 tiers designed to give achievable milestones
