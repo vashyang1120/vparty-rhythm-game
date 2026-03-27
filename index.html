@@ -825,7 +825,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.0.2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.1.0</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1302,53 +1302,92 @@ function setupBackground(song) {
 
   bgVid.style.display = 'none';
   ytFrame.style.display = 'none';
+  mvBtn.style.display = 'none';
   mvLoaded = false;
 
   if (song.videoUrl) {
-    // MP4 on GitHub — works without user gesture
+    // 本機 MP4 檔
     bgVid.src = song.videoUrl;
     bgVid.style.display = 'block';
+    bgVid.load();
     bgVid.play().catch(function(){});
-    mvBtn.style.display = 'none';
+
   } else if (song.youtubeId) {
-    // YouTube: show button, load on tap
+    // YouTube：遊戲開始時自動載入 iframe
+    // 瀏覽器要求「使用者手勢」才能 autoplay 有聲影片
+    // 但 mute=1 可以繞過，讓 MV 靜音自動播
+    // 玩家可以點 MV 按鈕開聲音
+    var vid = song.youtubeId.trim()
+      .replace(/.*shorts\//,'')
+      .replace(/.*v=/,'')
+      .replace(/[?&].*/,'')
+      .trim();
+
+    var params = [
+      'autoplay=1',
+      'controls=0',
+      'mute=1',          // 靜音才能自動播
+      'loop=1',
+      'playlist=' + vid, // loop 需要 playlist 參數
+      'rel=0',
+      'modestbranding=1',
+      'playsinline=1',
+      'enablejsapi=0'
+    ].join('&');
+
+    ytFrame.src = 'https://www.youtube.com/embed/' + vid + '?' + params;
+    ytFrame.style.display = 'block';
+    mvLoaded = true;
+
+    // 顯示「🔊 開聲音」按鈕
     mvBtn.style.display = 'block';
-    mvBtn.textContent = '▶ MV';
-  } else {
-    mvBtn.style.display = 'none';
+    mvBtn.textContent = '🔊';
+    mvBtn.title = '開啟 MV 聲音';
   }
 }
 
 function toggleMV() {
-  if (mvLoaded) return;
-  mvLoaded = true;
-  var song = selectedSong;
-  if (!song || !song.youtubeId) return;
-
-  // Extract clean video ID
-  var vid = song.youtubeId.trim()
-    .replace(/.*shorts\//,'')
-    .replace(/.*v=/,'')
-    .replace(/[?&].*/,'')
-    .trim();
-
+  // 點擊後切換 YouTube iframe 的靜音狀態
+  // 用 postMessage 控制 YouTube iframe 音量
   var ytFrame = document.getElementById('yt-player');
-  var params = [
-    'autoplay=1','controls=0','mute=1','loop=1','playlist='+vid,
-    'disablekb=1','modestbranding=1','rel=0','iv_load_policy=3','playsinline=1'
-  ].join('&');
-  ytFrame.src = 'https://www.youtube.com/embed/'+vid+'?'+params;
-  ytFrame.style.display = 'block';
-
   var mvBtn = document.getElementById('mv-btn');
-  mvBtn.textContent = '■ MV';
-  mvBtn.onclick = function() {
-    ytFrame.src = '';
-    ytFrame.style.display = 'none';
-    mvBtn.textContent = '▶ MV';
-    mvBtn.onclick = toggleMV;
-    mvLoaded = false;
-  };
+  if (!ytFrame || ytFrame.style.display === 'none') return;
+
+  if (mvBtn.textContent === '🔊') {
+    // 重新載入 iframe，這次不靜音（需要使用者手勢才有效）
+    var song = selectedSong;
+    if (!song || !song.youtubeId) return;
+    var vid = song.youtubeId.trim()
+      .replace(/.*shorts\//,'')
+      .replace(/.*v=/,'')
+      .replace(/[?&].*/,'')
+      .trim();
+    var params = [
+      'autoplay=1', 'controls=0', 'mute=0',
+      'loop=1', 'playlist=' + vid,
+      'rel=0', 'modestbranding=1', 'playsinline=1'
+    ].join('&');
+    ytFrame.src = 'https://www.youtube.com/embed/' + vid + '?' + params;
+    mvBtn.textContent = '🔇';
+    mvBtn.title = '靜音 MV';
+  } else {
+    // 靜音：重新載入靜音版
+    var song2 = selectedSong;
+    if (!song2 || !song2.youtubeId) return;
+    var vid2 = song2.youtubeId.trim()
+      .replace(/.*shorts\//,'')
+      .replace(/.*v=/,'')
+      .replace(/[?&].*/,'')
+      .trim();
+    var params2 = [
+      'autoplay=1', 'controls=0', 'mute=1',
+      'loop=1', 'playlist=' + vid2,
+      'rel=0', 'modestbranding=1', 'playsinline=1'
+    ].join('&');
+    ytFrame.src = 'https://www.youtube.com/embed/' + vid2 + '?' + params2;
+    mvBtn.textContent = '🔊';
+    mvBtn.title = '開啟 MV 聲音';
+  }
 }
 
 // ═══════════════════════════════════════════════════════
