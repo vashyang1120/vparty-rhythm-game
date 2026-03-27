@@ -283,17 +283,15 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   height:100%; width:auto; min-width:100%; object-fit:contain; pointer-events:none; }
 #yt-iframe-wrap { position:absolute; inset:0; overflow:hidden; }
 #yt-iframe-wrap iframe {
-  /* 橫式 MV 撐滿整個遊戲區域，保持 16:9 並裁切超出的部分 */
-  position:absolute;
-  top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  /* 讓影片填滿容器（object-fit:cover 效果）*/
-  width:177.78vh;  /* 16/9 * 100vh */
-  height:100vh;
-  min-width:100%;
-  min-height:100%;
-  border:none;
-  pointer-events:none;
+  /* YouTube iframe 滿版 cover：
+     遊戲畫面是 16:9 橫式，MV 也是 16:9
+     直接 width/height 100% 剛好填滿，不需要裁切 */
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  pointer-events: none;
 }
 #vid-dim { position:absolute; inset:0; background:rgba(20,5,35,.52); }
 
@@ -1312,7 +1310,6 @@ function setupBackground(song) {
   var ytFrame = document.getElementById('yt-player');
   var mvBtn  = document.getElementById('mv-btn');
 
-  // 全部先隱藏，等 321 GO 倒數結束（startLoop）才播
   bgVid.src = '';
   bgVid.style.display = 'none';
   ytFrame.src = '';
@@ -1322,12 +1319,27 @@ function setupBackground(song) {
 
   if (song.videoUrl) {
     bgVid.src = song.videoUrl;
-    bgVid.load(); // 預先緩衝，但不播
+    bgVid.style.display = 'block';
+    bgVid.load();
+    bgVid.play().catch(function(){});
   } else if (song.youtubeId) {
-    // 只記住 vid，等 startLoop → syncYouTubeToAudio 才載入
     var vid = song.youtubeId.trim()
       .replace(/.*shorts\//,'').replace(/.*v=/,'').replace(/[?&].*/,'').trim();
     ytFrame.dataset.vid = vid;
+    // 倒數時就開始播 MV（autoplay=1 mute=1）
+    // 音樂在倒數結束後才響，玩家在倒數時先看到 MV 畫面
+    var params = [
+      'autoplay=1','controls=0','mute=1',
+      'loop=1','playlist='+vid,
+      'rel=0','modestbranding=1','playsinline=1'
+    ].join('&');
+    ytFrame.src = 'https://www.youtube.com/embed/' + vid + '?' + params;
+    ytFrame.style.display = 'block';
+    mvLoaded = true;
+    // 🔊 開聲音按鈕
+    mvBtn.style.display = 'block';
+    mvBtn.textContent = '🔊';
+    mvBtn.title = '開啟 MV 聲音';
   }
 }
 
@@ -1418,45 +1430,10 @@ function startAudio(offset) {
   audioSource.connect(audioCtx.destination);
   audioSource.start(0, offset);
   audioStartTime = audioCtx.currentTime - offset;
-
-  // 音樂開始的同時，讓 YouTube MV 從頭同步播放
-  syncYouTubeToAudio(offset);
+  // MV 已在倒數時開始，不需要重設
 }
 
-function syncYouTubeToAudio(offset) {
-  var ytFrame = document.getElementById('yt-player');
-  var bgVid   = document.getElementById('bg-video');
-  var mvBtn   = document.getElementById('mv-btn');
-  var song = selectedSong;
-  if (!song) return;
 
-  if (song.videoUrl && bgVid.src) {
-    // 本機 MP4：現在才開始播
-    bgVid.style.display = 'block';
-    bgVid.currentTime = offset || 0;
-    bgVid.play().catch(function(){});
-
-  } else if (ytFrame.dataset.vid) {
-    // YouTube：現在才載入 + 播放
-    var vid = ytFrame.dataset.vid;
-    var startSec = Math.floor(offset || 0);
-    var params = [
-      'autoplay=1', 'controls=0', 'mute=1',
-      'loop=1', 'playlist=' + vid,
-      'rel=0', 'modestbranding=1',
-      'playsinline=1', 'enablejsapi=1',
-      'start=' + startSec
-    ].join('&');
-    ytFrame.src = 'https://www.youtube.com/embed/' + vid + '?' + params;
-    ytFrame.style.display = 'block';
-    mvLoaded = true;
-
-    // 顯示 🔊 按鈕讓玩家可以開聲音
-    mvBtn.style.display = 'block';
-    mvBtn.textContent = '🔊';
-    mvBtn.title = '開啟 MV 聲音';
-  }
-}
 // ── YouTube iframe 控制（postMessage API）──────────────
 function ytCmd(cmd) {
   var ytFrame = document.getElementById('yt-player');
@@ -1510,15 +1487,6 @@ function ytStop() {
 
 function stopAudio() {
   if (audioSource) { try { audioSource.stop(); } catch(e){} audioSource = null; }
-
-  // 停止 YouTube（清空 src 最可靠）
-  var ytFrame = document.getElementById('yt-player');
-  if (ytFrame && ytFrame.dataset.vid) {
-    // 用靜止版本取代，避免閃爍
-    var vid = ytFrame.dataset.vid;
-    ytFrame.src = 'https://www.youtube.com/embed/' + vid +
-      '?autoplay=0&controls=0&mute=1&rel=0&modestbranding=1&playsinline=1';
-  }
 }
 function pauseAudio() {
   if (!audioCtx || !audioSource) return;
@@ -2189,37 +2157,57 @@ function renderLBFromFirebase() {
   var el = document.getElementById('lb-list');
   el.innerHTML = '<div class="lb-loading">載入中... 🌸</div>';
 
-  // Get top 15 scores
-  firebaseDb.ref('scores').orderByChild('score').limitToLast(15)
+  // 取前100筆，做去重後只保留每人最高分，再取前15
+  firebaseDb.ref('scores').orderByChild('score').limitToLast(100)
     .once('value')
     .then(function(snapshot) {
-      var top15 = [];
+      var all = [];
       snapshot.forEach(function(child) {
-        top15.push(Object.assign({key: child.key}, child.val()));
+        all.push(Object.assign({key: child.key}, child.val()));
       });
-      top15.sort(function(a,b){ return b.score - a.score; });
+      all.sort(function(a,b){ return b.score - a.score; });
+
+      // 去重：每個 ID 只保留最高分
+      var seen = {};
+      var deduped = [];
+      all.forEach(function(s) {
+        if (!seen[s.name]) {
+          seen[s.name] = true;
+          deduped.push(s);
+        }
+      });
+
+      // 只顯示前15名
+      var top15 = deduped.slice(0, 15);
       renderLBRows(el, top15);
 
-      // Check if current player is in top 15
+      // 檢查目前玩家是否在前15
       var myName = PLAYER.id;
       var inTop15 = top15.some(function(s){ return s.name === myName; });
-
       if (!inTop15 && myName && myName !== '玩家') {
-        // Get player's real rank
-        firebaseDb.ref('scores').orderByChild('score')
-          .once('value')
-          .then(function(allSnap) {
-            var all = [];
-            allSnap.forEach(function(c){ all.push(c.val()); });
-            all.sort(function(a,b){ return b.score - a.score; });
-            var myBest = null;
-            for (var i=0; i<all.length; i++) {
-              if (all[i].name === myName && !myBest) {
-                myBest = {rank: i+1, score: all[i].score, total: all.length};
+        var myIdx = deduped.findIndex(function(s){ return s.name === myName; });
+        if (myIdx !== -1) {
+          showPlayerRankBanner(myIdx + 1, deduped[myIdx].score, deduped.length);
+        } else {
+          // 不在 top100 裡，再查全部
+          firebaseDb.ref('scores').orderByChild('score')
+            .once('value')
+            .then(function(allSnap) {
+              var allScores = [];
+              allSnap.forEach(function(c){ allScores.push(c.val()); });
+              allScores.sort(function(a,b){ return b.score - a.score; });
+              // 去重後找排名
+              var seenAll = {};
+              var dedupedAll = [];
+              allScores.forEach(function(s){
+                if (!seenAll[s.name]) { seenAll[s.name]=true; dedupedAll.push(s); }
+              });
+              var myRealIdx = dedupedAll.findIndex(function(s){ return s.name === myName; });
+              if (myRealIdx !== -1) {
+                showPlayerRankBanner(myRealIdx + 1, dedupedAll[myRealIdx].score, dedupedAll.length);
               }
-            }
-            if (myBest) showPlayerRankBanner(myBest.rank, myBest.score, myBest.total);
-          });
+            });
+        }
       }
     })
     .catch(function(e) {
@@ -2252,7 +2240,7 @@ function showPlayerRankBanner(rank, score, total) {
 function renderLBFromLocal() {
   var el = document.getElementById('lb-list');
   var allScores = JSON.parse(localStorage.getItem('vPartyScores') || '[]');
-  var top15 = allScores.slice(0, 15);
+  var top15 = dedupeByName(allScores).slice(0, 15);
   renderLBRows(el, top15);
   // Show player rank if outside top 15
   var myName = PLAYER.id;
@@ -2264,6 +2252,24 @@ function renderLBFromLocal() {
   }
 }
 
+
+// ── 排行榜去重：每個 ID 只保留最高分（防洗榜）──
+function dedupeByName(scores) {
+  var seen = {};
+  var result = [];
+  // scores 已經按分數降序排列，所以第一次看到的就是最高分
+  for (var i = 0; i < scores.length; i++) {
+    var s = scores[i];
+    var key = (s.name || '').trim();
+    if (!key) continue;
+    if (!seen[key]) {
+      seen[key] = true;
+      result.push(s);
+    }
+    // 已見過的 ID，跳過（它的分數一定比已存的低）
+  }
+  return result;
+}
 function renderLBRows(el, scores) {
   if (!scores.length) {
     el.innerHTML = '<div style="text-align:center;padding:28px;color:var(--text2);font-family:inherit;font-size:14px;">還沒有記錄喔！快來挑戰 🎈</div>';
