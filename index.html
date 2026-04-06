@@ -1023,6 +1023,7 @@ var AVATARS = AVATAR_KEYS.map(function(key) {
   return { key: key, src: 'assets/avatars/' + key + '.png' };
 });
 var SONGS = [];
+var lbSongId = 'song001';
 var lbSongId = "song001";
 
 
@@ -1308,29 +1309,22 @@ function ytGetVid(){var f=document.getElementById('yt-player');return f&&f.datas
 function ytPlayFrom(s){var f=document.getElementById('yt-player'),v=ytGetVid();if(!f||!v)return;var t=Math.floor(Math.max(0,s||0));f.src='https://www.youtube.com/embed/'+v+'?autoplay=1&controls=0&mute=1&loop=1&playlist='+v+'&rel=0&modestbranding=1&playsinline=1&start='+t;f.style.display='block';}
 function ytPause(){var f=document.getElementById('yt-player'),v=ytGetVid();if(!f||!v)return;f.src='https://www.youtube.com/embed/'+v+'?autoplay=0&controls=0&mute=1&rel=0';}
 function ytStop(){var f=document.getElementById('yt-player');if(!f)return;f.src='';f.style.display='none';}
+function ytGetVid(){var f=document.getElementById('yt-player');return(f&&f.dataset&&f.dataset.vid)||'';}
+function ytPlayFrom(s){var f=document.getElementById('yt-player'),v=ytGetVid();if(!f||!v)return;var t=Math.floor(Math.max(0,s||0));f.src='https://www.youtube.com/embed/'+v+'?autoplay=1&controls=0&mute=1&loop=1&playlist='+v+'&rel=0&modestbranding=1&playsinline=1&start='+t;f.style.display='block';}
+function ytPause(){var f=document.getElementById('yt-player'),v=ytGetVid();if(!f||!v)return;f.src='https://www.youtube.com/embed/'+v+'?autoplay=0&controls=0&mute=1&rel=0';}
+function ytStop(){var f=document.getElementById('yt-player');if(!f)return;f.src='';f.style.display='none';}
 function setupBackground(song) {
-  var bgVid  = document.getElementById('bg-video');
-  var ytFrame = document.getElementById('yt-player');
-  var mvBtn  = document.getElementById('mv-btn');
-
-  bgVid.src = '';
-  bgVid.style.display = 'none';
-  ytFrame.src = '';
-  ytFrame.style.display = 'none';
-  mvBtn.style.display = 'none';
-  mvLoaded = false;
-
-  if (song.videoUrl) {
-    bgVid.src = song.videoUrl;
-    bgVid.style.display = 'block';
-    bgVid.load();
-    bgVid.play().catch(function(){});
-  } else if (song.youtubeId) {
-  } else if (song.youtubeId) {
-    var vid = song.youtubeId.trim().replace(/.*shorts\//,'').replace(/.*v=/,'').replace(/[?&].*/,'').trim();
-    ytFrame.dataset.vid = vid;
-    ytFrame.src = ''; ytFrame.style.display = 'none';
-    mvLoaded = false; mvBtn.style.display = 'none';
+  var bgVid=document.getElementById('bg-video');
+  var ytFrame=document.getElementById('yt-player');
+  var mvBtn=document.getElementById('mv-btn');
+  bgVid.src='';bgVid.style.display='none';
+  ytFrame.src='';ytFrame.style.display='none';
+  mvBtn.style.display='none';mvLoaded=false;
+  if(song.videoUrl){
+    bgVid.src=song.videoUrl;bgVid.style.display='block';bgVid.load();bgVid.play().catch(function(){});
+  }else if(song.youtubeId){
+    var vid=song.youtubeId.trim().replace(/.*shorts\//,'').replace(/.*v=/,'').replace(/[?&].*/,'').trim();
+    ytFrame.dataset.vid=vid; // 只記 vid，startLoop 才播
   }
 }
 
@@ -1920,6 +1914,7 @@ function togglePause() {
   } else {
     resumeAudio();
   ytPlayFrom(audioPauseOffset);
+  ytPlayFrom(audioPauseOffset);
     ytPlay();    // MV 同步繼續
     G.lastRafTs = performance.now();
     requestAnimationFrame(loop);
@@ -1929,6 +1924,7 @@ function resumeGame() {
   G.paused = false;
   document.getElementById('pause-ov').classList.add('off');
   resumeAudio();
+  ytPlayFrom(audioPauseOffset);
   ytPlayFrom(audioPauseOffset);
   G.lastRafTs = performance.now();
   requestAnimationFrame(loop);
@@ -1949,6 +1945,7 @@ function quitGame() {
 //  END GAME
 // ═══════════════════════════════════════════════════════
 function endGame() {
+  ytStop();
   ytStop();
   G.running = false;
   cancelAnimationFrame(G.raf);
@@ -2096,6 +2093,7 @@ function saveScore(grade, acc) {
     acc:       acc,
     song:      (G.song && G.song.title) || '',
     songId:    (G.song && G.song.id) || 'song001',
+    songId:    (G.song && G.song.id) || 'song001',
     date:      new Date().toLocaleDateString('zh-TW'),
     ts:        Date.now()
   };
@@ -2124,6 +2122,24 @@ function saveScore(grade, acc) {
 
 // Render leaderboard: prefer Firebase if available, else localStorage
 function renderLB() {
+  // 更新排行榜標題和歌曲切換 tabs
+  var lt=document.getElementById('lb-title');
+  var tabs=document.getElementById('lb-song-tabs');
+  if(lt&&SONGS&&SONGS.length){
+    var cs=SONGS.find(function(x){return x.id===lbSongId;});
+    lt.textContent='🏆 '+(cs?cs.title:'排行榜');
+    if(tabs){
+      tabs.innerHTML='';
+      SONGS.forEach(function(s){
+        var btn=document.createElement('button');
+        btn.textContent=s.title;
+        btn.style='padding:4px 12px;border-radius:20px;border:2px solid var(--pink);background:'+(s.id===lbSongId?'var(--pink)':'transparent')+';color:'+(s.id===lbSongId?'#fff':'var(--pink)')+';font-size:12px;cursor:pointer;font-family:inherit;';
+        btn.onclick=function(){lbSongId=s.id;renderLB();};
+        tabs.appendChild(btn);
+      });
+    }
+  }
+
   var _lt=document.getElementById('lb-title');if(_lt&&SONGS&&SONGS.length){var _s=SONGS.find(function(x){return x.id===lbSongId;});_lt.textContent='🏆 '+(_s?_s.title:'排行榜');}
   if (FIREBASE_ENABLED) {
     if (firebaseDb) {
@@ -2164,6 +2180,8 @@ function renderLBFromFirebase() {
       });
       all.sort(function(a,b){ return b.score - a.score; });
 
+      // 依歌曲過濾
+      all = all.filter(function(s){ return !lbSongId || s.songId === lbSongId || (!s.songId && lbSongId==='song001'); });
       // 去重：每個 ID 只保留最高分
       var seen = {};
       var deduped = [];
