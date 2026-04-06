@@ -127,7 +127,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 .btn-outline {
   background:#fff; border:2px solid var(--pink-lt);
   color:var(--pink2);
-  box-shadow:var(--shadow-sm);
+  box-shadow:var(--shadow-sm); display:flex; flex-direction:column;
 }
 .btn-outline:hover { border-color:var(--pink); background:var(--pink-bg); }
 
@@ -234,7 +234,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 .song-card {
   background:#fff; border:2px solid var(--pink-lt); border-radius:var(--r-md);
   cursor:pointer; transition:all .2s; overflow:hidden;
-  box-shadow:var(--shadow-sm);
+  box-shadow:var(--shadow-sm); display:flex; flex-direction:column;
 }
 .song-card:hover { border-color:var(--pink); transform:translateY(-3px);
   box-shadow:0 8px 24px rgba(232,111,154,.25); }
@@ -243,7 +243,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   box-shadow:0 0 0 3px rgba(255,133,161,.25), 0 8px 24px rgba(232,111,154,.3);
 }
 .song-card-thumb {
-  width:100%; aspect-ratio:16/9; background:linear-gradient(135deg,var(--pink-bg),var(--purple-bg));
+  width:100%; height:90px; background:linear-gradient(135deg,var(--pink-bg),var(--purple-bg));
   display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden;
 }
 .song-card-thumb img { width:100%; height:100%; object-fit:cover; }
@@ -262,7 +262,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   border:2px solid var(--pink-lt); background:#fff;
   color:var(--text2); font-size:13px; font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive;
   cursor:pointer; transition:all .18s; letter-spacing:.05em;
-  box-shadow:var(--shadow-sm);
+  box-shadow:var(--shadow-sm); display:flex; flex-direction:column;
 }
 .db:hover { border-color:var(--pink); color:var(--pink2); }
 .db.on {
@@ -340,7 +340,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   border-radius:var(--r-xl); color:var(--pink2);
   font-size:11px; padding:6px 8px; cursor:pointer;
   font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive; transition:all .15s; width:100%;
-  box-shadow:var(--shadow-sm);
+  box-shadow:var(--shadow-sm); display:flex; flex-direction:column;
 }
 #pause-btn:hover { border-color:var(--pink); background:#fff; }
 #audio-dot { width:7px; height:7px; border-radius:50%; background:var(--pink-lt);
@@ -832,7 +832,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.1.5</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.2.0</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -958,7 +958,7 @@ body.portrait-game #s-admin {
 <!-- LEADERBOARD -->
 <div id="s-lb" class="screen off">
   <div id="lb-inner">
-    <h2>🏆 排行榜</h2>
+    <h2 id="lb-title">🏆 排行榜</h2>
     <div id="lb-list"></div>
     <div style="height:60px;"></div><!-- spacer for fixed button -->
   </div>
@@ -1023,6 +1023,7 @@ var AVATARS = AVATAR_KEYS.map(function(key) {
   return { key: key, src: 'assets/avatars/' + key + '.png' };
 });
 var SONGS = [];
+var lbSongId = "song001";
 
 
 // ═══════════════════════════════════════════════════════
@@ -1195,7 +1196,7 @@ function go(id) {
 //  BUTTONS
 // ═══════════════════════════════════════════════════════
 document.getElementById('btn-play').onclick        = function(){ initProfile(); go('s-profile'); };
-document.getElementById('btn-lb-go').onclick       = function(){ renderLB(); go('s-lb'); };
+document.getElementById('btn-lb-go').onclick = function(){ lbSongId=(selectedSong&&selectedSong.id)||'song001'; renderLB(); go('s-lb'); };
 document.getElementById('btn-profile-back').onclick = function(){ go('s-title'); };
 document.getElementById('btn-profile-ok').onclick   = function(){ saveProfile(); loadSongs(); go('s-songlist'); };
 document.getElementById('btn-back-song').onclick    = function(){ go('s-profile'); };
@@ -1253,7 +1254,8 @@ function renderSongCards() {
   SONGS.forEach(function(song, i) {
     var card = document.createElement('div');
     card.className = 'song-card';
-    var thumb = song.cover ? '<img src="'+song.cover+'" alt="">' : '🎈';
+    var coverUrl = song.cover || (song.youtubeId ? 'https://img.youtube.com/vi/'+song.youtubeId+'/hqdefault.jpg' : '');
+    var thumb = coverUrl ? '<img src="'+coverUrl+'" alt="" onerror="this.style.display=\'none\'">' : '🎈';
     card.innerHTML =
       '<div class="song-card-thumb">'+thumb+'</div>'+
       '<div class="song-card-body">'+
@@ -1302,6 +1304,10 @@ function loadSRT(url) {
 // ═══════════════════════════════════════════════════════
 var mvLoaded = false;
 
+function ytGetVid(){var f=document.getElementById('yt-player');return f&&f.dataset&&f.dataset.vid||'';}
+function ytPlayFrom(s){var f=document.getElementById('yt-player'),v=ytGetVid();if(!f||!v)return;var t=Math.floor(Math.max(0,s||0));f.src='https://www.youtube.com/embed/'+v+'?autoplay=1&controls=0&mute=1&loop=1&playlist='+v+'&rel=0&modestbranding=1&playsinline=1&start='+t;f.style.display='block';}
+function ytPause(){var f=document.getElementById('yt-player'),v=ytGetVid();if(!f||!v)return;f.src='https://www.youtube.com/embed/'+v+'?autoplay=0&controls=0&mute=1&rel=0';}
+function ytStop(){var f=document.getElementById('yt-player');if(!f)return;f.src='';f.style.display='none';}
 function setupBackground(song) {
   var bgVid  = document.getElementById('bg-video');
   var ytFrame = document.getElementById('yt-player');
@@ -1320,23 +1326,11 @@ function setupBackground(song) {
     bgVid.load();
     bgVid.play().catch(function(){});
   } else if (song.youtubeId) {
-    var vid = song.youtubeId.trim()
-      .replace(/.*shorts\//,'').replace(/.*v=/,'').replace(/[?&].*/,'').trim();
+  } else if (song.youtubeId) {
+    var vid = song.youtubeId.trim().replace(/.*shorts\//,'').replace(/.*v=/,'').replace(/[?&].*/,'').trim();
     ytFrame.dataset.vid = vid;
-    // 倒數時就開始播 MV（autoplay=1 mute=1）
-    // 音樂在倒數結束後才響，玩家在倒數時先看到 MV 畫面
-    var params = [
-      'autoplay=1','controls=0','mute=1',
-      'loop=1','playlist='+vid,
-      'rel=0','modestbranding=1','playsinline=1'
-    ].join('&');
-    ytFrame.src = 'https://www.youtube.com/embed/' + vid + '?' + params;
-    ytFrame.style.display = 'block';
-    mvLoaded = true;
-    // 🔊 開聲音按鈕
-    mvBtn.style.display = 'block';
-    mvBtn.textContent = '🔊';
-    mvBtn.title = '開啟 MV 聲音';
+    ytFrame.src = ''; ytFrame.style.display = 'none';
+    mvLoaded = false; mvBtn.style.display = 'none';
   }
 }
 
@@ -1650,6 +1644,7 @@ function startLoop() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   audioPauseOffset = 0;
   startAudio(0);
+  ytPlayFrom(0);
 
   G.running = true;
   G.lastRafTs = performance.now();
@@ -1712,7 +1707,7 @@ function spawnNotes() {
     // Spawn when: note_time - lead_time <= current_time
     if (b.t - lead/1000 > gtSec) break;
     G.beatIdx++;
-    makeNote(b.lane, b.t * 1000, b.hold || 0);
+    makeNote(b.lane, b.t * 1000, (b.hold || 0) * 1000);
   }
 }
 
@@ -1924,6 +1919,7 @@ function togglePause() {
     ytPause();   // MV 同步暫停
   } else {
     resumeAudio();
+  ytPlayFrom(audioPauseOffset);
     ytPlay();    // MV 同步繼續
     G.lastRafTs = performance.now();
     requestAnimationFrame(loop);
@@ -1933,6 +1929,7 @@ function resumeGame() {
   G.paused = false;
   document.getElementById('pause-ov').classList.add('off');
   resumeAudio();
+  ytPlayFrom(audioPauseOffset);
   G.lastRafTs = performance.now();
   requestAnimationFrame(loop);
 }
@@ -1952,6 +1949,7 @@ function quitGame() {
 //  END GAME
 // ═══════════════════════════════════════════════════════
 function endGame() {
+  ytStop();
   G.running = false;
   cancelAnimationFrame(G.raf);
   stopAudio();
@@ -2097,6 +2095,7 @@ function saveScore(grade, acc) {
     grade:     grade,
     acc:       acc,
     song:      (G.song && G.song.title) || '',
+    songId:    (G.song && G.song.id) || 'song001',
     date:      new Date().toLocaleDateString('zh-TW'),
     ts:        Date.now()
   };
@@ -2106,13 +2105,13 @@ function saveScore(grade, acc) {
     if (!firebaseDb) _doInitFirebase(); // ensure connected
   }
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores').push(entry).catch(function(e) {
+    firebaseDb.ref('scores/' + (entry.songId||'song001')).push(entry).catch(function(e) {
       console.warn('[Firebase] Write failed:', e.message);
     });
   }
 
   // ── localStorage (local fallback + admin panel source) ──
-  var key = 'vPartyScores';
+  var key = 'vPartyScores_' + (entry.songId||'song001');
   var arr = JSON.parse(localStorage.getItem(key) || '[]');
   arr.push(entry);
   arr.sort(function(a,b){ return b.score - a.score; });
@@ -2125,6 +2124,7 @@ function saveScore(grade, acc) {
 
 // Render leaderboard: prefer Firebase if available, else localStorage
 function renderLB() {
+  var _lt=document.getElementById('lb-title');if(_lt&&SONGS&&SONGS.length){var _s=SONGS.find(function(x){return x.id===lbSongId;});_lt.textContent='🏆 '+(_s?_s.title:'排行榜');}
   if (FIREBASE_ENABLED) {
     if (firebaseDb) {
       renderLBFromFirebase();
@@ -2155,7 +2155,7 @@ function renderLBFromFirebase() {
   el.innerHTML = '<div class="lb-loading">載入中... 🌸</div>';
 
   // 取前100筆，做去重後只保留每人最高分，再取前15
-  firebaseDb.ref('scores').orderByChild('score').limitToLast(100)
+  firebaseDb.ref('scores/'+(lbSongId||'song001')).orderByChild('score').limitToLast(100)
     .once('value')
     .then(function(snapshot) {
       var all = [];
@@ -2187,7 +2187,7 @@ function renderLBFromFirebase() {
           showPlayerRankBanner(myIdx + 1, deduped[myIdx].score, deduped.length);
         } else {
           // 不在 top100 裡，再查全部
-          firebaseDb.ref('scores').orderByChild('score')
+          firebaseDb.ref('scores/'+(lbSongId||'song001')).orderByChild('score')
             .once('value')
             .then(function(allSnap) {
               var allScores = [];
@@ -2318,7 +2318,7 @@ function adminDeleteScore(idx) {
 // Admin: render panel reads from Firebase if available
 function renderAdminPanel() {
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores').orderByChild('score').limitToLast(100)
+    firebaseDb.ref('scores/'+(lbSongId||'song001')).orderByChild('score').limitToLast(100)
       .once('value')
       .then(function(snapshot) {
         var scores = [];
