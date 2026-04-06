@@ -40,5 +40,35 @@
         "text": "最後衝刺！"
       }
     ]
+  },
+  {
+    "id": "song002",
+    "title": "V-MEN",
+    "artist": "氣球小V",
+    "audioUrl": "songs/song002/audio.mp3",
+    "videoUrl": "",
+    "youtubeId": "7VWVdyBDIEg",
+    "bpm": 85,
+    "duration": 128,
+    "cover": "",
+    "beatmapUrl": "songs/song002/beatmap.json",
+    "lyrics": [
+      {
+        "t": 4,
+        "text": "🎈 V-MEN"
+      },
+      {
+        "t": 32,
+        "text": "節奏起來！"
+      },
+      {
+        "t": 64,
+        "text": "副歌！衝！🔥"
+      },
+      {
+        "t": 96,
+        "text": "最後衝刺！💪"
+      }
+    ]
   }
 ]
