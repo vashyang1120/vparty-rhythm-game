@@ -832,7 +832,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.0</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.1</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -2168,7 +2168,7 @@ function renderLBFromFirebase() {
   el.innerHTML = '<div class="lb-loading">載入中... 🌸</div>';
 
   // 取前100筆，做去重後只保留每人最高分，再取前15
-  firebaseDb.ref('scores').orderByChild('score').limitToLast(200)
+  firebaseDb.ref('scores').limitToLast(200)
     .once('value')
     .then(function(snapshot) {
       var all = [];
@@ -2205,7 +2205,7 @@ function renderLBFromFirebase() {
           showPlayerRankBanner(myIdx + 1, deduped[myIdx].score, deduped.length);
         } else {
           // 不在 top100 裡，再查全部
-          firebaseDb.ref('scores').orderByChild('score').limitToLast(500)
+          firebaseDb.ref('scores').limitToLast(500)
             .once('value')
             .then(function(allSnap) {
               var allScores = [];
@@ -2336,7 +2336,7 @@ function adminDeleteScore(idx) {
 // Admin: render panel reads from Firebase if available
 function renderAdminPanel() {
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores').orderByChild('score').limitToLast(200)
+    firebaseDb.ref('scores').limitToLast(200)
       .once('value')
       .then(function(snapshot) {
         var scores = [];
