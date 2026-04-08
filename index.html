@@ -832,7 +832,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.1</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.2</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -2091,7 +2091,18 @@ function saveScore(grade, acc) {
     if (!firebaseDb) _doInitFirebase(); // ensure connected
   }
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores').push(entry).catch(function(e) {
+    firebaseDb.ref('scores').push(entry).then(function() {
+      firebaseDb.ref('scores').once('value', function(snap) {
+        if (snap.numChildren() > 300) {
+          var oldestKey = null, oldestTs = Infinity;
+          snap.forEach(function(c) {
+            var ts = c.val() && c.val().ts;
+            if (ts && ts < oldestTs) { oldestTs = ts; oldestKey = c.key; }
+          });
+          if (oldestKey) firebaseDb.ref('scores/' + oldestKey).remove();
+        }
+      });
+    }).catch(function(e) {
       console.warn('[Firebase] Write failed:', e.message);
     });
   }
@@ -2319,25 +2330,21 @@ function adminClearAll() {
 }
 
 // Admin: delete single score
-function adminDeleteScore(idx) {
+function adminDeleteScore(key) {
   if (!confirm('確定刪除這筆記錄？')) return;
-  // For local
-  var scores = JSON.parse(localStorage.getItem('vPartyScores') || '[]');
-  var entry = scores[idx];
-  scores.splice(idx, 1);
-  localStorage.setItem('vPartyScores', JSON.stringify(scores));
-  // For Firebase: need to find and delete by key
-  if (FIREBASE_ENABLED && firebaseDb && entry && entry.key) {
-    firebaseDb.ref('scores/' + entry.key).remove();
+  if (FIREBASE_ENABLED && firebaseDb && key) {
+    firebaseDb.ref('scores/' + key).remove()
+      .then(function(){ renderAdminPanel(); })
+      .catch(function(e){ console.warn('Delete failed:', e); renderAdminPanel(); });
+  } else {
+    renderAdminPanel();
   }
-  renderAdminPanel();
 }
 
 // Admin: render panel reads from Firebase if available
 function renderAdminPanel() {
   if (FIREBASE_ENABLED && firebaseDb) {
-    // limitToLast 不加 orderByChild，避免需要 Firebase index
-    firebaseDb.ref('scores').limitToLast(500)
+    firebaseDb.ref('scores').limitToLast(300)
       .once('value')
       .then(function(snapshot) {
         var scores = [];
@@ -2345,43 +2352,28 @@ function renderAdminPanel() {
           var v = child.val();
           if (v && v.name) scores.push(Object.assign({key: child.key}, v));
         });
-        scores.sort(function(a,b){ return b.score - a.score; });
         _renderAdminPanelUI(scores);
       })
       .catch(function(e) {
         console.warn('Admin Firebase failed:', e.message);
-        // fallback: 合併所有 localStorage
-        var all = [];
-        ['song001','song002','song003','song004','song005'].forEach(function(sid){
-          var k = 'vPartyScores_'+sid;
-          var d = JSON.parse(localStorage.getItem(k)||'[]');
-          all = all.concat(d);
-        });
-        // 也讀舊的 vPartyScores
-        var old = JSON.parse(localStorage.getItem('vPartyScores')||'[]');
-        all = all.concat(old);
-        all.sort(function(a,b){return b.score-a.score;});
-        _renderAdminPanelUI(all);
+        _renderAdminPanelUI([]);
       });
   } else {
-    var all = [];
-    ['song001','song002','song003','song004','song005'].forEach(function(sid){
-      var d = JSON.parse(localStorage.getItem('vPartyScores_'+sid)||'[]');
-      all = all.concat(d);
-    });
-    var old = JSON.parse(localStorage.getItem('vPartyScores')||'[]');
-    all = all.concat(old);
-    all.sort(function(a,b){return b.score-a.score;});
-    _renderAdminPanelUI(all);
+    _renderAdminPanelUI([]);
   }
 }
 
 function _renderAdminPanelUI(scores) {
+  window._adminScores = scores;
+  var curSort = window._adminSort || 'time_desc';
+
+  // 統計
   var statsEl = document.getElementById('admin-stats');
-  var maxScore = scores.length ? Math.max.apply(null, scores.map(function(s){ return s.score; })).toLocaleString() : '---';
+  var maxScore = scores.length ? Math.max.apply(null, scores.map(function(s){ return s.score||0; })).toLocaleString() : '---';
+  var songs = new Set(scores.map(function(s){ return s.songId || s.song || 'song001'; }));
   statsEl.innerHTML = [
     {val: scores.length, lbl: '總記錄'},
-    {val: new Set(scores.map(function(s){ return s.song; })).size, lbl: '歌曲數'},
+    {val: songs.size, lbl: '歌曲數'},
     {val: maxScore, lbl: '最高分'},
     {val: new Set(scores.map(function(s){ return s.name; })).size, lbl: '玩家數'},
   ].map(function(x){
@@ -2389,20 +2381,38 @@ function _renderAdminPanelUI(scores) {
   }).join('');
 
   var listEl = document.getElementById('admin-lb-list');
+
+  // 排序按鈕
+  var sortBar = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">' +
+    [['time_desc','🕐 最新→最舊'],['time_asc','🕐 最舊→最新'],['song','🎵 依歌曲'],['score','🏆 依分數']].map(function(item){
+      var key = item[0], label = item[1];
+      var active = curSort === key;
+      return '<button onclick="window._adminSort=\''+key+'\';_renderAdminPanelUI(window._adminScores);" style="padding:4px 10px;border-radius:12px;border:1px solid var(--pink);font-size:11px;cursor:pointer;font-family:inherit;'+
+        (active ? 'background:var(--pink);color:#fff;' : 'background:transparent;color:var(--pink);') + '">'+label+'</button>';
+    }).join('') + '</div>';
+
   if (!scores.length) {
-    listEl.innerHTML = '<div style="color:var(--text2);text-align:center;padding:16px;font-size:12px">尚無記錄</div>';
+    listEl.innerHTML = sortBar + '<div style="color:var(--text2);text-align:center;padding:16px;font-size:12px">尚無記錄</div>';
     return;
   }
-  listEl.innerHTML = scores.map(function(s, i) {
+
+  // 排序
+  var sorted = scores.slice();
+  if (curSort === 'time_desc') sorted.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+  else if (curSort === 'time_asc') sorted.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+  else if (curSort === 'song') sorted.sort(function(a,b){ return (a.songId||a.song||'').localeCompare(b.songId||b.song||''); });
+  else sorted.sort(function(a,b){ return (b.score||0)-(a.score||0); });
+
+  listEl.innerHTML = sortBar + sorted.map(function(s, i) {
     return '<div class="lb-admin-row">' +
-      '<div style="font-family:inherit;font-size:11px;color:var(--text2);width:20px">'+(i+1)+'</div>' +
+      '<div style="font-family:inherit;font-size:11px;color:var(--text2);width:24px;flex-shrink:0">'+(i+1)+'</div>' +
       '<img class="lb-admin-av" src="'+(s.avatarSrc||'')+'" onerror="this.style.display=\'none\'" alt="">' +
       '<div class="lb-admin-info">' +
         '<div class="lb-admin-name">'+s.name+'</div>' +
-        '<div class="lb-admin-meta">'+s.song+' · '+s.diff.toUpperCase()+' · '+s.date+'</div>' +
+        '<div class="lb-admin-meta">'+(s.song||s.songId||'')+' · '+(s.diff||'').toUpperCase()+' · '+s.date+'</div>' +
       '</div>' +
-      '<div class="lb-admin-score">'+s.score.toLocaleString()+'</div>' +
-      '<button class="lb-admin-del" onclick="adminDeleteScore('+i+')" title="刪除">×</button>' +
+      '<div class="lb-admin-score">'+(s.score||0).toLocaleString()+'</div>' +
+      '<button class="lb-admin-del" onclick="adminDeleteScore(\''+s.key+'\')" title="刪除">×</button>' +
     '</div>';
   }).join('');
 }
