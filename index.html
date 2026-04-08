@@ -2336,21 +2336,43 @@ function adminDeleteScore(idx) {
 // Admin: render panel reads from Firebase if available
 function renderAdminPanel() {
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores').limitToLast(200)
+    // limitToLast 不加 orderByChild，避免需要 Firebase index
+    firebaseDb.ref('scores').limitToLast(500)
       .once('value')
       .then(function(snapshot) {
         var scores = [];
         snapshot.forEach(function(child) {
-          scores.push(Object.assign({key: child.key}, child.val()));
+          var v = child.val();
+          if (v && v.name) scores.push(Object.assign({key: child.key}, v));
         });
         scores.sort(function(a,b){ return b.score - a.score; });
-        // Also save to localStorage for reference
-        localStorage.setItem('vPartyScores', JSON.stringify(scores.slice(0,20)));
         _renderAdminPanelUI(scores);
       })
-      .catch(function() { _renderAdminPanelUI(JSON.parse(localStorage.getItem('vPartyScores')||'[]')); });
+      .catch(function(e) {
+        console.warn('Admin Firebase failed:', e.message);
+        // fallback: 合併所有 localStorage
+        var all = [];
+        ['song001','song002','song003','song004','song005'].forEach(function(sid){
+          var k = 'vPartyScores_'+sid;
+          var d = JSON.parse(localStorage.getItem(k)||'[]');
+          all = all.concat(d);
+        });
+        // 也讀舊的 vPartyScores
+        var old = JSON.parse(localStorage.getItem('vPartyScores')||'[]');
+        all = all.concat(old);
+        all.sort(function(a,b){return b.score-a.score;});
+        _renderAdminPanelUI(all);
+      });
   } else {
-    _renderAdminPanelUI(JSON.parse(localStorage.getItem('vPartyScores')||'[]'));
+    var all = [];
+    ['song001','song002','song003','song004','song005'].forEach(function(sid){
+      var d = JSON.parse(localStorage.getItem('vPartyScores_'+sid)||'[]');
+      all = all.concat(d);
+    });
+    var old = JSON.parse(localStorage.getItem('vPartyScores')||'[]');
+    all = all.concat(old);
+    all.sort(function(a,b){return b.score-a.score;});
+    _renderAdminPanelUI(all);
   }
 }
 
