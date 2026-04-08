@@ -832,7 +832,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.2.0</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.0</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -959,6 +959,7 @@ body.portrait-game #s-admin {
 <div id="s-lb" class="screen off">
   <div id="lb-inner">
     <h2 id="lb-title">🏆 排行榜</h2>
+    <div id="lb-song-tabs" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:4px 0 8px;"></div>
     <div id="lb-list"></div>
     <div style="height:60px;"></div><!-- spacer for fixed button -->
   </div>
@@ -1204,7 +1205,7 @@ document.getElementById('btn-start').onclick        = initGame;
 document.getElementById('btn-resume').onclick       = resumeGame;
 document.getElementById('btn-quit').onclick         = quitGame;
 document.getElementById('btn-retry').onclick        = initGame;
-document.getElementById('btn-r-lb').onclick         = function(){ renderLB(); go('s-lb'); };
+document.getElementById('btn-r-lb').onclick = function(){ lbSongId=(G.song&&G.song.id)||'song001'; renderLB(); go('s-lb'); };
 document.getElementById('btn-r-home').onclick       = function(){ go('s-title'); };
 document.getElementById('btn-lb-home').onclick      = function(){ go('s-title'); };
 // leaderboard clear: admin-only
@@ -2090,7 +2091,7 @@ function saveScore(grade, acc) {
     if (!firebaseDb) _doInitFirebase(); // ensure connected
   }
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores/' + (entry.songId||'song001')).push(entry).catch(function(e) {
+    firebaseDb.ref('scores').push(entry).catch(function(e) {
       console.warn('[Firebase] Write failed:', e.message);
     });
   }
@@ -2109,31 +2110,56 @@ function saveScore(grade, acc) {
 
 // Render leaderboard: prefer Firebase if available, else localStorage
 function renderLB() {
-  var lt=document.getElementById('lb-title');  var tabs=document.getElementById('lb-song-tabs');  function _renderTabs(){    if(!lt||!tabs||!SONGS||!SONGS.length)return;    var cs=SONGS.find(function(x){return x.id===lbSongId;});    lt.textContent='🏆 '+(cs?cs.title:'排行榜');    tabs.innerHTML='';    SONGS.forEach(function(s){      var b=document.createElement('button');      b.textContent=s.title;      b.style='padding:4px 12px;border-radius:20px;border:2px solid var(--pink);cursor:pointer;font-size:12px;font-family:inherit;margin:2px;'+        (s.id===lbSongId?'background:var(--pink);color:#fff;':'background:transparent;color:var(--pink);');      b.onclick=function(){lbSongId=s.id;renderLB();};      tabs.appendChild(b);    });  }  if(SONGS&&SONGS.length){_renderTabs();}  else{fetch('./songs.json').then(function(r){return r.json();}).then(function(d){SONGS=d;_renderTabs();}).catch(function(){});}
+  var lt = document.getElementById('lb-title');
+  var tabs = document.getElementById('lb-song-tabs');
 
-  var _lt=document.getElementById('lb-title');if(_lt&&SONGS&&SONGS.length){var _s=SONGS.find(function(x){return x.id===lbSongId;});_lt.textContent='🏆 '+(_s?_s.title:'排行榜');}
-  if (FIREBASE_ENABLED) {
-    if (firebaseDb) {
+  function _doRender() {
+    // 更新標題
+    if (lt && SONGS && SONGS.length) {
+      var cs = SONGS.find(function(x){ return x.id === lbSongId; });
+      lt.textContent = '🏆 ' + (cs ? cs.title : '排行榜');
+    }
+    // 渲染歌曲選擇 tabs
+    if (tabs && SONGS && SONGS.length) {
+      tabs.innerHTML = '';
+      SONGS.forEach(function(s) {
+        var b = document.createElement('button');
+        b.textContent = s.title;
+        var isActive = s.id === lbSongId;
+        b.style = 'padding:6px 16px;border-radius:20px;border:2px solid var(--pink);cursor:pointer;' +
+          'font-size:13px;font-family:inherit;margin:2px;transition:all .15s;' +
+          (isActive ? 'background:var(--pink);color:#fff;font-weight:800;' : 'background:transparent;color:var(--pink);');
+        b.onclick = function(){ lbSongId = s.id; renderLB(); };
+        tabs.appendChild(b);
+      });
+    }
+    // 讀取排行榜資料
+    if (FIREBASE_ENABLED && firebaseDb) {
       renderLBFromFirebase();
-    } else {
-      // Firebase not ready yet — try to init then retry once
+    } else if (FIREBASE_ENABLED) {
       _doInitFirebase();
       if (firebaseDb) {
         renderLBFromFirebase();
       } else {
-        // Show local first, then replace when Firebase loads
         renderLBFromLocal();
-        var checkInterval = setInterval(function() {
-          if (firebaseDb) {
-            clearInterval(checkInterval);
-            renderLBFromFirebase();
-          }
+        var ci = setInterval(function() {
+          if (firebaseDb) { clearInterval(ci); renderLBFromFirebase(); }
         }, 300);
-        setTimeout(function(){ clearInterval(checkInterval); }, 5000);
+        setTimeout(function(){ clearInterval(ci); }, 5000);
       }
+    } else {
+      renderLBFromLocal();
     }
+  }
+
+  // 如果 SONGS 還沒載入，先 fetch 再渲染
+  if (SONGS && SONGS.length) {
+    _doRender();
   } else {
-    renderLBFromLocal();
+    fetch('./songs.json?' + Date.now())
+      .then(function(r){ return r.json(); })
+      .then(function(d){ SONGS = d; _doRender(); })
+      .catch(function(){ _doRender(); }); // 就算 fetch 失敗也繼續顯示排行榜
   }
 }
 
@@ -2142,7 +2168,7 @@ function renderLBFromFirebase() {
   el.innerHTML = '<div class="lb-loading">載入中... 🌸</div>';
 
   // 取前100筆，做去重後只保留每人最高分，再取前15
-  firebaseDb.ref('scores/'+(lbSongId||'song001')).orderByChild('score').limitToLast(100)
+  firebaseDb.ref('scores').orderByChild('score').limitToLast(200)
     .once('value')
     .then(function(snapshot) {
       var all = [];
@@ -2179,7 +2205,7 @@ function renderLBFromFirebase() {
           showPlayerRankBanner(myIdx + 1, deduped[myIdx].score, deduped.length);
         } else {
           // 不在 top100 裡，再查全部
-          firebaseDb.ref('scores/'+(lbSongId||'song001')).orderByChild('score')
+          firebaseDb.ref('scores').orderByChild('score').limitToLast(500)
             .once('value')
             .then(function(allSnap) {
               var allScores = [];
@@ -2310,7 +2336,7 @@ function adminDeleteScore(idx) {
 // Admin: render panel reads from Firebase if available
 function renderAdminPanel() {
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores/'+(lbSongId||'song001')).orderByChild('score').limitToLast(100)
+    firebaseDb.ref('scores').orderByChild('score').limitToLast(200)
       .once('value')
       .then(function(snapshot) {
         var scores = [];
