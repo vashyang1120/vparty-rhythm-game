@@ -832,7 +832,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.3</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -2343,6 +2343,8 @@ function adminDeleteScore(key) {
 
 // Admin: render panel reads from Firebase if available
 function renderAdminPanel() {
+  // 確保 Firebase 已初始化（不論從哪裡進入後台都能讀到資料）
+  if (FIREBASE_ENABLED && !firebaseDb) _doInitFirebase();
   if (FIREBASE_ENABLED && firebaseDb) {
     firebaseDb.ref('scores').limitToLast(300)
       .once('value')
