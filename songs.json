@@ -11,34 +11,13 @@
     "cover": "",
     "beatmapUrl": "songs/song001/beatmap.json",
     "lyrics": [
-      {
-        "t": 4,
-        "text": "在小V派對裡夢想 🎈"
-      },
-      {
-        "t": 14,
-        "text": "跟著節奏一起跳！"
-      },
-      {
-        "t": 36,
-        "text": "副歌要來了——"
-      },
-      {
-        "t": 52,
-        "text": "魔法降臨！衝！"
-      },
-      {
-        "t": 68,
-        "text": "再來一段！"
-      },
-      {
-        "t": 84,
-        "text": "最強高潮！🌟"
-      },
-      {
-        "t": 100,
-        "text": "最後衝刺！"
-      }
+      {"t": 4, "text": "在小V派對裡夢想 🎈"},
+      {"t": 14, "text": "跟著節奏一起跳！"},
+      {"t": 36, "text": "副歌要來了——"},
+      {"t": 52, "text": "魔法降臨！衝！"},
+      {"t": 68, "text": "再來一段！"},
+      {"t": 84, "text": "最強高潮！🌟"},
+      {"t": 100, "text": "最後衝刺！"}
     ]
   },
   {
@@ -53,22 +32,28 @@
     "cover": "",
     "beatmapUrl": "songs/song002/beatmap.json",
     "lyrics": [
-      {
-        "t": 4,
-        "text": "🎈 V-MEN"
-      },
-      {
-        "t": 32,
-        "text": "節奏起來！"
-      },
-      {
-        "t": 64,
-        "text": "副歌！衝！🔥"
-      },
-      {
-        "t": 96,
-        "text": "最後衝刺！💪"
-      }
+      {"t": 4, "text": "🎈 V-MEN"},
+      {"t": 32, "text": "節奏起來！"},
+      {"t": 64, "text": "副歌！衝！🔥"},
+      {"t": 96, "text": "最後衝刺！💪"}
+    ]
+  },
+  {
+    "id": "song003",
+    "title": "掌心的初光",
+    "artist": "氣球小V",
+    "audioUrl": "songs/song003/audio.mp3",
+    "videoUrl": "",
+    "youtubeId": "3pjsm5tqO1g",
+    "bpm": 110,
+    "duration": 123,
+    "cover": "",
+    "beatmapUrl": "songs/song003/beatmap.json",
+    "lyrics": [
+      {"t": 4, "text": "掌心的初光 ✨"},
+      {"t": 32, "text": "節奏起來！"},
+      {"t": 64, "text": "副歌！衝！🔥"},
+      {"t": 96, "text": "最後衝刺！💪"}
     ]
   }
 ]
