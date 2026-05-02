@@ -55,5 +55,23 @@
       {"t": 64, "text": "副歌！衝！🔥"},
       {"t": 96, "text": "最後衝刺！💪"}
     ]
+  },
+  {
+    "id": "song004",
+    "title": "一顆氣球的重量",
+    "artist": "氣球小V",
+    "audioUrl": "songs/song004/audio.mp3",
+    "videoUrl": "",
+    "youtubeId": "lRf6kooac1w",
+    "bpm": 136,
+    "duration": 259,
+    "cover": "",
+    "beatmapUrl": "songs/song004/beatmap.json",
+    "lyrics": [
+      {"t": 4, "text": "一顆氣球的重量 🎈"},
+      {"t": 64, "text": "節奏起來！"},
+      {"t": 128, "text": "副歌！衝！🔥"},
+      {"t": 200, "text": "最後衝刺！💪"}
+    ]
   }
 ]
