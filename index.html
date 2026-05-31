@@ -839,7 +839,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.10</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.11</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1883,7 +1883,7 @@ function updateLyrics() {
   var gtSec = G.gt / 1000;
   var cur = null;
   for (var i=0; i<ly.length; i++) {
-    var tSec = (ly[i].t >= 100 ? ly[i].t/1000 : ly[i].t) - 2.88;
+    var tSec = ly[i].t >= 100 ? ly[i].t/1000 : ly[i].t;
     if (tSec <= gtSec) cur = ly[i];
     else break;
   }
