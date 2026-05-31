@@ -839,7 +839,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.12</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.13</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1760,6 +1760,18 @@ function moveNotes() {
         // shrinking tail extends to the right of hitzone as hold progresses
         n.tailEl.style.left = (hzPx + 13) + 'px';
         n.tailEl.style.width = (rem * pxMs) + 'px';
+        // flip gradient so left (near hitzone) is solid, right (tip) fades out
+        if (!n._tailFlipped) {
+          n._tailFlipped = true;
+          var colors = [
+            'rgba(255,133,161,',
+            'rgba(255,209,102,',
+            'rgba(62,207,142,',
+            'rgba(199,125,255,'
+          ];
+          var c = colors[lane];
+          n.tailEl.style.background = 'linear-gradient(to right,'+c+'.9),'+c+'.15))';
+        }
         if (rem <= 0 && !n.holdScored) finishHold(n);
       }
     } else {
