@@ -73,5 +73,23 @@
       {"t": 128, "text": "副歌！衝！🔥"},
       {"t": 200, "text": "最後衝刺！💪"}
     ]
+  },
+  {
+    "id": "song005",
+    "title": "夢想啟動時",
+    "artist": "氣球小V",
+    "audioUrl": "songs/song005/audio.mp3",
+    "videoUrl": "",
+    "youtubeId": "4Y_PF9s-Dhw",
+    "bpm": 93,
+    "duration": 112,
+    "cover": "",
+    "beatmapUrl": "songs/song005/beatmap.json",
+    "lyrics": [
+      {"t": 4, "text": "夢想啟動時 🌟"},
+      {"t": 32, "text": "節奏起來！"},
+      {"t": 64, "text": "副歌！衝！🔥"},
+      {"t": 96, "text": "最後衝刺！💪"}
+    ]
   }
 ]
