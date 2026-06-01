@@ -123,6 +123,11 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   color:#fff; box-shadow:0 4px 16px rgba(255,190,11,.4);
 }
 .btn-y:hover { transform:translateY(-1px); }
+.btn-b {
+  background:linear-gradient(135deg,#4cc9f0,#4361ee);
+  color:#fff; box-shadow:0 4px 16px rgba(67,97,238,.35);
+}
+.btn-b:hover { transform:translateY(-1px); }
 
 .btn-outline {
   background:#fff; border:2px solid var(--pink-lt);
@@ -228,30 +233,35 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 }
 #s-songlist h2 { font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive; color:var(--pink2); font-size:20px; letter-spacing:.08em; }
 #song-cards {
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
-  gap:12px; width:min(680px,94vw); max-height:50vh; overflow-y:auto;
+  display:flex; align-items:center; justify-content:center;
+  gap:0; width:min(500px,94vw); position:relative;
 }
+.song-nav {
+  background:none; border:none; cursor:pointer; font-size:32px;
+  color:var(--pink2); padding:8px; flex-shrink:0;
+  transition:transform .15s; user-select:none;
+}
+.song-nav:hover { transform:scale(1.2); }
+.song-nav:disabled { opacity:.2; cursor:default; transform:none; }
 .song-card {
   background:#fff; border:2px solid var(--pink-lt); border-radius:var(--r-md);
-  cursor:pointer; transition:all .2s; overflow:hidden;
+  cursor:default; overflow:hidden;
   box-shadow:var(--shadow-sm); display:flex; flex-direction:column;
-}
-.song-card:hover { border-color:var(--pink); transform:translateY(-3px);
-  box-shadow:0 8px 24px rgba(232,111,154,.25); }
-.song-card.selected {
-  border-color:var(--pink); background:var(--pink-bg);
+  width:min(320px,70vw); flex-shrink:0;
+  border-color:var(--pink);
   box-shadow:0 0 0 3px rgba(255,133,161,.25), 0 8px 24px rgba(232,111,154,.3);
 }
 .song-card-thumb {
-  width:100%; height:90px; background:linear-gradient(135deg,var(--pink-bg),var(--purple-bg));
-  display:flex; align-items:center; justify-content:center; font-size:32px; overflow:hidden;
+  width:100%; height:180px; background:linear-gradient(135deg,var(--pink-bg),var(--purple-bg));
+  display:flex; align-items:center; justify-content:center; font-size:48px; overflow:hidden;
 }
 .song-card-thumb img { width:100%; height:100%; object-fit:cover; }
 .song-card-body { padding:10px 12px; }
-.song-card-title { font-size:13px; font-weight:800; color:var(--text); margin-bottom:2px; }
-.song-card-artist { font-size:11px; color:var(--text2); font-weight:600; }
+.song-card-title { font-size:15px; font-weight:800; color:var(--text); margin-bottom:2px; text-align:center; }
+.song-card-artist { font-size:12px; color:var(--text2); font-weight:600; text-align:center; }
 .song-card-meta { display:flex; justify-content:space-between; margin-top:5px;
   font-size:10px; color:var(--text2); font-weight:700; }
+.song-counter { font-size:11px; color:var(--text2); font-weight:700; letter-spacing:.08em; }
 
 /* Difficulty row */
 #diff-wrap { display:flex; flex-direction:column; gap:8px; width:min(340px,92vw); align-items:center; }
@@ -839,14 +849,14 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.3.17</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.1</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
   </div>
   <div class="btn-row" style="margin-top:8px;">
-    <button class="btn btn-s" onclick="window.open('https://youtube.com/playlist?list=PLCxWyaG1VhB7wvvXJtJ3T8qfxNM6wOUQx&si=EosteOeSS8U4zSjG','_blank')">🎬 觀看MV</button>
-    <button class="btn btn-s" onclick="history.back()">← 回到遊戲選單</button>
+    <button class="btn btn-b" onclick="window.open('https://youtube.com/playlist?list=PLCxWyaG1VhB7wvvXJtJ3T8qfxNM6wOUQx&si=EosteOeSS8U4zSjG','_blank')">🎬 觀看MV</button>
+    <button class="btn btn-y" style="color:#7a5500;" onclick="history.back()">← 回到遊戲選單</button>
   </div>
   <div style="position:absolute;bottom:12px;font-size:10px;color:#222;letter-spacing:.1em;text-align:center">
     📱 直向手機自動旋轉 · 點擊軌道打擊 · 長按接 Hold<br>
@@ -881,7 +891,12 @@ body.portrait-game #s-admin {
 <!-- SONG LIST -->
 <div id="s-songlist" class="screen off">
   <h2>🎵 選擇歌曲</h2>
-  <div id="song-cards"></div>
+  <div id="song-cards">
+    <button class="song-nav" id="song-prev">&#9664;</button>
+    <div id="song-card-wrap"></div>
+    <button class="song-nav" id="song-next">&#9654;</button>
+  </div>
+  <div class="song-counter" id="song-counter"></div>
   <div id="diff-wrap">
     <label>難度</label>
     <div class="drow">
@@ -1260,30 +1275,30 @@ function loadSongs() {
     });
 }
 
+var songIdx = 0;
 function renderSongCards() {
-  var c = document.getElementById('song-cards');
-  c.innerHTML = '';
-  SONGS.forEach(function(song, i) {
-    var card = document.createElement('div');
-    card.className = 'song-card';
-    var coverUrl = song.cover || (song.youtubeId ? 'https://img.youtube.com/vi/'+song.youtubeId+'/hqdefault.jpg' : '');
-    var thumb = coverUrl ? '<img src="'+coverUrl+'" alt="" onerror="this.style.display=\'none\'">' : '🎈';
-    card.innerHTML =
+  if (!SONGS.length) return;
+  songIdx = Math.max(0, Math.min(songIdx, SONGS.length - 1));
+  var song = SONGS[songIdx];
+  selectedSong = song;
+  var coverUrl = song.cover || (song.youtubeId ? 'https://img.youtube.com/vi/'+song.youtubeId+'/hqdefault.jpg' : '');
+  var thumb = coverUrl ? '<img src="'+coverUrl+'" alt="" onerror="this.style.display=\'none\'">' : '🎈';
+  var wrap = document.getElementById('song-card-wrap');
+  wrap.innerHTML =
+    '<div class="song-card">'+
       '<div class="song-card-thumb">'+thumb+'</div>'+
       '<div class="song-card-body">'+
         '<div class="song-card-title">'+song.title+'</div>'+
         '<div class="song-card-artist">'+(song.artist||'')+'</div>'+
         '<div class="song-card-meta"><span>'+song.duration+'s</span><span>BPM '+(song.bpm||110)+'</span></div>'+
-      '</div>';
-    card.onclick = function(){
-      document.querySelectorAll('.song-card').forEach(function(c){ c.classList.remove('selected'); });
-      card.classList.add('selected');
-      selectedSong = song;
-    };
-    c.appendChild(card);
-    if (i === 0) { card.classList.add('selected'); selectedSong = song; }
-  });
+      '</div>'+
+    '</div>';
+  document.getElementById('song-counter').textContent = (songIdx+1) + ' / ' + SONGS.length;
+  document.getElementById('song-prev').disabled = songIdx === 0;
+  document.getElementById('song-next').disabled = songIdx === SONGS.length - 1;
 }
+document.getElementById('song-prev').onclick = function(){ if(songIdx>0){ songIdx--; renderSongCards(); } };
+document.getElementById('song-next').onclick = function(){ if(songIdx<SONGS.length-1){ songIdx++; renderSongCards(); } };
 
 // ═══════════════════════════════════════════════════════
 //  SRT
