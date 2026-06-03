@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-test-4</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-debug-test</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -2172,39 +2172,62 @@ var FIREBASE_CONFIG = {
 };
 var FIREBASE_ENABLED = true;
 var firebaseDb = null;
+var firebaseAuthReady = false;
+var firebaseInitPromise = null;
 
-function initFirebase() {
-  if (!FIREBASE_ENABLED) return;
-  // If SDK not loaded yet, retry up to 20 times (every 250ms = 5s total)
-  if (typeof firebase === 'undefined') {
-    var attempts = 0;
-    var retry = setInterval(function() {
-      attempts++;
-      if (typeof firebase !== 'undefined') {
-        clearInterval(retry);
-        _doInitFirebase();
-      } else if (attempts >= 20) {
-        clearInterval(retry);
-        console.warn('[Firebase] SDK never loaded');
+function ensureFirebaseReady() {
+  if (!FIREBASE_ENABLED) return Promise.resolve(false);
+  if (firebaseAuthReady && firebaseDb) return Promise.resolve(true);
+  if (firebaseInitPromise) return firebaseInitPromise;
+
+  firebaseInitPromise = new Promise(function(resolve) {
+    function start() {
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        firebase.auth().signInAnonymously()
+          .then(function() {
+            firebaseDb = firebase.database();
+            firebaseAuthReady = true;
+            console.log('[Firebase] Auth + DB ready ✓');
+            resolve(true);
+          })
+          .catch(function(err) {
+            console.warn('[Firebase] 匿名登入失敗', err);
+            firebaseDb = null;
+            firebaseAuthReady = false;
+            resolve(false);
+          });
+      } catch(e) {
+        console.warn('[Firebase] Init failed:', e.message);
+        firebaseDb = null;
+        firebaseAuthReady = false;
+        resolve(false);
       }
-    }, 250);
-    return;
-  }
-  _doInitFirebase();
+    }
+
+    if (typeof firebase === 'undefined') {
+      var attempts = 0;
+      var retry = setInterval(function() {
+        attempts++;
+        if (typeof firebase !== 'undefined') {
+          clearInterval(retry);
+          start();
+        } else if (attempts >= 20) {
+          clearInterval(retry);
+          console.warn('[Firebase] SDK never loaded');
+          resolve(false);
+        }
+      }, 250);
+    } else {
+      start();
+    }
+  });
+
+  return firebaseInitPromise;
 }
 
-function _doInitFirebase() {
-  try {
-    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    firebase.auth().signInAnonymously().catch(function(err) {
-      console.warn('匿名登入失敗', err);
-    });
-    firebaseDb = firebase.database();
-    console.log('[Firebase] Connected ✓');
-  } catch(e) {
-    console.warn('[Firebase] Init failed:', e.message);
-    firebaseDb = null;
-  }
+function initFirebase() {
+  ensureFirebaseReady();
 }
 
 // Save score to Firebase gameLogs + leaderboards + localStorage fallback
@@ -2251,51 +2274,52 @@ function saveScore(grade, acc) {
     updatedAt:        now
   };
 
-  if (FIREBASE_ENABLED) {
-    if (!firebaseDb) _doInitFirebase();
-  }
-
-  if (FIREBASE_ENABLED && firebaseDb) {
-    // 1. 寫 gameLogs（TEST_MODE=true 寫 dev/gameLogs/rhythm）
-    firebaseDb.ref(DB_PATHS.gameLogs).push(logEntry).catch(function(e) {
-      console.warn('[Firebase] gameLogs write failed:', e.message);
-    });
-
-    // 2. 寫 scores（TEST_MODE=true 寫 dev/scores，不寫正式 scores）
-    firebaseDb.ref(DB_PATHS.writeScores).push(logEntry).then(function() {
-      firebaseDb.ref(DB_PATHS.writeScores).once('value', function(snap) {
-        if (snap.numChildren() > 300) {
-          var oldestKey = null, oldestTs = Infinity;
-          snap.forEach(function(c) {
-            var ts = c.val() && c.val().ts;
-            if (ts && ts < oldestTs) { oldestTs = ts; oldestKey = c.key; }
-          });
-          if (oldestKey) firebaseDb.ref(DB_PATHS.writeScores + '/' + oldestKey).remove();
-        }
-      });
-    }).catch(function(e) {
-      console.warn('[Firebase] scores write failed:', e.message);
-    });
-
-    // 3. 更新 leaderboards（TEST_MODE=true 寫 dev/leaderboards/rhythm）
-    var lbPath = DB_PATHS.leaderboardsBase + '/' + songId + '/' + diff + '/' + pKey;
-    firebaseDb.ref(lbPath).once('value').then(function(snap) {
-      var existing = snap.val();
-      if (!existing || G.score > (existing.bestScore || 0)) {
-        return firebaseDb.ref(lbPath).set(lbEntry);
-      }
-    }).catch(function(e) {
-      console.warn('[Firebase] leaderboard update failed:', e.message);
-    });
-  }
-
-  // ── localStorage fallback ──
+  // ── localStorage fallback（立即執行）──
   var key = 'vPartyScores_' + songId;
   var arr = JSON.parse(localStorage.getItem(key) || '[]');
   arr.push(logEntry);
   arr.sort(function(a,b){ return b.score - a.score; });
   var top = arr.slice(0, 20);
   localStorage.setItem(key, JSON.stringify(top));
+
+  // ── Firebase 寫入（等待 auth 完成後在背景執行）──
+  if (FIREBASE_ENABLED) {
+    ensureFirebaseReady().then(function(ok) {
+      if (!ok || !firebaseDb) return;
+
+      // 1. 寫 gameLogs
+      firebaseDb.ref(DB_PATHS.gameLogs).push(logEntry).catch(function(e) {
+        console.warn('[Firebase] gameLogs write failed:', e.message);
+      });
+
+      // 2. 寫 scores
+      firebaseDb.ref(DB_PATHS.writeScores).push(logEntry).then(function() {
+        firebaseDb.ref(DB_PATHS.writeScores).once('value', function(snap) {
+          if (snap.numChildren() > 300) {
+            var oldestKey = null, oldestTs = Infinity;
+            snap.forEach(function(c) {
+              var ts = c.val() && c.val().ts;
+              if (ts && ts < oldestTs) { oldestTs = ts; oldestKey = c.key; }
+            });
+            if (oldestKey) firebaseDb.ref(DB_PATHS.writeScores + '/' + oldestKey).remove();
+          }
+        });
+      }).catch(function(e) {
+        console.warn('[Firebase] scores write failed:', e.message);
+      });
+
+      // 3. 更新 leaderboards
+      var lbPath = DB_PATHS.leaderboardsBase + '/' + songId + '/' + diff + '/' + pKey;
+      firebaseDb.ref(lbPath).once('value').then(function(snap) {
+        var existing = snap.val();
+        if (!existing || G.score > (existing.bestScore || 0)) {
+          return firebaseDb.ref(lbPath).set(lbEntry);
+        }
+      }).catch(function(e) {
+        console.warn('[Firebase] leaderboard update failed:', e.message);
+      });
+    });
+  }
 
   return top[0].score === G.score && top.filter(function(x){ return x.score === G.score; }).length === 1;
 }
@@ -2326,19 +2350,14 @@ function renderLB() {
       });
     }
     // 讀取排行榜資料
-    if (FIREBASE_ENABLED && firebaseDb) {
-      renderLBFromFirebase();
-    } else if (FIREBASE_ENABLED) {
-      _doInitFirebase();
-      if (firebaseDb) {
-        renderLBFromFirebase();
-      } else {
-        renderLBFromLocal();
-        var ci = setInterval(function() {
-          if (firebaseDb) { clearInterval(ci); renderLBFromFirebase(); }
-        }, 300);
-        setTimeout(function(){ clearInterval(ci); }, 5000);
-      }
+    if (FIREBASE_ENABLED) {
+      ensureFirebaseReady().then(function(ok) {
+        if (ok && firebaseDb) {
+          renderLBFromFirebase();
+        } else {
+          renderLBFromLocal();
+        }
+      });
     } else {
       renderLBFromLocal();
     }
@@ -2542,11 +2561,13 @@ function adminClearAll() {
     : '這會清除 scores 與 leaderboards/rhythm，但不會刪除 gameLogs。確定要清空排行榜資料嗎？';
   if (!confirm(msg)) return;
   localStorage.removeItem('vPartyScores');
-  if (FIREBASE_ENABLED && firebaseDb) {
+  if (!FIREBASE_ENABLED) { renderAdminPanel(); return; }
+  ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) { alert('Firebase 尚未登入成功，請稍後再試'); return; }
     firebaseDb.ref(DB_PATHS.writeScores).remove().catch(function(e){ console.warn('[Firebase] Clear scores failed:', e); });
     firebaseDb.ref(DB_PATHS.leaderboardsBase).remove().catch(function(e){ console.warn('[Firebase] Clear leaderboards failed:', e); });
-  }
-  renderAdminPanel();
+    renderAdminPanel();
+  });
 }
 
 // Admin: delete single score
@@ -2556,62 +2577,64 @@ function adminDeleteScore(key, source) {
     return;
   }
   if (!confirm('確定刪除這筆記錄？')) return;
-  if (FIREBASE_ENABLED && firebaseDb && key) {
+  if (!FIREBASE_ENABLED) { renderAdminPanel(); return; }
+  ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) { alert('Firebase 尚未登入成功，請稍後再試'); return; }
     var path = source === 'gameLogs'
       ? DB_PATHS.gameLogs + '/' + key
       : DB_PATHS.writeScores + '/' + key;
     firebaseDb.ref(path).remove()
       .then(function(){ renderAdminPanel(); })
       .catch(function(e){ console.warn('Delete failed:', e); renderAdminPanel(); });
-  } else {
-    renderAdminPanel();
-  }
+  });
 }
 
 // Admin: render panel - 合併顯示 gameLogs + legacyScores + devScores
 function renderAdminPanel() {
-  if (FIREBASE_ENABLED && !firebaseDb) _doInitFirebase();
-  if (!FIREBASE_ENABLED || !firebaseDb) { _renderAdminPanelUI([]); return; }
+  if (!FIREBASE_ENABLED) { _renderAdminPanelUI([]); return; }
+  ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) { _renderAdminPanelUI([]); return; }
 
-  var p1 = firebaseDb.ref(DB_PATHS.gameLogs).limitToLast(300)
-    .once('value').then(function(snap) {
-      var arr = [];
-      snap.forEach(function(child) {
-        var v = child.val();
-        if (v && v.name) arr.push(Object.assign({}, v, {key: child.key, _source: 'gameLogs'}));
-      });
-      return arr;
-    }).catch(function() { return []; });
+    var p1 = firebaseDb.ref(DB_PATHS.gameLogs).limitToLast(300)
+      .once('value').then(function(snap) {
+        var arr = [];
+        snap.forEach(function(child) {
+          var v = child.val();
+          if (v && v.name) arr.push(Object.assign({}, v, {key: child.key, _source: 'gameLogs'}));
+        });
+        return arr;
+      }).catch(function() { return []; });
 
-  var p2 = firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300)
-    .once('value').then(function(snap) {
-      var arr = [];
-      snap.forEach(function(child) {
-        var v = child.val();
-        if (v && v.name) arr.push(Object.assign({}, v, {key: child.key, _source: 'legacyScores'}));
-      });
-      return arr;
-    }).catch(function() { return []; });
+    var p2 = firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300)
+      .once('value').then(function(snap) {
+        var arr = [];
+        snap.forEach(function(child) {
+          var v = child.val();
+          if (v && v.name) arr.push(Object.assign({}, v, {key: child.key, _source: 'legacyScores'}));
+        });
+        return arr;
+      }).catch(function() { return []; });
 
-  var p3 = (DB_PATHS.writeScores !== DB_PATHS.legacyScoresReadOnly)
-    ? firebaseDb.ref(DB_PATHS.writeScores).limitToLast(300)
-        .once('value').then(function(snap) {
-          var arr = [];
-          snap.forEach(function(child) {
-            var v = child.val();
-            if (v && v.name) arr.push(Object.assign({}, v, {key: child.key, _source: 'devScores'}));
-          });
-          return arr;
-        }).catch(function() { return []; })
-    : Promise.resolve([]);
+    var p3 = (DB_PATHS.writeScores !== DB_PATHS.legacyScoresReadOnly)
+      ? firebaseDb.ref(DB_PATHS.writeScores).limitToLast(300)
+          .once('value').then(function(snap) {
+            var arr = [];
+            snap.forEach(function(child) {
+              var v = child.val();
+              if (v && v.name) arr.push(Object.assign({}, v, {key: child.key, _source: 'devScores'}));
+            });
+            return arr;
+          }).catch(function() { return []; })
+      : Promise.resolve([]);
 
-  Promise.all([p1, p2, p3]).then(function(results) {
-    var all = [].concat(results[0], results[1], results[2]);
-    all.sort(function(a, b) { return (b.ts || 0) - (a.ts || 0); });
-    _renderAdminPanelUI(all.slice(0, 300));
-  }).catch(function(e) {
-    console.warn('Admin merge failed:', e.message);
-    _renderAdminPanelUI([]);
+    Promise.all([p1, p2, p3]).then(function(results) {
+      var all = [].concat(results[0], results[1], results[2]);
+      all.sort(function(a, b) { return (b.ts || 0) - (a.ts || 0); });
+      _renderAdminPanelUI(all.slice(0, 300));
+    }).catch(function(e) {
+      console.warn('Admin merge failed:', e.message);
+      _renderAdminPanelUI([]);
+    });
   });
 }
 
@@ -2726,10 +2749,11 @@ function adminMigrateScores() {
     ? '測試模式：將只讀取正式 scores，並把結果寫入 dev/leaderboards/rhythm，不會修改正式資料。繼續嗎？'
     : '將舊 scores 資料遷移到新版 leaderboards？\n這個動作只需執行一次，不會清除舊資料。';
   if (!confirm(msg)) return;
-  if (!FIREBASE_ENABLED || !firebaseDb) { alert('Firebase 未連線'); return; }
+  if (!FIREBASE_ENABLED) { alert('Firebase 未啟用'); return; }
+  ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) { alert('Firebase 尚未登入成功，請稍後再試'); return; }
 
-  // 永遠從正式 scores 讀（legacyScoresReadOnly），但只寫到 leaderboardsBase（TEST_MODE=true 時為 dev）
-  firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300).once('value').then(function(snapshot) {
+    firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300).once('value').then(function(snapshot) {
     var best = {};
     snapshot.forEach(function(child) {
       var s = child.val();
@@ -2774,6 +2798,7 @@ function adminMigrateScores() {
   }).catch(function(e) {
     alert('讀取 scores 失敗：' + e.message);
   });
+  }); // end ensureFirebaseReady
 }
 
 async function adminChangePw() {
@@ -3072,6 +3097,224 @@ var AVATARS = AVATAR_KEYS.map(function(key) {
 // { audioUrl: "songs/song001/audio.mp3", videoUrl: "songs/song001/video.mp4" }
 
 
+</script>
+
+<!-- ═══ DEBUG PANEL ═══ -->
+<div id="debug-panel" style="
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:99999;
+  background:rgba(0,0,0,.92); color:#0f0; font-family:monospace; font-size:12px;
+  overflow-y:auto; padding:16px; box-sizing:border-box;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <span style="color:#ff0;font-size:16px;font-weight:bold;">🔧 v2.4.7-debug-test</span>
+    <button onclick="document.getElementById('debug-panel').style.display='none'"
+      style="background:#f00;color:#fff;border:none;padding:4px 12px;cursor:pointer;border-radius:4px;font-size:13px;">✕ 關閉</button>
+  </div>
+  <div id="debug-content">載入中...</div>
+</div>
+
+<!-- Debug 觸發按鈕（右下角） -->
+<button id="debug-trigger" onclick="showDebugPanel()"
+  style="position:fixed;bottom:60px;right:10px;z-index:9999;background:#333;color:#0f0;
+  border:1px solid #0f0;padding:4px 10px;font-size:11px;font-family:monospace;
+  cursor:pointer;border-radius:4px;opacity:.7;">DEBUG</button>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DEBUG PANEL
+// ═══════════════════════════════════════════════════════
+var _debugLastFBError = null;
+
+// Hook Firebase read errors
+(function() {
+  var origEnsure = ensureFirebaseReady;
+  window._origEnsureFirebaseReady = origEnsure;
+})();
+
+async function showDebugPanel() {
+  document.getElementById('debug-panel').style.display = 'block';
+  document.getElementById('debug-content').textContent = '收集資料中...';
+
+  var lines = [];
+
+  // ── 1. 環境 ──
+  lines.push('═══ 環境 ═══');
+  lines.push('location.href: ' + location.href);
+  lines.push('TEST_MODE: ' + TEST_MODE);
+  lines.push('BASE_PATH: "' + BASE_PATH + '"');
+  lines.push('DB_PATHS.writeScores: ' + DB_PATHS.writeScores);
+  lines.push('DB_PATHS.gameLogs: ' + DB_PATHS.gameLogs);
+  lines.push('DB_PATHS.leaderboardsBase: ' + DB_PATHS.leaderboardsBase);
+  lines.push('DB_PATHS.legacyScoresReadOnly: ' + DB_PATHS.legacyScoresReadOnly);
+
+  // ── 2. Firebase ──
+  lines.push('');
+  lines.push('═══ Firebase ═══');
+  lines.push('SDK 載入: ' + (typeof firebase !== 'undefined' ? '✅ 是' : '❌ 否'));
+  lines.push('firebaseAuthReady: ' + firebaseAuthReady);
+  lines.push('firebaseDb: ' + (firebaseDb ? '✅ 存在' : '❌ null'));
+
+  var uid = '(未登入)';
+  try {
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      var user = firebase.auth().currentUser;
+      uid = user ? user.uid : '(currentUser = null)';
+    }
+  } catch(e) { uid = '讀取失敗: ' + e.message; }
+  lines.push('currentUser uid: ' + uid);
+
+  if (_debugLastFBError) {
+    lines.push('❌ 最後 Firebase 錯誤: ' + _debugLastFBError);
+  } else {
+    lines.push('最後 Firebase 錯誤: 無');
+  }
+
+  // ── 3. 嘗試 Firebase auth ──
+  lines.push('');
+  lines.push('═══ Firebase Auth 測試 ═══');
+  try {
+    var fbOk = await ensureFirebaseReady();
+    lines.push('ensureFirebaseReady() 結果: ' + (fbOk ? '✅ OK' : '❌ 失敗'));
+    lines.push('firebaseDb after ensure: ' + (firebaseDb ? '✅ 存在' : '❌ null'));
+    var user2 = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    lines.push('currentUser after ensure: ' + (user2 ? user2.uid : 'null'));
+  } catch(e) {
+    lines.push('ensureFirebaseReady() 例外: ' + e.message);
+  }
+
+  // ── 4. 頭像 ──
+  lines.push('');
+  lines.push('═══ 頭像 ═══');
+  lines.push('AVATARS 數量: ' + (AVATARS ? AVATARS.length : '未定義'));
+  lines.push('PLAYER.avatarKey: ' + PLAYER.avatarKey);
+  lines.push('PLAYER.baseAvatarKey: ' + PLAYER.baseAvatarKey);
+  lines.push('PLAYER.displayAvatarKey: ' + PLAYER.displayAvatarKey);
+  lines.push('PLAYER.avatarSrc: ' + PLAYER.avatarSrc);
+
+  // 測試 boy1.png 載入
+  var boy1Src = resolveAssetPath('assets/avatars/boy1.png');
+  lines.push('boy1.png 預期路徑: ' + boy1Src);
+  var boy1Ok = await new Promise(function(res) {
+    var img = new Image();
+    img.onload = function() { res('✅ 載入成功'); };
+    img.onerror = function() { res('❌ 載入失敗（404 或路徑錯誤）'); };
+    img.src = boy1Src;
+  });
+  lines.push('boy1.png 載入測試: ' + boy1Ok);
+
+  // 測試目前玩家頭像
+  if (PLAYER.avatarSrc) {
+    var avOk = await new Promise(function(res) {
+      var img = new Image();
+      img.onload = function() { res('✅ 載入成功'); };
+      img.onerror = function() { res('❌ 載入失敗'); };
+      img.src = PLAYER.avatarSrc;
+    });
+    lines.push('玩家頭像載入測試 (' + PLAYER.avatarSrc + '): ' + avOk);
+  } else {
+    lines.push('玩家頭像 src 為空');
+  }
+
+  // ── 5. 歌曲 ──
+  lines.push('');
+  lines.push('═══ 歌曲資料 ═══');
+  lines.push('songs.json 是否載入: ' + (SONGS && SONGS.length > 0 ? '✅ 是，共 ' + SONGS.length + ' 首' : '❌ 未載入或空'));
+
+  if (SONGS && SONGS.length) {
+    for (var i = 0; i < SONGS.length; i++) {
+      await debugCheckSong(SONGS[i], lines);
+    }
+  }
+
+  // ── 渲染 ──
+  var el = document.getElementById('debug-content');
+  el.innerHTML = lines.map(function(l) {
+    var color = '#0f0';
+    if (l.indexOf('❌') !== -1) color = '#f66';
+    else if (l.indexOf('✅') !== -1) color = '#6f6';
+    else if (l.indexOf('═══') !== -1) color = '#ff0';
+    else if (l.indexOf('⚠️') !== -1) color = '#fa0';
+    return '<div style="color:' + color + ';margin:1px 0;white-space:pre-wrap;">' + escHtml(l) + '</div>';
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function debugCheckSong(song, lines) {
+  lines.push('');
+  lines.push('── ' + song.id + ': ' + song.title + ' ──');
+  lines.push('  audioUrl: ' + song.audioUrl);
+  lines.push('  beatmapUrl: ' + song.beatmapUrl);
+  lines.push('  srtUrl: ' + (song.srtUrl || '(無)'));
+  lines.push('  duration (songs.json): ' + song.duration + 's');
+
+  // beatmap 分析
+  try {
+    var bmResp = await fetch(song.beatmapUrl);
+    if (!bmResp.ok) throw new Error('HTTP ' + bmResp.status);
+    var bm = await bmResp.json();
+    var noteCount = bm.length;
+    var lastNote = bm.length ? bm[bm.length - 1] : null;
+    var lastT = lastNote ? (lastNote.t || 0) : 0;
+    // hold 結束時間
+    if (lastNote && lastNote.hold) {
+      var holdMs = lastNote.hold > 10 ? lastNote.hold / 1000 : lastNote.hold;
+      lastT = lastT + holdMs;
+    }
+    lines.push('  beatmap notes: ' + noteCount);
+    lines.push('  beatmap 最後 note 時間: ' + lastT.toFixed(2) + 's');
+    if (song.duration - lastT > 10) {
+      lines.push('  ⚠️ beatmap 可能太短（比 duration 少 ' + (song.duration - lastT).toFixed(1) + 's）');
+    } else {
+      lines.push('  ✅ beatmap 長度 OK');
+    }
+  } catch(e) {
+    lines.push('  ❌ beatmap 載入失敗: ' + e.message);
+  }
+
+  // srt 分析
+  if (song.srtUrl) {
+    try {
+      var srtResp = await fetch(song.srtUrl);
+      if (!srtResp.ok) throw new Error('HTTP ' + srtResp.status);
+      var srtText = await srtResp.text();
+      // 找最後一個時間戳的結束時間
+      var timeMatches = srtText.match(/(\d+:\d+:\d+[,.]\d+)\s+-->/g);
+      var lastEnd = 0;
+      if (timeMatches) {
+        // 找所有 --> 後的結束時間
+        var allTimes = srtText.match(/-->\s*(\d+):(\d+):(\d+)[,.](\d+)/g);
+        if (allTimes && allTimes.length) {
+          var last = allTimes[allTimes.length - 1];
+          var m = last.match(/(\d+):(\d+):(\d+)[,.](\d+)/);
+          if (m) lastEnd = parseInt(m[1])*3600 + parseInt(m[2])*60 + parseInt(m[3]) + parseInt(m[4])/1000;
+        }
+      }
+      lines.push('  srt 最後字幕結束時間: ' + lastEnd.toFixed(2) + 's');
+      if (song.duration - lastEnd > 10) {
+        lines.push('  ⚠️ 字幕可能太短（比 duration 少 ' + (song.duration - lastEnd).toFixed(1) + 's）');
+      } else {
+        lines.push('  ✅ 字幕長度 OK');
+      }
+    } catch(e) {
+      lines.push('  ❌ srt 載入失敗: ' + e.message);
+    }
+  }
+
+  // audio 實際 duration
+  try {
+    var audioOk = await new Promise(function(res) {
+      var a = new Audio();
+      a.onloadedmetadata = function() { res('✅ ' + a.duration.toFixed(2) + 's'); };
+      a.onerror = function() { res('❌ 載入失敗'); };
+      a.src = song.audioUrl;
+    });
+    lines.push('  audio 實際 duration: ' + audioOk);
+  } catch(e) {
+    lines.push('  audio duration 讀取失敗: ' + e.message);
+  }
+}
 </script>
 
 </body>
