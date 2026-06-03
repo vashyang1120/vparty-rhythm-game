@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-test</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-test-3</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1048,9 +1048,21 @@ body.portrait-game #s-admin {
 </div><!-- #root -->
 <script>
 // ═══ 全域資源宣告（必須在最前面）═══
+var TEST_MODE = true;
+var BASE_PATH = TEST_MODE ? '../' : '';
+var DB_PREFIX = TEST_MODE ? 'dev/' : '';
+
+function resolveAssetPath(url) {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.indexOf('../') === 0) return url;
+  if (url.indexOf('/') === 0) return url;
+  return BASE_PATH + url;
+}
+
 var AVATAR_KEYS = ['boy1', 'girl1', 'boy2', 'girl2', 'cat1', 'cat2', 'fat1', 'girl3', 'curl1', 'boy3', 'girl4', 'girl5', 'curl2', 'dog1', 'dog2', 'dog3', 'dog4'];
 var AVATARS = AVATAR_KEYS.map(function(key) {
-  return { key: key, src: '../assets/avatars/' + key + '.png' };
+  return { key: key, src: resolveAssetPath('assets/avatars/' + key + '.png') };
 });
 var SONGS = [];
 var lbSongId = "song001";
@@ -1326,16 +1338,24 @@ document.querySelectorAll('.db').forEach(function(b){
 // ═══════════════════════════════════════════════════════
 var SONGS = [], selectedSong = null;
 
+function normalizeSongPaths(song) {
+  var s = Object.assign({}, song);
+  ['audioUrl','videoUrl','beatmapUrl','srtUrl','cover'].forEach(function(k) {
+    if (s[k]) s[k] = resolveAssetPath(s[k]);
+  });
+  return s;
+}
+
 function loadSongs() {
   fetch('https://vashyang1120.github.io/vparty-rhythm-game/songs.json')
     .then(function(r){ if(!r.ok) throw new Error(); return r.json(); })
     .then(function(data){
-      SONGS = data;
+      SONGS = data.map(normalizeSongPaths);
       renderSongCards();
     })
     .catch(function(){
       // songs.json 載入失敗時的預設（本機測試用）
-      SONGS = [{
+      SONGS = [normalizeSongPaths({
         id: 'song001',
         title: '在小V派對裡夢想',
         artist: '氣球小V',
@@ -1349,7 +1369,7 @@ function loadSongs() {
           {t:4,text:'在小V派對裡夢想 🎈'},{t:36,text:'副歌要來了——'},
           {t:52,text:'魔法降臨！衝！'},{t:84,text:'最強高潮！🌟'}
         ]
-      }];
+      })];
       renderSongCards();
     });
 }
@@ -2141,8 +2161,6 @@ var FIREBASE_CONFIG = {
   measurementId:     "G-ZB7430NTBR"
 };
 var FIREBASE_ENABLED = true;
-var TEST_MODE = true;
-var DB_PREFIX = TEST_MODE ? 'dev/' : ''; // config is set!
 var firebaseDb = null;
 
 function initFirebase() {
@@ -2322,7 +2340,7 @@ function renderLB() {
   } else {
     fetch('https://vashyang1120.github.io/vparty-rhythm-game/songs.json?' + Date.now())
       .then(function(r){ return r.json(); })
-      .then(function(d){ SONGS = d; _doRender(); })
+      .then(function(d){ SONGS = d.map(normalizeSongPaths); _doRender(); })
       .catch(function(){ _doRender(); }); // 就算 fetch 失敗也繼續顯示排行榜
   }
 }
