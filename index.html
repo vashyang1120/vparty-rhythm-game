@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.3</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.6</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1020,11 +1020,13 @@ body.portrait-game #s-admin {
 
     <!-- Leaderboard management -->
     <div class="admin-section">
-      <h3>排行榜管理</h3>
+      <h3>遊玩紀錄管理</h3>
+      <div style="font-size:10px;color:#4a8a4a;margin-bottom:6px;">以下顯示的是遊玩紀錄（gameLogs），不是排行榜。清空排行榜只會清除 scores / leaderboards，遊玩紀錄會保留。</div>
       <div id="admin-lb-list" style="max-height:300px;overflow-y:auto;border:1px solid #1a3a1a;border-radius:5px;background:#0a140a;"></div>
       <div class="btn-row" style="margin-top:4px;">
         <button class="btn btn-admin-danger" onclick="adminClearAll()">清空全部排行榜</button>
         <button class="btn btn-admin" onclick="adminExportLB()">匯出 JSON</button>
+        <button class="btn btn-admin" onclick="adminMigrateScores()" title="把舊 scores 資料遷移到新版 leaderboards，只需執行一次">遷移舊排行榜</button>
       </div>
     </div>
 
@@ -1160,14 +1162,89 @@ var PERF_MS = 72, GOOD_MS = 145;
 // ═══════════════════════════════════════════════════════
 //  PLAYER
 // ═══════════════════════════════════════════════════════
-var PLAYER = {id:'玩家', avatarKey:'boy1', avatarSrc:''};
+var PLAYER = {
+  id: '玩家',
+  baseAvatarKey: 'boy1',
+  displayAvatarKey: 'boy1',
+  avatarKey: 'boy1',   // alias，相容舊邏輯
+  avatarSrc: '',
+  playerKey: ''
+};
+
+// ── 工具函式 ──────────────────────────────────────────
+function normalizePlayerId(id) {
+  return (id || '').trim() || '玩家';
+}
+
+function makePlayerKey(id, baseAvatarKey) {
+  return encodeURIComponent(normalizePlayerId(id)) + '__' + (baseAvatarKey || 'boy1');
+}
+
+function getAvatarByKey(key) {
+  return AVATARS.find(function(a){ return a.key === key; }) || AVATARS[0];
+}
+
+function getDisplayAvatarSrc() {
+  return getAvatarByKey(PLAYER.displayAvatarKey).src;
+}
+
+function migrateLocalProfile() {
+  // 讀舊資料
+  try {
+    var old = JSON.parse(localStorage.getItem('vPartyProfile') || '{}');
+    if (!old.id) return null;
+    var migrated = {
+      id: normalizePlayerId(old.id),
+      baseAvatarKey: old.avatarKey || 'boy1',
+      displayAvatarKey: old.avatarKey || 'boy1',
+      avatarKey: old.avatarKey || 'boy1'
+    };
+    migrated.playerKey = makePlayerKey(migrated.id, migrated.baseAvatarKey);
+    // 存回新版
+    localStorage.setItem('vPartyPlayerProfile', JSON.stringify(migrated));
+    return migrated;
+  } catch(e) { return null; }
+}
+
+function loadPlayerProfile() {
+  try {
+    // 優先讀新版
+    var s = JSON.parse(localStorage.getItem('vPartyPlayerProfile') || '{}');
+    if (!s.id) {
+      // fallback：嘗試 migration 舊版
+      s = migrateLocalProfile() || {};
+    }
+    if (s.id) PLAYER.id = s.id;
+    if (s.baseAvatarKey) PLAYER.baseAvatarKey = s.baseAvatarKey;
+    if (s.displayAvatarKey) PLAYER.displayAvatarKey = s.displayAvatarKey;
+    // 相容 alias
+    PLAYER.avatarKey = PLAYER.displayAvatarKey;
+    PLAYER.playerKey = makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+  } catch(e) {}
+}
+
+function savePlayerProfile() {
+  PLAYER.id = normalizePlayerId(document.getElementById('player-id-input').value);
+  // 玩家選頭像時是選 baseAvatarKey（第一階段 display = base）
+  // baseAvatarKey 在選頭像時設定，這裡只儲存
+  PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
+  PLAYER.avatarKey = PLAYER.baseAvatarKey;
+  PLAYER.playerKey = makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+  PLAYER.avatarSrc = getDisplayAvatarSrc();
+  var profile = {
+    id: PLAYER.id,
+    baseAvatarKey: PLAYER.baseAvatarKey,
+    displayAvatarKey: PLAYER.displayAvatarKey,
+    avatarKey: PLAYER.avatarKey,
+    playerKey: PLAYER.playerKey
+  };
+  localStorage.setItem('vPartyPlayerProfile', JSON.stringify(profile));
+  // 同步更新舊版 key，避免其他地方讀舊版出錯
+  localStorage.setItem('vPartyProfile', JSON.stringify({id: PLAYER.id, avatarKey: PLAYER.avatarKey}));
+}
 
 function initProfile() {
-  try {
-    var s = JSON.parse(localStorage.getItem('vPartyProfile') || '{}');
-    if (s.id) PLAYER.id = s.id;
-    if (s.avatarKey) PLAYER.avatarKey = s.avatarKey;
-  } catch(e) {}
+  loadPlayerProfile();
 
   var grid = document.getElementById('avatar-grid');
   grid.innerHTML = '';
@@ -1177,10 +1254,12 @@ function initProfile() {
     img.src = av.src;
     img.alt = '';
     img.dataset.key = av.key;
-    if (av.key === PLAYER.avatarKey) img.classList.add('selected');
+    if (av.key === PLAYER.baseAvatarKey) img.classList.add('selected');
     img.onclick = function() {
       document.querySelectorAll('.av-item').forEach(function(i){ i.classList.remove('selected'); });
       img.classList.add('selected');
+      PLAYER.baseAvatarKey = av.key;
+      PLAYER.displayAvatarKey = av.key;
       PLAYER.avatarKey = av.key;
       PLAYER.avatarSrc = av.src;
       document.getElementById('avatar-preview').src = av.src;
@@ -1188,15 +1267,14 @@ function initProfile() {
     grid.appendChild(img);
   });
 
-  var cur = AVATARS.find(function(a){ return a.key === PLAYER.avatarKey; }) || AVATARS[0];
+  var cur = getAvatarByKey(PLAYER.baseAvatarKey);
   PLAYER.avatarSrc = cur.src;
   document.getElementById('avatar-preview').src = cur.src;
   document.getElementById('player-id-input').value = PLAYER.id;
 }
 
 function saveProfile() {
-  PLAYER.id = document.getElementById('player-id-input').value.trim() || '玩家';
-  localStorage.setItem('vPartyProfile', JSON.stringify({id:PLAYER.id, avatarKey:PLAYER.avatarKey}));
+  savePlayerProfile();
   document.getElementById('sb-avatar').src = PLAYER.avatarSrc;
   document.getElementById('sb-name').textContent = PLAYER.id;
 }
@@ -2099,28 +2177,62 @@ function _doInitFirebase() {
   }
 }
 
-// Save score to BOTH Firebase (cloud) and localStorage (offline fallback)
+// Save score to Firebase gameLogs + leaderboards + localStorage fallback
 function saveScore(grade, acc) {
-  var entry = {
-    name:      PLAYER.id,
-    avatarKey: PLAYER.avatarKey,
-    avatarSrc: PLAYER.avatarSrc,
-    score:     G.score,
-    diff:      G.diff,
-    grade:     grade,
-    acc:       acc,
-    song:      (G.song && G.song.title) || '',
-    songId:    (G.song && G.song.id) || 'song001',
-    date:      new Date().toLocaleDateString('zh-TW'),
-    ts:        Date.now()
+  var pKey = PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+  var songId = (G.song && G.song.id) || 'song001';
+  var diff = G.diff || 'normal';
+  var now = Date.now();
+
+  var logEntry = {
+    gameId:           'rhythm',
+    playerKey:        pKey,
+    name:             PLAYER.id,
+    baseAvatarKey:    PLAYER.baseAvatarKey || PLAYER.avatarKey,
+    displayAvatarKey: PLAYER.displayAvatarKey || PLAYER.avatarKey,
+    avatarKey:        PLAYER.avatarKey,
+    avatarSrc:        PLAYER.avatarSrc,
+    score:            G.score,
+    diff:             diff,
+    grade:            grade,
+    acc:              acc,
+    maxCombo:         G.maxCombo || 0,
+    song:             (G.song && G.song.title) || '',
+    songId:           songId,
+    date:             new Date().toLocaleDateString('zh-TW'),
+    ts:               now
   };
 
-  // ── Firebase (cloud, shared across all devices) ──
+  var lbEntry = {
+    gameId:           'rhythm',
+    playerKey:        pKey,
+    name:             PLAYER.id,
+    baseAvatarKey:    PLAYER.baseAvatarKey || PLAYER.avatarKey,
+    displayAvatarKey: PLAYER.displayAvatarKey || PLAYER.avatarKey,
+    avatarKey:        PLAYER.avatarKey,
+    avatarSrc:        PLAYER.avatarSrc,
+    bestScore:        G.score,
+    diff:             diff,
+    grade:            grade,
+    acc:              acc,
+    maxCombo:         G.maxCombo || 0,
+    song:             (G.song && G.song.title) || '',
+    songId:           songId,
+    updatedAt:        now
+  };
+
   if (FIREBASE_ENABLED) {
-    if (!firebaseDb) _doInitFirebase(); // ensure connected
+    if (!firebaseDb) _doInitFirebase();
   }
+
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores').push(entry).then(function() {
+    // 1. 一定寫 gameLogs
+    firebaseDb.ref('gameLogs/rhythm').push(logEntry).catch(function(e) {
+      console.warn('[Firebase] gameLogs write failed:', e.message);
+    });
+
+    // 2. 同時寫舊 scores（相容舊排行榜）
+    firebaseDb.ref('scores').push(logEntry).then(function() {
       firebaseDb.ref('scores').once('value', function(snap) {
         if (snap.numChildren() > 300) {
           var oldestKey = null, oldestTs = Infinity;
@@ -2132,19 +2244,29 @@ function saveScore(grade, acc) {
         }
       });
     }).catch(function(e) {
-      console.warn('[Firebase] Write failed:', e.message);
+      console.warn('[Firebase] scores write failed:', e.message);
+    });
+
+    // 3. 讀 leaderboards 決定是否更新
+    var lbPath = 'leaderboards/rhythm/' + songId + '/' + diff + '/' + pKey;
+    firebaseDb.ref(lbPath).once('value').then(function(snap) {
+      var existing = snap.val();
+      if (!existing || G.score > (existing.bestScore || 0)) {
+        return firebaseDb.ref(lbPath).set(lbEntry);
+      }
+    }).catch(function(e) {
+      console.warn('[Firebase] leaderboard update failed:', e.message);
     });
   }
 
-  // ── localStorage (local fallback + admin panel source) ──
-  var key = 'vPartyScores_' + (entry.songId||'song001');
+  // ── localStorage fallback ──
+  var key = 'vPartyScores_' + songId;
   var arr = JSON.parse(localStorage.getItem(key) || '[]');
-  arr.push(entry);
+  arr.push(logEntry);
   arr.sort(function(a,b){ return b.score - a.score; });
   var top = arr.slice(0, 20);
   localStorage.setItem(key, JSON.stringify(top));
 
-  // Is this a new local record?
   return top[0].score === G.score && top.filter(function(x){ return x.score === G.score; }).length === 1;
 }
 
@@ -2196,7 +2318,7 @@ function renderLB() {
   if (SONGS && SONGS.length) {
     _doRender();
   } else {
-    fetch('./songs.json?' + Date.now())
+    fetch('https://vashyang1120.github.io/vparty-rhythm-game/songs.json?' + Date.now())
       .then(function(r){ return r.json(); })
       .then(function(d){ SONGS = d; _doRender(); })
       .catch(function(){ _doRender(); }); // 就算 fetch 失敗也繼續顯示排行榜
@@ -2206,69 +2328,79 @@ function renderLB() {
 function renderLBFromFirebase() {
   var el = document.getElementById('lb-list');
   el.innerHTML = '<div class="lb-loading">載入中... 🌸</div>';
+  var songId = lbSongId || 'song001';
+  var diff = window._lbDiff || 'normal';
 
-  // 取前100筆，做去重後只保留每人最高分，再取前15
-  firebaseDb.ref('scores').limitToLast(200)
-    .once('value')
-    .then(function(snapshot) {
-      var all = [];
-      snapshot.forEach(function(child) {
-        all.push(Object.assign({key: child.key}, child.val()));
-      });
-      all.sort(function(a,b){ return b.score - a.score; });
-
-      // 依歌曲過濾（無 songId 的舊資料歸入 song001）
-      all = all.filter(function(s){
-        var sid = s.songId || 'song001';
-        return sid === (lbSongId || 'song001');
-      });
-      // 去重：每個 ID 只保留最高分
-      var seen = {};
-      var deduped = [];
-      all.forEach(function(s) {
-        if (!seen[s.name]) {
-          seen[s.name] = true;
-          deduped.push(s);
-        }
-      });
-
-      // 只顯示前15名
-      var top15 = deduped.slice(0, 15);
-      renderLBRows(el, top15);
-
-      // 檢查目前玩家是否在前15
-      var myName = PLAYER.id;
-      var inTop15 = top15.some(function(s){ return s.name === myName; });
-      if (!inTop15 && myName && myName !== '玩家') {
-        var myIdx = deduped.findIndex(function(s){ return s.name === myName; });
-        if (myIdx !== -1) {
-          showPlayerRankBanner(myIdx + 1, deduped[myIdx].score, deduped.length);
-        } else {
-          // 不在 top100 裡，再查全部
-          firebaseDb.ref('scores').limitToLast(500)
-            .once('value')
-            .then(function(allSnap) {
-              var allScores = [];
-              allSnap.forEach(function(c){ allScores.push(c.val()); });
-              allScores.sort(function(a,b){ return b.score - a.score; });
-              // 去重後找排名
-              var seenAll = {};
-              var dedupedAll = [];
-              allScores.forEach(function(s){
-                if (!seenAll[s.name]) { seenAll[s.name]=true; dedupedAll.push(s); }
-              });
-              var myRealIdx = dedupedAll.findIndex(function(s){ return s.name === myName; });
-              if (myRealIdx !== -1) {
-                showPlayerRankBanner(myRealIdx + 1, dedupedAll[myRealIdx].score, dedupedAll.length);
-              }
-            });
-        }
-      }
-    })
-    .catch(function(e) {
-      console.warn('[Firebase] Read failed:', e.message);
-      renderLBFromLocal();
+  // 優先讀新版 leaderboards
+  var lbPath = 'leaderboards/rhythm/' + songId + '/' + diff;
+  firebaseDb.ref(lbPath).once('value').then(function(snap) {
+    var entries = [];
+    snap.forEach(function(child) {
+      var v = child.val();
+      if (v) entries.push(Object.assign({key: child.key, score: v.bestScore || v.score || 0}, v));
     });
+
+    if (entries.length > 0) {
+      // 新版資料：每個 playerKey 已經是最高分，直接排序
+      entries.sort(function(a,b){ return b.score - a.score; });
+      _renderLBResult(el, entries, 'playerKey');
+    } else {
+      // Fallback：讀舊 scores
+      _renderLBFromOldScores(el, songId);
+    }
+  }).catch(function(e) {
+    console.warn('[Firebase] leaderboard read failed:', e.message);
+    _renderLBFromOldScores(el, songId);
+  });
+}
+
+function _renderLBFromOldScores(el, songId) {
+  firebaseDb.ref('scores').limitToLast(300).once('value').then(function(snapshot) {
+    var all = [];
+    snapshot.forEach(function(child) {
+      all.push(Object.assign({key: child.key}, child.val()));
+    });
+    all.sort(function(a,b){ return b.score - a.score; });
+    all = all.filter(function(s){
+      return (s.songId || 'song001') === (songId || 'song001');
+    });
+    // 轉換舊資料格式，用 playerKey 去重
+    all = all.map(function(s) {
+      var pk = s.playerKey || makePlayerKey(s.name, s.avatarKey);
+      var dispAv = s.displayAvatarKey || s.avatarKey || s.baseAvatarKey;
+      return Object.assign({}, s, {
+        playerKey: pk,
+        baseAvatarKey: s.baseAvatarKey || s.avatarKey,
+        displayAvatarKey: dispAv,
+        score: s.score || 0
+      });
+    });
+    _renderLBResult(el, all, 'playerKey');
+  }).catch(function(e) {
+    console.warn('[Firebase] Read failed:', e.message);
+    renderLBFromLocal();
+  });
+}
+
+function _renderLBResult(el, entries, dedupeField) {
+  // 去重：每個 playerKey 只保留最高分
+  var seen = {};
+  var deduped = [];
+  entries.forEach(function(s) {
+    var k = s[dedupeField] || s.name || '';
+    if (!k) return;
+    if (!seen[k]) { seen[k] = true; deduped.push(s); }
+  });
+  var top15 = deduped.slice(0, 15);
+  renderLBRows(el, top15);
+
+  // 檢查目前玩家排名
+  var myKey = PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+  var inTop15 = top15.some(function(s){ return (s.playerKey||s.name) === myKey || s.name === PLAYER.id; });
+  if (!inTop15 && PLAYER.id && PLAYER.id !== '玩家') {
+    var myIdx = deduped.findIndex(function(s){ return (s.playerKey||s.name) === myKey || s.name === PLAYER.id; });
+    if (myIdx !== -1) showPlayerRankBanner(myIdx + 1, deduped[myIdx].score, deduped.length);
+  }
 }
 
 function showPlayerRankBanner(rank, score, total) {
@@ -2332,37 +2464,42 @@ function renderLBRows(el, scores) {
   }
   var rc = ['rank1','rank2','rank3'];
   el.innerHTML = scores.map(function(s, i) {
+    // 顯示頭像：優先 displayAvatarKey，再 avatarKey，再 baseAvatarKey，最後 avatarSrc
+    var dispKey = s.displayAvatarKey || s.avatarKey || s.baseAvatarKey;
+    var avObj = dispKey ? getAvatarByKey(dispKey) : null;
+    var avSrc = (avObj && avObj.src) || s.avatarSrc || '';
+    var displayScore = (s.bestScore || s.score || 0);
     return '<div class="lbr">' +
       '<div class="lbr-rank ' + (rc[i]||'') + '">' + (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)) + '</div>' +
-      '<img class="lbr-av" src="' + (s.avatarSrc||'') + '" alt="' + s.name + '" onerror="this.style.display=\'none\'">' +
+      '<img class="lbr-av" src="' + avSrc + '" alt="' + s.name + '" onerror="this.style.display=\'none\'">' +
       '<div class="lbr-info">' +
         '<div class="lbr-name">' + s.name + '</div>' +
-        '<div class="lbr-meta">' + s.song + ' · ' + s.date + ' · ACC ' + s.acc + '%</div>' +
+        '<div class="lbr-meta">' + (s.song||'') + ' · ' + (s.date||s.updatedAt&&new Date(s.updatedAt).toLocaleDateString('zh-TW')||'') + ' · ACC ' + (s.acc||0) + '%</div>' +
       '</div>' +
-      '<div class="lbr-diff">' + s.diff.toUpperCase() + '</div>' +
-      '<div style="font-family:\'Fredoka One\',cursive;font-size:13px;color:var(--purple2);margin:0 6px;flex-shrink:0">' + s.grade + '</div>' +
-      '<div class="lbr-score">' + s.score.toLocaleString() + '</div>' +
+      '<div class="lbr-diff">' + (s.diff||'').toUpperCase() + '</div>' +
+      '<div style="font-family:\'Fredoka One\',cursive;font-size:13px;color:var(--purple2);margin:0 6px;flex-shrink:0">' + (s.grade||'') + '</div>' +
+      '<div class="lbr-score">' + displayScore.toLocaleString() + '</div>' +
     '</div>';
   }).join('');
 }
 
 // Admin: clear ALL scores from Firebase + localStorage
 function adminClearAll() {
-  if (!confirm('確定清空所有排行榜記錄？此操作無法復原。')) return;
+  if (!confirm('確定清空所有排行榜記錄？此操作無法復原。\n（遊玩紀錄 gameLogs 會保留）')) return;
   localStorage.removeItem('vPartyScores');
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores').remove().then(function() {
-      console.log('[Firebase] All scores cleared');
-    }).catch(function(e) { console.warn('[Firebase] Clear failed:', e); });
+    firebaseDb.ref('scores').remove().catch(function(e){ console.warn('[Firebase] Clear scores failed:', e); });
+    firebaseDb.ref('leaderboards/rhythm').remove().catch(function(e){ console.warn('[Firebase] Clear leaderboards failed:', e); });
   }
   renderAdminPanel();
 }
 
 // Admin: delete single score
-function adminDeleteScore(key) {
+function adminDeleteScore(key, source) {
   if (!confirm('確定刪除這筆記錄？')) return;
   if (FIREBASE_ENABLED && firebaseDb && key) {
-    firebaseDb.ref('scores/' + key).remove()
+    var path = (source === 'gameLogs') ? 'gameLogs/rhythm/' + key : 'scores/' + key;
+    firebaseDb.ref(path).remove()
       .then(function(){ renderAdminPanel(); })
       .catch(function(e){ console.warn('Delete failed:', e); renderAdminPanel(); });
   } else {
@@ -2370,23 +2507,41 @@ function adminDeleteScore(key) {
   }
 }
 
-// Admin: render panel reads from Firebase if available
+// Admin: render panel reads from gameLogs (new) with fallback to scores (old)
 function renderAdminPanel() {
-  // 確保 Firebase 已初始化（不論從哪裡進入後台都能讀到資料）
   if (FIREBASE_ENABLED && !firebaseDb) _doInitFirebase();
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref('scores').limitToLast(300)
+    // 優先讀新版 gameLogs
+    firebaseDb.ref('gameLogs/rhythm').limitToLast(300)
       .once('value')
       .then(function(snapshot) {
-        var scores = [];
+        var logs = [];
         snapshot.forEach(function(child) {
           var v = child.val();
-          if (v && v.name) scores.push(Object.assign({key: child.key}, v));
+          if (v && v.name) logs.push(Object.assign({key: child.key, _source: 'gameLogs'}, v));
         });
-        _renderAdminPanelUI(scores);
+        if (logs.length > 0) {
+          _renderAdminPanelUI(logs);
+        } else {
+          // Fallback：讀舊 scores
+          firebaseDb.ref('scores').limitToLast(300)
+            .once('value')
+            .then(function(snap) {
+              var scores = [];
+              snap.forEach(function(child) {
+                var v = child.val();
+                if (v && v.name) scores.push(Object.assign({key: child.key, _source: 'scores'}, v));
+              });
+              _renderAdminPanelUI(scores);
+            })
+            .catch(function(e) {
+              console.warn('Admin Firebase fallback failed:', e.message);
+              _renderAdminPanelUI([]);
+            });
+        }
       })
       .catch(function(e) {
-        console.warn('Admin Firebase failed:', e.message);
+        console.warn('Admin gameLogs failed:', e.message);
         _renderAdminPanelUI([]);
       });
   } else {
@@ -2443,7 +2598,7 @@ function _renderAdminPanelUI(scores) {
         '<div class="lb-admin-meta">'+(s.song||s.songId||'')+' · '+(s.diff||'').toUpperCase()+' · '+s.date+'</div>' +
       '</div>' +
       '<div class="lb-admin-score">'+(s.score||0).toLocaleString()+'</div>' +
-      '<button class="lb-admin-del" onclick="adminDeleteScore(\''+s.key+'\')" title="刪除">×</button>' +
+      '<button class="lb-admin-del" onclick="adminDeleteScore(\''+s.key+'\',\''+(s._source||'scores')+'\')" title="刪除">×</button>' +
     '</div>';
   }).join('');
 }
@@ -2487,11 +2642,69 @@ function adminLogout() {
 }
 
 function adminExportLB() {
-  var scores = JSON.parse(localStorage.getItem('vPartyScores') || '[]');
+  // 優先匯出後台目前顯示的資料（gameLogs 或 fallback scores）
+  var scores = window._adminScores && window._adminScores.length
+    ? window._adminScores
+    : JSON.parse(localStorage.getItem('vPartyScores') || '[]');
   var blob = new Blob([JSON.stringify(scores, null, 2)], {type:'application/json'});
   var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'leaderboard_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'gamelogs_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
+}
+
+// Admin: 遷移舊 scores 到新版 leaderboards（只需手動執行一次）
+function adminMigrateScores() {
+  if (!confirm('將舊 scores 資料遷移到新版 leaderboards？\n這個動作只需執行一次，不會清除舊資料。')) return;
+  if (!FIREBASE_ENABLED || !firebaseDb) { alert('Firebase 未連線'); return; }
+
+  firebaseDb.ref('scores').limitToLast(300).once('value').then(function(snapshot) {
+    var best = {}; // key: songId/diff/playerKey → entry
+    snapshot.forEach(function(child) {
+      var s = child.val();
+      if (!s || !s.name) return;
+      var pk = s.playerKey || makePlayerKey(s.name, s.avatarKey);
+      var songId = s.songId || 'song001';
+      var diff = s.diff || 'normal';
+      var mapKey = songId + '/' + diff + '/' + pk;
+      if (!best[mapKey] || (s.score || 0) > (best[mapKey].bestScore || 0)) {
+        best[mapKey] = {
+          gameId: 'rhythm',
+          playerKey: pk,
+          name: s.name,
+          baseAvatarKey: s.baseAvatarKey || s.avatarKey || 'boy1',
+          displayAvatarKey: s.displayAvatarKey || s.avatarKey || 'boy1',
+          avatarKey: s.avatarKey || 'boy1',
+          avatarSrc: s.avatarSrc || '',
+          bestScore: s.score || 0,
+          diff: diff,
+          grade: s.grade || '',
+          acc: s.acc || 0,
+          maxCombo: s.maxCombo || 0,
+          song: s.song || '',
+          songId: songId,
+          updatedAt: s.ts || Date.now()
+        };
+      }
+    });
+
+    var writes = Object.keys(best).map(function(k) {
+      return firebaseDb.ref('leaderboards/rhythm/' + k).transaction(function(existing) {
+        // 只有新資料分數更高時才覆蓋
+        if (!existing || best[k].bestScore > (existing.bestScore || 0)) {
+          return best[k];
+        }
+        return existing; // 不動
+      });
+    });
+
+    Promise.all(writes).then(function() {
+      alert('遷移完成！共處理 ' + Object.keys(best).length + ' 筆最高分紀錄。');
+    }).catch(function(e) {
+      alert('遷移失敗：' + e.message);
+    });
+  }).catch(function(e) {
+    alert('讀取 scores 失敗：' + e.message);
+  });
 }
 
 async function adminChangePw() {
