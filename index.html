@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-hotfix2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-hotfix3</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -2399,7 +2399,6 @@ function renderLBFromFirebase() {
   var el = document.getElementById('lb-list');
   el.innerHTML = '<div class="lb-loading">載入中... 🌸</div>';
   var songId = lbSongId || 'song001';
-  var diff = window._lbDiff || 'normal';
 
   function normalizeEntry(v, source) {
     var pk = v.playerKey || makePlayerKey(v.name, v.avatarKey);
@@ -2423,36 +2422,44 @@ function renderLBFromFirebase() {
     };
   }
 
-  // 同時讀三個來源
-  var p1 = firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + diff)
-    .once('value').then(function(snap) {
-      var arr = [];
-      snap.forEach(function(child) {
-        var v = child.val();
-        if (v && v.name) arr.push(normalizeEntry(v, 'leaderboards'));
-      });
-      return arr;
-    }).catch(function() { return []; });
+  // p1：同時讀 leaderboards 的 easy / normal / hard 三個節點
+  var diffs = ['easy', 'normal', 'hard'];
+  var lbPromises = diffs.map(function(d) {
+    return firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + d)
+      .once('value').then(function(snap) {
+        var arr = [];
+        snap.forEach(function(child) {
+          var v = child.val();
+          if (v && v.name) arr.push(normalizeEntry(v, 'leaderboards'));
+        });
+        return arr;
+      }).catch(function() { return []; });
+  });
+  var p1 = Promise.all(lbPromises).then(function(arrays) {
+    return [].concat.apply([], arrays);
+  });
 
+  // p2：舊 scores，只依 songId 篩選，不篩 diff
   var p2 = firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300)
     .once('value').then(function(snap) {
       var arr = [];
       snap.forEach(function(child) {
         var v = child.val();
-        if (v && v.name && (v.songId || 'song001') === songId && (v.diff || 'normal') === diff) {
+        if (v && v.name && (v.songId || 'song001') === songId) {
           arr.push(normalizeEntry(v, 'legacyScores'));
         }
       });
       return arr;
     }).catch(function() { return []; });
 
+  // p3：dev scores（TEST_MODE 時才有，正式版 writeScores === legacyScoresReadOnly 所以跳過）
   var p3 = (DB_PATHS.writeScores !== DB_PATHS.legacyScoresReadOnly)
     ? firebaseDb.ref(DB_PATHS.writeScores).limitToLast(300)
         .once('value').then(function(snap) {
           var arr = [];
           snap.forEach(function(child) {
             var v = child.val();
-            if (v && v.name && (v.songId || 'song001') === songId && (v.diff || 'normal') === diff) {
+            if (v && v.name && (v.songId || 'song001') === songId) {
               arr.push(normalizeEntry(v, 'devScores'));
             }
           });
@@ -2462,6 +2469,7 @@ function renderLBFromFirebase() {
 
   Promise.all([p1, p2, p3]).then(function(results) {
     var all = [].concat(results[0], results[1], results[2]);
+    // 同一 playerKey 只保留最高分，分數相同保留較新的
     var best = {};
     all.forEach(function(e) {
       var k = e.playerKey;
