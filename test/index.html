@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-test-3</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-test-4</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1050,7 +1050,17 @@ body.portrait-game #s-admin {
 // ═══ 全域資源宣告（必須在最前面）═══
 var TEST_MODE = true;
 var BASE_PATH = TEST_MODE ? '../' : '';
-var DB_PREFIX = TEST_MODE ? 'dev/' : '';
+var DB_PATHS = TEST_MODE ? {
+  writeScores:          'dev/scores',
+  gameLogs:             'dev/gameLogs/rhythm',
+  leaderboardsBase:     'dev/leaderboards/rhythm',
+  legacyScoresReadOnly: 'scores'
+} : {
+  writeScores:          'scores',
+  gameLogs:             'gameLogs/rhythm',
+  leaderboardsBase:     'leaderboards/rhythm',
+  legacyScoresReadOnly: 'scores'
+};
 
 function resolveAssetPath(url) {
   if (!url) return url;
@@ -2246,29 +2256,29 @@ function saveScore(grade, acc) {
   }
 
   if (FIREBASE_ENABLED && firebaseDb) {
-    // 1. 一定寫 gameLogs
-    firebaseDb.ref(DB_PREFIX + 'gameLogs/rhythm').push(logEntry).catch(function(e) {
+    // 1. 寫 gameLogs（TEST_MODE=true 寫 dev/gameLogs/rhythm）
+    firebaseDb.ref(DB_PATHS.gameLogs).push(logEntry).catch(function(e) {
       console.warn('[Firebase] gameLogs write failed:', e.message);
     });
 
-    // 2. 同時寫舊 scores（相容舊排行榜）
-    firebaseDb.ref(DB_PREFIX + 'scores').push(logEntry).then(function() {
-      firebaseDb.ref(DB_PREFIX + 'scores').once('value', function(snap) {
+    // 2. 寫 scores（TEST_MODE=true 寫 dev/scores，不寫正式 scores）
+    firebaseDb.ref(DB_PATHS.writeScores).push(logEntry).then(function() {
+      firebaseDb.ref(DB_PATHS.writeScores).once('value', function(snap) {
         if (snap.numChildren() > 300) {
           var oldestKey = null, oldestTs = Infinity;
           snap.forEach(function(c) {
             var ts = c.val() && c.val().ts;
             if (ts && ts < oldestTs) { oldestTs = ts; oldestKey = c.key; }
           });
-          if (oldestKey) firebaseDb.ref(DB_PREFIX + 'scores/' + oldestKey).remove();
+          if (oldestKey) firebaseDb.ref(DB_PATHS.writeScores + '/' + oldestKey).remove();
         }
       });
     }).catch(function(e) {
       console.warn('[Firebase] scores write failed:', e.message);
     });
 
-    // 3. 讀 leaderboards 決定是否更新
-    var lbPath = DB_PREFIX + 'leaderboards/rhythm/' + songId + '/' + diff + '/' + pKey;
+    // 3. 更新 leaderboards（TEST_MODE=true 寫 dev/leaderboards/rhythm）
+    var lbPath = DB_PATHS.leaderboardsBase + '/' + songId + '/' + diff + '/' + pKey;
     firebaseDb.ref(lbPath).once('value').then(function(snap) {
       var existing = snap.val();
       if (!existing || G.score > (existing.bestScore || 0)) {
@@ -2351,67 +2361,89 @@ function renderLBFromFirebase() {
   var songId = lbSongId || 'song001';
   var diff = window._lbDiff || 'normal';
 
-  // 優先讀新版 leaderboards
-  var lbPath = DB_PREFIX + 'leaderboards/rhythm/' + songId + '/' + diff;
-  firebaseDb.ref(lbPath).once('value').then(function(snap) {
-    var entries = [];
-    snap.forEach(function(child) {
-      var v = child.val();
-      if (v) entries.push(Object.assign({key: child.key, score: v.bestScore || v.score || 0}, v));
-    });
+  function normalizeEntry(v, source) {
+    var pk = v.playerKey || makePlayerKey(v.name, v.avatarKey);
+    return {
+      playerKey:        pk,
+      name:             v.name || '',
+      baseAvatarKey:    v.baseAvatarKey || v.avatarKey || 'boy1',
+      displayAvatarKey: v.displayAvatarKey || v.avatarKey || 'boy1',
+      avatarKey:        v.avatarKey || 'boy1',
+      avatarSrc:        v.avatarSrc || '',
+      bestScore:        v.bestScore || v.score || 0,
+      score:            v.score || v.bestScore || 0,
+      songId:           v.songId || 'song001',
+      diff:             v.diff || 'normal',
+      grade:            v.grade || '',
+      acc:              v.acc || 0,
+      maxCombo:         v.maxCombo || 0,
+      ts:               v.ts || v.updatedAt || 0,
+      updatedAt:        v.updatedAt || v.ts || 0,
+      source:           source
+    };
+  }
 
-    if (entries.length > 0) {
-      // 新版資料：每個 playerKey 已經是最高分，直接排序
-      entries.sort(function(a,b){ return b.score - a.score; });
-      _renderLBResult(el, entries, 'playerKey');
-    } else {
-      // Fallback：讀舊 scores
-      _renderLBFromOldScores(el, songId);
-    }
-  }).catch(function(e) {
-    console.warn('[Firebase] leaderboard read failed:', e.message);
-    _renderLBFromOldScores(el, songId);
-  });
-}
-
-function _renderLBFromOldScores(el, songId) {
-  firebaseDb.ref(DB_PREFIX + 'scores').limitToLast(300).once('value').then(function(snapshot) {
-    var all = [];
-    snapshot.forEach(function(child) {
-      all.push(Object.assign({key: child.key}, child.val()));
-    });
-    all.sort(function(a,b){ return b.score - a.score; });
-    all = all.filter(function(s){
-      return (s.songId || 'song001') === (songId || 'song001');
-    });
-    // 轉換舊資料格式，用 playerKey 去重
-    all = all.map(function(s) {
-      var pk = s.playerKey || makePlayerKey(s.name, s.avatarKey);
-      var dispAv = s.displayAvatarKey || s.avatarKey || s.baseAvatarKey;
-      return Object.assign({}, s, {
-        playerKey: pk,
-        baseAvatarKey: s.baseAvatarKey || s.avatarKey,
-        displayAvatarKey: dispAv,
-        score: s.score || 0
+  // 同時讀三個來源
+  var p1 = firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + diff)
+    .once('value').then(function(snap) {
+      var arr = [];
+      snap.forEach(function(child) {
+        var v = child.val();
+        if (v && v.name) arr.push(normalizeEntry(v, 'leaderboards'));
       });
+      return arr;
+    }).catch(function() { return []; });
+
+  var p2 = firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300)
+    .once('value').then(function(snap) {
+      var arr = [];
+      snap.forEach(function(child) {
+        var v = child.val();
+        if (v && v.name && (v.songId || 'song001') === songId && (v.diff || 'normal') === diff) {
+          arr.push(normalizeEntry(v, 'legacyScores'));
+        }
+      });
+      return arr;
+    }).catch(function() { return []; });
+
+  var p3 = (DB_PATHS.writeScores !== DB_PATHS.legacyScoresReadOnly)
+    ? firebaseDb.ref(DB_PATHS.writeScores).limitToLast(300)
+        .once('value').then(function(snap) {
+          var arr = [];
+          snap.forEach(function(child) {
+            var v = child.val();
+            if (v && v.name && (v.songId || 'song001') === songId && (v.diff || 'normal') === diff) {
+              arr.push(normalizeEntry(v, 'devScores'));
+            }
+          });
+          return arr;
+        }).catch(function() { return []; })
+    : Promise.resolve([]);
+
+  Promise.all([p1, p2, p3]).then(function(results) {
+    var all = [].concat(results[0], results[1], results[2]);
+    var best = {};
+    all.forEach(function(e) {
+      var k = e.playerKey;
+      if (!k) return;
+      if (!best[k]) {
+        best[k] = e;
+      } else if (e.bestScore > best[k].bestScore ||
+                (e.bestScore === best[k].bestScore && (e.ts || 0) > (best[k].ts || 0))) {
+        best[k] = e;
+      }
     });
-    _renderLBResult(el, all, 'playerKey');
+    var merged = Object.values(best);
+    merged.sort(function(a, b) { return b.bestScore - a.bestScore; });
+    _renderLBResult(el, merged);
   }).catch(function(e) {
-    console.warn('[Firebase] Read failed:', e.message);
+    console.warn('[Firebase] LB merge failed:', e.message);
     renderLBFromLocal();
   });
 }
 
-function _renderLBResult(el, entries, dedupeField) {
-  // 去重：每個 playerKey 只保留最高分
-  var seen = {};
-  var deduped = [];
-  entries.forEach(function(s) {
-    var k = s[dedupeField] || s.name || '';
-    if (!k) return;
-    if (!seen[k]) { seen[k] = true; deduped.push(s); }
-  });
-  var top15 = deduped.slice(0, 15);
+function _renderLBResult(el, entries) {
+  var top15 = entries.slice(0, 15);
   renderLBRows(el, top15);
 
   // 檢查目前玩家排名
@@ -2505,20 +2537,29 @@ function renderLBRows(el, scores) {
 
 // Admin: clear ALL scores from Firebase + localStorage
 function adminClearAll() {
-  if (!confirm('確定清空所有排行榜記錄？此操作無法復原。\n（遊玩紀錄 gameLogs 會保留）')) return;
+  var msg = TEST_MODE
+    ? '測試模式：這會清除 dev/scores 與 dev/leaderboards/rhythm，但不會刪除正式 scores，也不會刪除 dev/gameLogs。確定要清空測試排行榜資料嗎？'
+    : '這會清除 scores 與 leaderboards/rhythm，但不會刪除 gameLogs。確定要清空排行榜資料嗎？';
+  if (!confirm(msg)) return;
   localStorage.removeItem('vPartyScores');
   if (FIREBASE_ENABLED && firebaseDb) {
-    firebaseDb.ref(DB_PREFIX + 'scores').remove().catch(function(e){ console.warn('[Firebase] Clear scores failed:', e); });
-    firebaseDb.ref(DB_PREFIX + 'leaderboards/rhythm').remove().catch(function(e){ console.warn('[Firebase] Clear leaderboards failed:', e); });
+    firebaseDb.ref(DB_PATHS.writeScores).remove().catch(function(e){ console.warn('[Firebase] Clear scores failed:', e); });
+    firebaseDb.ref(DB_PATHS.leaderboardsBase).remove().catch(function(e){ console.warn('[Firebase] Clear leaderboards failed:', e); });
   }
   renderAdminPanel();
 }
 
 // Admin: delete single score
 function adminDeleteScore(key, source) {
+  if (source === 'legacyScores') {
+    alert('正式舊資料不能從測試版刪除。');
+    return;
+  }
   if (!confirm('確定刪除這筆記錄？')) return;
   if (FIREBASE_ENABLED && firebaseDb && key) {
-    var path = (source === 'gameLogs') ? DB_PREFIX + 'gameLogs/rhythm/' + key : DB_PREFIX + 'scores/' + key;
+    var path = source === 'gameLogs'
+      ? DB_PATHS.gameLogs + '/' + key
+      : DB_PATHS.writeScores + '/' + key;
     firebaseDb.ref(path).remove()
       .then(function(){ renderAdminPanel(); })
       .catch(function(e){ console.warn('Delete failed:', e); renderAdminPanel(); });
@@ -2527,46 +2568,51 @@ function adminDeleteScore(key, source) {
   }
 }
 
-// Admin: render panel reads from gameLogs (new) with fallback to scores (old)
+// Admin: render panel - 合併顯示 gameLogs + legacyScores + devScores
 function renderAdminPanel() {
   if (FIREBASE_ENABLED && !firebaseDb) _doInitFirebase();
-  if (FIREBASE_ENABLED && firebaseDb) {
-    // 優先讀新版 gameLogs
-    firebaseDb.ref(DB_PREFIX + 'gameLogs/rhythm').limitToLast(300)
-      .once('value')
-      .then(function(snapshot) {
-        var logs = [];
-        snapshot.forEach(function(child) {
-          var v = child.val();
-          if (v && v.name) logs.push(Object.assign({key: child.key, _source: 'gameLogs'}, v));
-        });
-        if (logs.length > 0) {
-          _renderAdminPanelUI(logs);
-        } else {
-          // Fallback：讀舊 scores
-          firebaseDb.ref(DB_PREFIX + 'scores').limitToLast(300)
-            .once('value')
-            .then(function(snap) {
-              var scores = [];
-              snap.forEach(function(child) {
-                var v = child.val();
-                if (v && v.name) scores.push(Object.assign({key: child.key, _source: 'scores'}, v));
-              });
-              _renderAdminPanelUI(scores);
-            })
-            .catch(function(e) {
-              console.warn('Admin Firebase fallback failed:', e.message);
-              _renderAdminPanelUI([]);
-            });
-        }
-      })
-      .catch(function(e) {
-        console.warn('Admin gameLogs failed:', e.message);
-        _renderAdminPanelUI([]);
+  if (!FIREBASE_ENABLED || !firebaseDb) { _renderAdminPanelUI([]); return; }
+
+  var p1 = firebaseDb.ref(DB_PATHS.gameLogs).limitToLast(300)
+    .once('value').then(function(snap) {
+      var arr = [];
+      snap.forEach(function(child) {
+        var v = child.val();
+        if (v && v.name) arr.push(Object.assign({}, v, {key: child.key, _source: 'gameLogs'}));
       });
-  } else {
+      return arr;
+    }).catch(function() { return []; });
+
+  var p2 = firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300)
+    .once('value').then(function(snap) {
+      var arr = [];
+      snap.forEach(function(child) {
+        var v = child.val();
+        if (v && v.name) arr.push(Object.assign({}, v, {key: child.key, _source: 'legacyScores'}));
+      });
+      return arr;
+    }).catch(function() { return []; });
+
+  var p3 = (DB_PATHS.writeScores !== DB_PATHS.legacyScoresReadOnly)
+    ? firebaseDb.ref(DB_PATHS.writeScores).limitToLast(300)
+        .once('value').then(function(snap) {
+          var arr = [];
+          snap.forEach(function(child) {
+            var v = child.val();
+            if (v && v.name) arr.push(Object.assign({}, v, {key: child.key, _source: 'devScores'}));
+          });
+          return arr;
+        }).catch(function() { return []; })
+    : Promise.resolve([]);
+
+  Promise.all([p1, p2, p3]).then(function(results) {
+    var all = [].concat(results[0], results[1], results[2]);
+    all.sort(function(a, b) { return (b.ts || 0) - (a.ts || 0); });
+    _renderAdminPanelUI(all.slice(0, 300));
+  }).catch(function(e) {
+    console.warn('Admin merge failed:', e.message);
     _renderAdminPanelUI([]);
-  }
+  });
 }
 
 function _renderAdminPanelUI(scores) {
@@ -2610,11 +2656,13 @@ function _renderAdminPanelUI(scores) {
   else sorted.sort(function(a,b){ return (b.score||0)-(a.score||0); });
 
   listEl.innerHTML = sortBar + sorted.map(function(s, i) {
+    var sourceLabel = s._source === 'gameLogs' ? '[gameLogs]' : s._source === 'legacyScores' ? '[legacyScores]' : s._source === 'devScores' ? '[devScores]' : '[scores]';
+    var sourceColor = s._source === 'gameLogs' ? '#06d6a0' : s._source === 'legacyScores' ? '#ffd166' : '#4cc9f0';
     return '<div class="lb-admin-row">' +
       '<div style="font-family:inherit;font-size:11px;color:var(--text2);width:24px;flex-shrink:0">'+(i+1)+'</div>' +
       '<img class="lb-admin-av" src="'+(s.avatarSrc||'')+'" onerror="this.style.display=\'none\'" alt="">' +
       '<div class="lb-admin-info">' +
-        '<div class="lb-admin-name">'+s.name+'</div>' +
+        '<div class="lb-admin-name">'+s.name+' <span style="font-size:9px;color:'+sourceColor+';font-weight:700;">'+sourceLabel+'</span></div>' +
         '<div class="lb-admin-meta">'+(s.song||s.songId||'')+' · '+(s.diff||'').toUpperCase()+' · '+s.date+'</div>' +
       '</div>' +
       '<div class="lb-admin-score">'+(s.score||0).toLocaleString()+'</div>' +
@@ -2674,11 +2722,15 @@ function adminExportLB() {
 
 // Admin: 遷移舊 scores 到新版 leaderboards（只需手動執行一次）
 function adminMigrateScores() {
-  if (!confirm('將舊 scores 資料遷移到新版 leaderboards？\n這個動作只需執行一次，不會清除舊資料。')) return;
+  var msg = TEST_MODE
+    ? '測試模式：將只讀取正式 scores，並把結果寫入 dev/leaderboards/rhythm，不會修改正式資料。繼續嗎？'
+    : '將舊 scores 資料遷移到新版 leaderboards？\n這個動作只需執行一次，不會清除舊資料。';
+  if (!confirm(msg)) return;
   if (!FIREBASE_ENABLED || !firebaseDb) { alert('Firebase 未連線'); return; }
 
-  firebaseDb.ref(DB_PREFIX + 'scores').limitToLast(300).once('value').then(function(snapshot) {
-    var best = {}; // key: songId/diff/playerKey → entry
+  // 永遠從正式 scores 讀（legacyScoresReadOnly），但只寫到 leaderboardsBase（TEST_MODE=true 時為 dev）
+  firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300).once('value').then(function(snapshot) {
+    var best = {};
     snapshot.forEach(function(child) {
       var s = child.val();
       if (!s || !s.name) return;
@@ -2708,17 +2760,14 @@ function adminMigrateScores() {
     });
 
     var writes = Object.keys(best).map(function(k) {
-      return firebaseDb.ref(DB_PREFIX + 'leaderboards/rhythm/' + k).transaction(function(existing) {
-        // 只有新資料分數更高時才覆蓋
-        if (!existing || best[k].bestScore > (existing.bestScore || 0)) {
-          return best[k];
-        }
-        return existing; // 不動
+      return firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + k).transaction(function(existing) {
+        if (!existing || best[k].bestScore > (existing.bestScore || 0)) return best[k];
+        return existing;
       });
     });
 
     Promise.all(writes).then(function() {
-      alert('遷移完成！共處理 ' + Object.keys(best).length + ' 筆最高分紀錄。');
+      alert('遷移完成！共處理 ' + Object.keys(best).length + ' 筆最高分紀錄。\n寫入路徑：' + DB_PATHS.leaderboardsBase);
     }).catch(function(e) {
       alert('遷移失敗：' + e.message);
     });
