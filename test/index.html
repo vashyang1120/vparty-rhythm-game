@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-3</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-4</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1513,25 +1513,84 @@ function loadPlayerProfile() {
 function savePlayerProfile() {
   var newId = normalizePlayerId(document.getElementById('player-id-input').value);
   var oldBaseAvatarKey = PLAYER.baseAvatarKey;
-  var newBaseAvatarKey = PLAYER.baseAvatarKey; // 由 initProfile 的 avatar-grid 點擊更新
+  var newBaseAvatarKey = PLAYER.baseAvatarKey; // 由 avatar-grid 點擊更新
   var oldPlayerKey = PLAYER.playerKey;
   var newPlayerKey = makePlayerKey(newId, newBaseAvatarKey);
 
-  var baseChanged = (oldBaseAvatarKey !== newBaseAvatarKey); // baseAvatarKey 真的改變
-  var identityChanged = (oldPlayerKey !== newPlayerKey);     // playerKey 改變（ID 或 base 其一改變）
+  var baseChanged = (oldBaseAvatarKey !== newBaseAvatarKey);
+  var identityChanged = (oldPlayerKey !== newPlayerKey);
 
   PLAYER.id = newId;
   PLAYER.playerKey = newPlayerKey;
 
   if (baseChanged) {
-    // 只有真的換了身份頭像，才重設 displayAvatarKey
+    // 換了身份頭像，顯示頭像直接重設為 baseAvatarKey
     PLAYER.displayAvatarKey = newBaseAvatarKey;
     PLAYER.avatarKey = newBaseAvatarKey;
+    PLAYER.avatarSrc = getAvatarByKey(newBaseAvatarKey).src;
+    _saveLocalProfile();
+    if (identityChanged) {
+      ensurePlayerProfile();
+      loadUnlockedAvatars();
+    }
+    return;
   }
-  // 只改 ID 不改 baseAvatarKey → 保留原本裝備的 displayAvatarKey
 
-  PLAYER.avatarSrc = getAvatarByKey(PLAYER.displayAvatarKey).src;
+  if (!identityChanged) {
+    // 什麼都沒變，直接存即可，不改 displayAvatarKey
+    PLAYER.avatarSrc = getAvatarByKey(PLAYER.displayAvatarKey).src;
+    _saveLocalProfile();
+    return;
+  }
 
+  // identityChanged（只改 ID）：
+  // 必須以新 playerKey 的 Firebase 資料為準
+  // 先暫時把 displayAvatarKey 設回 baseAvatarKey，等雲端資料回來再決定
+  PLAYER.displayAvatarKey = newBaseAvatarKey;
+  PLAYER.avatarKey = newBaseAvatarKey;
+  PLAYER.avatarSrc = getAvatarByKey(newBaseAvatarKey).src;
+  _saveLocalProfile();
+
+  // 載入新 playerKey 的 profile 和 unlockedAvatars
+  ensurePlayerProfile().then(function() {
+    return loadUnlockedAvatars();
+  }).then(function(unlocked) {
+    // 檢查 Firebase profile 的 displayAvatarKey 是否在新 playerKey 已解鎖
+    if (!FIREBASE_ENABLED || !firebaseDb) return;
+    var pKey = PLAYER.playerKey;
+    firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').once('value').then(function(snap) {
+      var fbProfile = snap.val();
+      var fbDisplayKey = fbProfile && fbProfile.displayAvatarKey;
+      var isUnlockable = fbDisplayKey && UNLOCKABLE_AVATARS.find(function(a){ return a.key === fbDisplayKey; });
+      var isUnlockedInNew = fbDisplayKey && unlocked && unlocked[fbDisplayKey] && unlocked[fbDisplayKey].unlocked;
+
+      if (fbDisplayKey && (!isUnlockable || isUnlockedInNew)) {
+        // A. Firebase profile 的 displayAvatarKey 存在且已解鎖（或是 baseAvatarKey 等非解鎖類）
+        PLAYER.displayAvatarKey = fbDisplayKey;
+        PLAYER.avatarKey = fbDisplayKey;
+        PLAYER.avatarSrc = getAvatarByKey(fbDisplayKey).src;
+      } else {
+        // B. 新身份沒有解鎖舊 displayAvatarKey，保持 baseAvatarKey
+        PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
+        PLAYER.avatarKey = PLAYER.baseAvatarKey;
+        PLAYER.avatarSrc = getAvatarByKey(PLAYER.baseAvatarKey).src;
+        // 更新 Firebase profile
+        firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').update({
+          displayAvatarKey: PLAYER.baseAvatarKey,
+          avatarKey: PLAYER.baseAvatarKey,
+          updatedAt: Date.now()
+        });
+      }
+      _saveLocalProfile();
+      // 更新 UI
+      var sbAv = document.getElementById('sb-avatar');
+      if (sbAv) sbAv.src = PLAYER.avatarSrc;
+    });
+  });
+}
+
+// 儲存到 localStorage（不含 Firebase 操作）
+function _saveLocalProfile() {
   var profile = {
     id: PLAYER.id,
     baseAvatarKey: PLAYER.baseAvatarKey,
@@ -1541,12 +1600,6 @@ function savePlayerProfile() {
   };
   localStorage.setItem('vPartyPlayerProfile', JSON.stringify(profile));
   localStorage.setItem('vPartyProfile', JSON.stringify({id: PLAYER.id, avatarKey: PLAYER.avatarKey}));
-
-  // 如果 playerKey 有變化（含只改 ID），重新同步雲端
-  if (identityChanged) {
-    ensurePlayerProfile();
-    loadUnlockedAvatars();
-  }
 }
 
 function initProfile() {
@@ -1618,16 +1671,9 @@ document.getElementById('btn-lb-go').onclick = function(){
 document.getElementById('btn-profile-back').onclick = function(){ go('s-title'); };
 document.getElementById('btn-profile-ok').onclick = function(){
   saveProfile();
-  // savePlayerProfile 內部已處理 baseChanged 時的雲端同步
-  // 確保最新 playerKey 的資料載入完成後再進選歌
-  var syncReady = (ensurePlayerProfile && typeof ensurePlayerProfile === 'function')
-    ? ensurePlayerProfile()
-    : Promise.resolve();
-  syncReady.then(function() {
-    loadUnlockedAvatars();
-    loadSongs();
-    go('s-songlist');
-  });
+  // savePlayerProfile 已處理雲端同步，直接進選歌
+  loadSongs();
+  go('s-songlist');
 };
 document.getElementById('btn-back-song').onclick    = function(){ go('s-profile'); };
 document.getElementById('btn-start').onclick        = initGame;
@@ -2510,9 +2556,22 @@ function renderUnlockPanel() {
   if (!grid) return;
   grid.innerHTML = '';
 
+  // 防呆：如果 displayAvatarKey 是 UNLOCKABLE_AVATARS 但未解鎖，自動修正回 baseAvatarKey
+  var displayIsUnlockable = UNLOCKABLE_AVATARS.find(function(a){ return a.key === PLAYER.displayAvatarKey; });
+  if (displayIsUnlockable) {
+    var displayIsUnlocked = unlockedAvatars[PLAYER.displayAvatarKey] && unlockedAvatars[PLAYER.displayAvatarKey].unlocked;
+    if (!displayIsUnlocked) {
+      PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
+      PLAYER.avatarKey = PLAYER.baseAvatarKey;
+      PLAYER.avatarSrc = getAvatarByKey(PLAYER.baseAvatarKey).src;
+      _saveLocalProfile();
+      if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
+    }
+  }
+
   UNLOCKABLE_AVATARS.forEach(function(av) {
     var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
-    var isEquipped = PLAYER.displayAvatarKey === av.key;
+    var isEquipped = (PLAYER.displayAvatarKey === av.key) && isUnlocked; // 必須已解鎖才能顯示使用中
     var src = resolveAssetPath(av.file);
 
     var card = document.createElement('div');
