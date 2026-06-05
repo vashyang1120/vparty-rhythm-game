@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-debug-test-2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-1</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -886,6 +886,35 @@ body.portrait-game #s-admin {
   <div class="btn-row" style="margin-top:12px;">
     <button class="btn btn-p" id="btn-profile-ok">確認 🎀</button>
     <button class="btn btn-d" id="btn-profile-back">返回</button>
+  </div>
+  <div style="margin-top:8px;">
+    <button class="btn btn-b" id="btn-open-unlock" onclick="openUnlockPanel()" style="font-size:12px;padding:6px 16px;">🔓 解鎖 / 更換頭像</button>
+  </div>
+</div>
+
+<!-- UNLOCK PANEL -->
+<div id="s-unlock" class="screen off">
+  <h2>🔓 頭像收藏</h2>
+  <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-align:center;">
+    身份頭像：<strong id="unlock-base-label">-</strong>　
+    顯示頭像：<strong id="unlock-display-label">-</strong>
+  </div>
+  <div id="unlock-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;width:min(600px,94vw);max-height:60vh;overflow-y:auto;padding:4px;"></div>
+  <div id="unlock-flash" class="hidden" style="text-align:center;color:#06d6a0;font-weight:700;margin-top:8px;font-size:14px;"></div>
+  <!-- PIN 輸入區 -->
+  <div id="unlock-pin-area" style="display:none;margin-top:12px;text-align:center;">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">
+      輸入 4 碼遠端 PIN 或 6 碼管理員 PIN
+    </div>
+    <input id="unlock-pin-input" type="tel" maxlength="6" placeholder="輸入 PIN"
+      style="width:120px;padding:8px;font-size:18px;letter-spacing:.2em;text-align:center;border:2px solid var(--pink);border-radius:8px;background:var(--pink-bg);">
+    <div class="btn-row" style="margin-top:8px;justify-content:center;">
+      <button class="btn btn-p" style="font-size:12px;padding:6px 16px;" onclick="submitUnlockPin()">確認</button>
+      <button class="btn btn-d" style="font-size:12px;padding:6px 16px;" onclick="document.getElementById('unlock-pin-area').style.display='none'">取消</button>
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:12px;">
+    <button class="btn btn-d" id="btn-unlock-back">← 返回</button>
   </div>
 </div>
 
@@ -1054,12 +1083,14 @@ var DB_PATHS = TEST_MODE ? {
   writeScores:          'dev/scores',
   gameLogs:             'dev/gameLogs/rhythm',
   leaderboardsBase:     'dev/leaderboards/rhythm',
-  legacyScoresReadOnly: 'scores'
+  legacyScoresReadOnly: 'scores',
+  players:              'dev/players'
 } : {
   writeScores:          'scores',
   gameLogs:             'gameLogs/rhythm',
   leaderboardsBase:     'leaderboards/rhythm',
-  legacyScoresReadOnly: 'scores'
+  legacyScoresReadOnly: 'scores',
+  players:              'players'
 };
 
 function resolveAssetPath(url) {
@@ -1193,6 +1224,35 @@ var PLAYER = {
   playerKey: ''
 };
 
+// ═══════════════════════════════════════════════════════
+//  UNLOCK SYSTEM
+// ═══════════════════════════════════════════════════════
+var ADMIN_UNLOCK_PIN = '952740';
+var REMOTE_UNLOCK_PINS = {
+  '1101': 'xiaov_base',
+  '1201': 'dance_sister_01',
+  '1202': 'balloon_sister_01',
+  '1203': 'balloon_sister_02',
+  '2101': 'balloon_brother_01',
+  '2102': 'balloon_brother_02',
+  '2103': 'balloon_brother_03'
+};
+
+var UNLOCKABLE_AVATARS = [
+  { key: 'xiaov_base',         name: '小V',         file: 'assets/avatars/xiaov_base.png',         tier: 'wave1', unlockCategory: 'first_play',   unlockText: '完成任一遊戲 1 場' },
+  { key: 'dance_sister_01',    name: '唱跳姐姐',    file: 'assets/avatars/dance_sister_01.png',    tier: 'wave1', unlockCategory: 'social_ig_fb', unlockText: '追蹤 IG 或 FB 粉專' },
+  { key: 'balloon_sister_01',  name: '氣球姐姐 1',  file: 'assets/avatars/balloon_sister_01.png',  tier: 'wave1', unlockCategory: 'social_line',  unlockText: '加官方 LINE 好友' },
+  { key: 'balloon_sister_02',  name: '氣球姐姐 2',  file: 'assets/avatars/balloon_sister_02.png',  tier: 'wave1', unlockCategory: 'social_google',unlockText: 'Google 商家 5 星好評' },
+  { key: 'balloon_brother_01', name: '氣球哥哥 1',  file: 'assets/avatars/balloon_brother_01.png', tier: 'wave2', unlockCategory: 'game_tetris',  unlockText: '方塊遊戲達指定分數' },
+  { key: 'balloon_brother_02', name: '氣球哥哥 2',  file: 'assets/avatars/balloon_brother_02.png', tier: 'wave2', unlockCategory: 'game_rhythm',  unlockText: '節奏遊戲任一首達 A 以上' },
+  { key: 'balloon_brother_03', name: '氣球哥哥 3',  file: 'assets/avatars/balloon_brother_03.png', tier: 'wave2', unlockCategory: 'game_adventure',unlockText: '冒險遊戲通過指定進度' },
+  { key: 'bubble_brother_01',  name: '泡泡哥哥',    file: 'assets/avatars/bubble_brother_01.png',  tier: 'rare',  unlockCategory: 'event',        unlockText: '泡泡活動限定 / 特別活動' },
+  { key: 'xiaov_special',      name: '小V 特別版',  file: 'assets/avatars/xiaov_special.png',      tier: 'rare',  unlockCategory: 'special',      unlockText: '打敗小V / 特別活動 / 高階成就' }
+];
+
+// 本機解鎖狀態 { avatarKey: {unlocked, source, unlockedAt} }
+var unlockedAvatars = {};
+
 // ── 工具函式 ──────────────────────────────────────────
 function normalizePlayerId(id) {
   return (id || '').trim() || '玩家';
@@ -1203,11 +1263,171 @@ function makePlayerKey(id, baseAvatarKey) {
 }
 
 function getAvatarByKey(key) {
+  // 先找 UNLOCKABLE_AVATARS，再找 AVATARS
+  var ua = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
+  if (ua) return { key: ua.key, src: resolveAssetPath(ua.file) };
   return AVATARS.find(function(a){ return a.key === key; }) || AVATARS[0];
 }
 
 function getDisplayAvatarSrc() {
   return getAvatarByKey(PLAYER.displayAvatarKey).src;
+}
+
+// ── 解鎖系統函式 ──────────────────────────────────────
+
+function ensurePlayerProfile() {
+  if (!FIREBASE_ENABLED) return Promise.resolve();
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) return;
+    var pKey = PLAYER.playerKey;
+    if (!pKey) return;
+    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').once('value').then(function(snap) {
+      var profile = snap.val();
+      if (!profile) {
+        // 建立新 profile
+        var newProfile = {
+          id: PLAYER.id,
+          name: PLAYER.id,
+          playerKey: pKey,
+          baseAvatarKey: PLAYER.baseAvatarKey,
+          displayAvatarKey: PLAYER.displayAvatarKey,
+          avatarKey: PLAYER.avatarKey,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+        return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').set(newProfile);
+      } else {
+        // 同步 displayAvatarKey（不改 baseAvatarKey / playerKey）
+        if (profile.displayAvatarKey && profile.displayAvatarKey !== PLAYER.displayAvatarKey) {
+          PLAYER.displayAvatarKey = profile.displayAvatarKey;
+          PLAYER.avatarKey = profile.displayAvatarKey;
+          PLAYER.avatarSrc = getAvatarByKey(profile.displayAvatarKey).src;
+        }
+      }
+    });
+  });
+}
+
+function loadUnlockedAvatars() {
+  if (!FIREBASE_ENABLED) return Promise.resolve({});
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) return {};
+    var pKey = PLAYER.playerKey;
+    if (!pKey) return {};
+    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/unlockedAvatars').once('value').then(function(snap) {
+      unlockedAvatars = {};
+      snap.forEach(function(child) {
+        unlockedAvatars[child.key] = child.val();
+      });
+      return unlockedAvatars;
+    });
+  }).catch(function() { return {}; });
+}
+
+function unlockAvatar(avatarKey, source) {
+  if (!avatarKey) return Promise.resolve(false);
+  if (unlockedAvatars[avatarKey] && unlockedAvatars[avatarKey].unlocked) return Promise.resolve(false); // 已解鎖
+  var entry = { unlocked: true, source: source || 'manual', unlockedAt: Date.now() };
+  unlockedAvatars[avatarKey] = entry; // 先本機更新
+  if (!FIREBASE_ENABLED) return Promise.resolve(true);
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) return true;
+    var pKey = PLAYER.playerKey;
+    if (!pKey) return true;
+    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/unlockedAvatars/' + avatarKey).set(entry).then(function() {
+      return true;
+    });
+  }).catch(function(e) {
+    console.warn('[Unlock] write failed:', e.message);
+    return true; // 本機已更新，仍視為成功
+  });
+}
+
+function equipDisplayAvatar(avatarKey) {
+  if (!avatarKey) return;
+  if (!unlockedAvatars[avatarKey] || !unlockedAvatars[avatarKey].unlocked) {
+    console.warn('[Equip] avatarKey not unlocked:', avatarKey);
+    return;
+  }
+  // 只更新 displayAvatarKey / avatarKey，絕不改 baseAvatarKey / playerKey
+  PLAYER.displayAvatarKey = avatarKey;
+  PLAYER.avatarKey = avatarKey;
+  PLAYER.avatarSrc = getAvatarByKey(avatarKey).src;
+
+  // 同步 UI
+  var sbAv = document.getElementById('sb-avatar');
+  if (sbAv) sbAv.src = PLAYER.avatarSrc;
+  var prev = document.getElementById('avatar-preview');
+  if (prev) prev.src = PLAYER.avatarSrc;
+
+  // 同步 localStorage
+  var profile = JSON.parse(localStorage.getItem('vPartyPlayerProfile') || '{}');
+  profile.displayAvatarKey = avatarKey;
+  profile.avatarKey = avatarKey;
+  localStorage.setItem('vPartyPlayerProfile', JSON.stringify(profile));
+  localStorage.setItem('vPartyProfile', JSON.stringify({ id: PLAYER.id, avatarKey: avatarKey }));
+
+  // 同步 Firebase profile
+  if (FIREBASE_ENABLED) {
+    ensureFirebaseReady().then(function(ok) {
+      if (!ok || !firebaseDb) return;
+      var pKey = PLAYER.playerKey;
+      if (!pKey) return;
+      firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').update({
+        displayAvatarKey: avatarKey,
+        avatarKey: avatarKey,
+        updatedAt: Date.now()
+      });
+    });
+  }
+}
+
+function handleUnlockPin(pin, targetAvatarKey) {
+  pin = (pin || '').trim();
+  if (pin.length === 6 && pin === ADMIN_UNLOCK_PIN) {
+    // 管理員 PIN：解鎖指定 avatarKey
+    if (!targetAvatarKey) {
+      alert('請先選擇要解鎖的頭像');
+      return;
+    }
+    unlockAvatar(targetAvatarKey, 'admin_pin').then(function(isNew) {
+      if (isNew) {
+        alert('✅ 解鎖成功！');
+        renderUnlockPanel();
+      } else {
+        alert('這個頭像已經解鎖了！');
+      }
+    });
+  } else if (pin.length === 4) {
+    // 遠端 PIN
+    var mapped = REMOTE_UNLOCK_PINS[pin];
+    if (!mapped) {
+      alert('PIN 錯誤');
+      return;
+    }
+    unlockAvatar(mapped, 'remote_pin').then(function(isNew) {
+      if (isNew) {
+        alert('✅ 解鎖成功！');
+        renderUnlockPanel();
+      } else {
+        alert('這個頭像已經解鎖了！');
+      }
+    });
+  } else {
+    alert('PIN 錯誤');
+  }
+}
+
+function autoUnlockFirstPlayAvatar() {
+  if (unlockedAvatars['xiaov_base'] && unlockedAvatars['xiaov_base'].unlocked) return;
+  unlockAvatar('xiaov_base', 'auto_first_play').then(function(isNew) {
+    if (isNew) {
+      setTimeout(function() {
+        var msg = document.getElementById('unlock-flash');
+        if (msg) { msg.textContent = '🎉 解鎖新頭像：小V！'; msg.classList.remove('hidden'); setTimeout(function(){ msg.classList.add('hidden'); }, 3000); }
+      }, 500);
+    }
+  });
 }
 
 function migrateLocalProfile() {
@@ -1267,6 +1487,9 @@ function savePlayerProfile() {
 
 function initProfile() {
   loadPlayerProfile();
+  // 確保 Firebase profile 存在，並載入已解鎖頭像
+  ensurePlayerProfile();
+  loadUnlockedAvatars();
 
   var grid = document.getElementById('avatar-grid');
   grid.innerHTML = '';
@@ -1304,7 +1527,7 @@ function saveProfile() {
 // ═══════════════════════════════════════════════════════
 //  SCREENS
 // ═══════════════════════════════════════════════════════
-var ALL_S = ['s-title','s-profile','s-songlist','s-game','s-result','s-lb','s-admin'];
+var ALL_S = ['s-title','s-profile','s-unlock','s-songlist','s-game','s-result','s-lb','s-admin'];
 function go(id) {
   ALL_S.forEach(function(s){ document.getElementById(s).classList.toggle('off', s !== id); });
   // Hide floating fullscreen btn during game (sidebar has its own)
@@ -1341,6 +1564,8 @@ document.getElementById('btn-r-lb').onclick = function(){
 };
 document.getElementById('btn-r-home').onclick       = function(){ go('s-title'); };
 document.getElementById('btn-lb-home').onclick      = function(){ go('s-title'); };
+
+document.getElementById('btn-unlock-back').onclick = function(){ go('s-profile'); };
 
 // 啟動時提前初始化 Firebase + 載入歌曲，減少等待
 ensureFirebaseReady();
@@ -2034,7 +2259,7 @@ function updateLyrics() {
   var gtSec = G.gt / 1000;
   var cur = null;
   for (var i=0; i<ly.length; i++) {
-    var tSec = ly[i].t >= 100 ? ly[i].t/1000 : ly[i].t;
+    var tSec = ly[i].t; // parseSRT 已保證 t 是秒
     if (tSec <= gtSec) cur = ly[i];
     else break;
   }
@@ -2160,12 +2385,101 @@ function endGame() {
   if (msgEl) msgEl.textContent = getGradeMsg(g);
   var isNew = saveScore(g, acc);
   document.getElementById('r-rec').classList.toggle('hidden', !isNew);
+  // 完成一場遊戲後自動解鎖 xiaov_base
+  autoUnlockFirstPlayAvatar();
   go('s-result');
 }
 
 // ═══════════════════════════════════════════════════════
 //  LEADERBOARD
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  UNLOCK PANEL UI
+// ═══════════════════════════════════════════════════════
+var _unlockPinTarget = null;
+
+function openUnlockPanel() {
+  loadUnlockedAvatars().then(function() {
+    renderUnlockPanel();
+    go('s-unlock');
+  });
+}
+
+function renderUnlockPanel() {
+  var baseLabel = document.getElementById('unlock-base-label');
+  var dispLabel = document.getElementById('unlock-display-label');
+  if (baseLabel) baseLabel.textContent = PLAYER.baseAvatarKey;
+  if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
+
+  var grid = document.getElementById('unlock-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  UNLOCKABLE_AVATARS.forEach(function(av) {
+    var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
+    var isEquipped = PLAYER.displayAvatarKey === av.key;
+    var src = resolveAssetPath(av.file);
+
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:2px solid ' + (isEquipped ? 'var(--pink)' : (isUnlocked ? 'var(--pink-lt)' : '#ccc')) + ';border-radius:12px;padding:10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;';
+
+    var imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'width:64px;height:64px;border-radius:50%;overflow:hidden;background:var(--pink-bg);' + (!isUnlocked ? 'filter:grayscale(1) opacity(.4);' : '');
+    var img = document.createElement('img');
+    img.src = src;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+    imgWrap.appendChild(img);
+    card.appendChild(imgWrap);
+
+    var name = document.createElement('div');
+    name.textContent = av.name;
+    name.style.cssText = 'font-size:12px;font-weight:700;color:var(--text);';
+    card.appendChild(name);
+
+    if (isEquipped) {
+      var badge = document.createElement('div');
+      badge.textContent = '✅ 使用中';
+      badge.style.cssText = 'font-size:10px;color:var(--pink);font-weight:700;';
+      card.appendChild(badge);
+    } else if (isUnlocked) {
+      var btn = document.createElement('button');
+      btn.textContent = '設為顯示頭像';
+      btn.className = 'btn btn-s';
+      btn.style.cssText = 'font-size:10px;padding:4px 8px;';
+      btn.onclick = (function(key) { return function() {
+        equipDisplayAvatar(key);
+        renderUnlockPanel();
+      }; })(av.key);
+      card.appendChild(btn);
+    } else {
+      var unlockText = document.createElement('div');
+      unlockText.textContent = av.unlockText;
+      unlockText.style.cssText = 'font-size:9px;color:#999;line-height:1.3;';
+      card.appendChild(unlockText);
+
+      var pinBtn = document.createElement('button');
+      pinBtn.textContent = '🔑 輸入 PIN';
+      pinBtn.className = 'btn btn-b';
+      pinBtn.style.cssText = 'font-size:10px;padding:4px 8px;';
+      pinBtn.onclick = (function(key) { return function() {
+        _unlockPinTarget = key;
+        var pinArea = document.getElementById('unlock-pin-area');
+        if (pinArea) { pinArea.style.display = 'block'; document.getElementById('unlock-pin-input').value = ''; document.getElementById('unlock-pin-input').focus(); }
+      }; })(av.key);
+      card.appendChild(pinBtn);
+    }
+
+    grid.appendChild(card);
+  });
+}
+
+function submitUnlockPin() {
+  var pin = (document.getElementById('unlock-pin-input').value || '').trim();
+  document.getElementById('unlock-pin-area').style.display = 'none';
+  handleUnlockPin(pin, _unlockPinTarget);
+  _unlockPinTarget = null;
+}
+
 // ═══════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════
@@ -2399,7 +2713,6 @@ function renderLBFromFirebase() {
   var el = document.getElementById('lb-list');
   el.innerHTML = '<div class="lb-loading">載入中... 🌸</div>';
   var songId = lbSongId || 'song001';
-  var diff = window._lbDiff || 'normal';
 
   function normalizeEntry(v, source) {
     var pk = v.playerKey || makePlayerKey(v.name, v.avatarKey);
@@ -2423,36 +2736,44 @@ function renderLBFromFirebase() {
     };
   }
 
-  // 同時讀三個來源
-  var p1 = firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + diff)
-    .once('value').then(function(snap) {
-      var arr = [];
-      snap.forEach(function(child) {
-        var v = child.val();
-        if (v && v.name) arr.push(normalizeEntry(v, 'leaderboards'));
-      });
-      return arr;
-    }).catch(function() { return []; });
+  // p1：同時讀 leaderboards 的 easy / normal / hard 三個節點
+  var diffs = ['easy', 'normal', 'hard'];
+  var lbPromises = diffs.map(function(d) {
+    return firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + d)
+      .once('value').then(function(snap) {
+        var arr = [];
+        snap.forEach(function(child) {
+          var v = child.val();
+          if (v && v.name) arr.push(normalizeEntry(v, 'leaderboards'));
+        });
+        return arr;
+      }).catch(function() { return []; });
+  });
+  var p1 = Promise.all(lbPromises).then(function(arrays) {
+    return [].concat.apply([], arrays);
+  });
 
+  // p2：舊 scores，只依 songId 篩選，不篩 diff
   var p2 = firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300)
     .once('value').then(function(snap) {
       var arr = [];
       snap.forEach(function(child) {
         var v = child.val();
-        if (v && v.name && (v.songId || 'song001') === songId && (v.diff || 'normal') === diff) {
+        if (v && v.name && (v.songId || 'song001') === songId) {
           arr.push(normalizeEntry(v, 'legacyScores'));
         }
       });
       return arr;
     }).catch(function() { return []; });
 
+  // p3：dev scores（TEST_MODE 時才有，正式版 writeScores === legacyScoresReadOnly 所以跳過）
   var p3 = (DB_PATHS.writeScores !== DB_PATHS.legacyScoresReadOnly)
     ? firebaseDb.ref(DB_PATHS.writeScores).limitToLast(300)
         .once('value').then(function(snap) {
           var arr = [];
           snap.forEach(function(child) {
             var v = child.val();
-            if (v && v.name && (v.songId || 'song001') === songId && (v.diff || 'normal') === diff) {
+            if (v && v.name && (v.songId || 'song001') === songId) {
               arr.push(normalizeEntry(v, 'devScores'));
             }
           });
@@ -2462,6 +2783,7 @@ function renderLBFromFirebase() {
 
   Promise.all([p1, p2, p3]).then(function(results) {
     var all = [].concat(results[0], results[1], results[2]);
+    // 同一 playerKey 只保留最高分，分數相同保留較新的
     var best = {};
     all.forEach(function(e) {
       var k = e.playerKey;
@@ -3116,227 +3438,6 @@ window.addEventListener('orientationchange', function() {
 
 </script>
 
-<!-- ═══ DEBUG PANEL ═══ -->
-<div id="debug-panel" style="
-  display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:99999;
-  background:rgba(0,0,0,.92); color:#0f0; font-family:monospace; font-size:12px;
-  overflow-y:auto; padding:16px; box-sizing:border-box;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <span style="color:#ff0;font-size:16px;font-weight:bold;">🔧 v2.4.7-debug-test-2</span>
-    <button onclick="document.getElementById('debug-panel').style.display='none'"
-      style="background:#f00;color:#fff;border:none;padding:4px 12px;cursor:pointer;border-radius:4px;font-size:13px;">✕ 關閉</button>
-  </div>
-  <div id="debug-content">載入中...</div>
-</div>
-
-<!-- Debug 觸發按鈕（右下角） -->
-<button id="debug-trigger" onclick="showDebugPanel()"
-  style="position:fixed;bottom:60px;right:10px;z-index:9999;background:#333;color:#0f0;
-  border:1px solid #0f0;padding:4px 10px;font-size:11px;font-family:monospace;
-  cursor:pointer;border-radius:4px;opacity:.7;">DEBUG</button>
-
-<script>
-// ═══════════════════════════════════════════════════════
-//  DEBUG PANEL
-// ═══════════════════════════════════════════════════════
-var _debugLastFBError = null;
-
-// Hook Firebase read errors
-(function() {
-  var origEnsure = ensureFirebaseReady;
-  window._origEnsureFirebaseReady = origEnsure;
-})();
-
-async function showDebugPanel() {
-  document.getElementById('debug-panel').style.display = 'block';
-  document.getElementById('debug-content').textContent = '收集資料中...';
-
-  var lines = [];
-
-  // ── 1. 環境 ──
-  lines.push('═══ 環境 ═══');
-  lines.push('location.href: ' + location.href);
-  lines.push('TEST_MODE: ' + TEST_MODE);
-  lines.push('BASE_PATH: "' + BASE_PATH + '"');
-  lines.push('DB_PATHS.writeScores: ' + DB_PATHS.writeScores);
-  lines.push('DB_PATHS.gameLogs: ' + DB_PATHS.gameLogs);
-  lines.push('DB_PATHS.leaderboardsBase: ' + DB_PATHS.leaderboardsBase);
-  lines.push('DB_PATHS.legacyScoresReadOnly: ' + DB_PATHS.legacyScoresReadOnly);
-
-  // ── 2. Firebase ──
-  lines.push('');
-  lines.push('═══ Firebase ═══');
-  lines.push('SDK 載入: ' + (typeof firebase !== 'undefined' ? '✅ 是' : '❌ 否'));
-  lines.push('firebaseAuthReady: ' + firebaseAuthReady);
-  lines.push('firebaseDb: ' + (firebaseDb ? '✅ 存在' : '❌ null'));
-
-  var uid = '(未登入)';
-  try {
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-      var user = firebase.auth().currentUser;
-      uid = user ? user.uid : '(currentUser = null)';
-    }
-  } catch(e) { uid = '讀取失敗: ' + e.message; }
-  lines.push('currentUser uid: ' + uid);
-
-  if (_debugLastFBError) {
-    lines.push('❌ 最後 Firebase 錯誤: ' + _debugLastFBError);
-  } else {
-    lines.push('最後 Firebase 錯誤: 無');
-  }
-
-  // ── 3. 嘗試 Firebase auth ──
-  lines.push('');
-  lines.push('═══ Firebase Auth 測試 ═══');
-  try {
-    var fbOk = await ensureFirebaseReady();
-    lines.push('ensureFirebaseReady() 結果: ' + (fbOk ? '✅ OK' : '❌ 失敗'));
-    lines.push('firebaseDb after ensure: ' + (firebaseDb ? '✅ 存在' : '❌ null'));
-    var user2 = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
-    lines.push('currentUser after ensure: ' + (user2 ? user2.uid : 'null'));
-  } catch(e) {
-    lines.push('ensureFirebaseReady() 例外: ' + e.message);
-  }
-
-  // ── 4. 頭像 ──
-  lines.push('');
-  lines.push('═══ 頭像 ═══');
-  lines.push('AVATARS 數量: ' + (AVATARS ? AVATARS.length : '未定義'));
-  lines.push('AVATARS 是否只有一份: ' + (AVATARS && AVATARS.length === 17 ? '✅ 是（17個）' : '⚠️ 數量異常: ' + (AVATARS ? AVATARS.length : 0)));
-  lines.push('第一個 avatar src: ' + (AVATARS && AVATARS[0] ? AVATARS[0].src : '未定義'));
-  lines.push('PLAYER.avatarKey: ' + PLAYER.avatarKey);
-  lines.push('PLAYER.baseAvatarKey: ' + PLAYER.baseAvatarKey);
-  lines.push('PLAYER.displayAvatarKey: ' + PLAYER.displayAvatarKey);
-  lines.push('PLAYER.avatarSrc: ' + PLAYER.avatarSrc);
-
-  // 測試 boy1.png 載入
-  var boy1Src = resolveAssetPath('assets/avatars/boy1.png');
-  lines.push('boy1.png 預期路徑: ' + boy1Src);
-  var boy1Ok = await new Promise(function(res) {
-    var img = new Image();
-    img.onload = function() { res('✅ 載入成功'); };
-    img.onerror = function() { res('❌ 載入失敗（404 或路徑錯誤）'); };
-    img.src = boy1Src;
-  });
-  lines.push('boy1.png 載入測試: ' + boy1Ok);
-
-  // 測試目前玩家頭像
-  if (PLAYER.avatarSrc) {
-    var avOk = await new Promise(function(res) {
-      var img = new Image();
-      img.onload = function() { res('✅ 載入成功'); };
-      img.onerror = function() { res('❌ 載入失敗'); };
-      img.src = PLAYER.avatarSrc;
-    });
-    lines.push('玩家頭像載入測試 (' + PLAYER.avatarSrc + '): ' + avOk);
-  } else {
-    lines.push('玩家頭像 src 為空');
-  }
-
-  // ── 5. 歌曲 ──
-  lines.push('');
-  lines.push('═══ 歌曲資料 ═══');
-  lines.push('songsLoadPromise 狀態: ' + (songsLoadPromise ? '已建立' : '尚未建立'));
-  lines.push('songsLoadError: ' + (songsLoadError || '無'));
-  lines.push('songs.json 是否載入: ' + (SONGS && SONGS.length > 0 ? '✅ 是，共 ' + SONGS.length + ' 首' : '❌ 未載入或空'));
-
-  if (SONGS && SONGS.length) {
-    for (var i = 0; i < SONGS.length; i++) {
-      await debugCheckSong(SONGS[i], lines);
-    }
-  }
-
-  // ── 渲染 ──
-  var el = document.getElementById('debug-content');
-  el.innerHTML = lines.map(function(l) {
-    var color = '#0f0';
-    if (l.indexOf('❌') !== -1) color = '#f66';
-    else if (l.indexOf('✅') !== -1) color = '#6f6';
-    else if (l.indexOf('═══') !== -1) color = '#ff0';
-    else if (l.indexOf('⚠️') !== -1) color = '#fa0';
-    return '<div style="color:' + color + ';margin:1px 0;white-space:pre-wrap;">' + escHtml(l) + '</div>';
-  }).join('');
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-async function debugCheckSong(song, lines) {
-  lines.push('');
-  lines.push('── ' + song.id + ': ' + song.title + ' ──');
-  lines.push('  audioUrl: ' + song.audioUrl);
-  lines.push('  beatmapUrl: ' + song.beatmapUrl);
-  lines.push('  srtUrl: ' + (song.srtUrl || '(無)'));
-  lines.push('  duration (songs.json): ' + song.duration + 's');
-
-  // beatmap 分析
-  try {
-    var bmResp = await fetch(song.beatmapUrl);
-    if (!bmResp.ok) throw new Error('HTTP ' + bmResp.status);
-    var bm = await bmResp.json();
-    var noteCount = bm.length;
-    var lastNote = bm.length ? bm[bm.length - 1] : null;
-    var lastT = lastNote ? (lastNote.t || 0) : 0;
-    // hold 結束時間
-    if (lastNote && lastNote.hold) {
-      var holdMs = lastNote.hold > 10 ? lastNote.hold / 1000 : lastNote.hold;
-      lastT = lastT + holdMs;
-    }
-    lines.push('  beatmap notes: ' + noteCount);
-    lines.push('  beatmap 最後 note 時間: ' + lastT.toFixed(2) + 's');
-    if (song.duration - lastT > 10) {
-      lines.push('  ⚠️ beatmap 可能太短（比 duration 少 ' + (song.duration - lastT).toFixed(1) + 's）');
-    } else {
-      lines.push('  ✅ beatmap 長度 OK');
-    }
-  } catch(e) {
-    lines.push('  ❌ beatmap 載入失敗: ' + e.message);
-  }
-
-  // srt 分析
-  if (song.srtUrl) {
-    try {
-      var srtResp = await fetch(song.srtUrl);
-      if (!srtResp.ok) throw new Error('HTTP ' + srtResp.status);
-      var srtText = await srtResp.text();
-      // 找最後一個時間戳的結束時間
-      var timeMatches = srtText.match(/(\d+:\d+:\d+[,.]\d+)\s+-->/g);
-      var lastEnd = 0;
-      if (timeMatches) {
-        // 找所有 --> 後的結束時間
-        var allTimes = srtText.match(/-->\s*(\d+):(\d+):(\d+)[,.](\d+)/g);
-        if (allTimes && allTimes.length) {
-          var last = allTimes[allTimes.length - 1];
-          var m = last.match(/(\d+):(\d+):(\d+)[,.](\d+)/);
-          if (m) lastEnd = parseInt(m[1])*3600 + parseInt(m[2])*60 + parseInt(m[3]) + parseInt(m[4])/1000;
-        }
-      }
-      lines.push('  srt 最後字幕結束時間: ' + lastEnd.toFixed(2) + 's');
-      if (song.duration - lastEnd > 10) {
-        lines.push('  ⚠️ 字幕可能太短（比 duration 少 ' + (song.duration - lastEnd).toFixed(1) + 's）');
-      } else {
-        lines.push('  ✅ 字幕長度 OK');
-      }
-    } catch(e) {
-      lines.push('  ❌ srt 載入失敗: ' + e.message);
-    }
-  }
-
-  // audio 實際 duration
-  try {
-    var audioOk = await new Promise(function(res) {
-      var a = new Audio();
-      a.onloadedmetadata = function() { res('✅ ' + a.duration.toFixed(2) + 's'); };
-      a.onerror = function() { res('❌ 載入失敗'); };
-      a.src = song.audioUrl;
-    });
-    lines.push('  audio 實際 duration: ' + audioOk);
-  } catch(e) {
-    lines.push('  audio duration 讀取失敗: ' + e.message);
-  }
-}
-</script>
 
 </body>
 </html>
