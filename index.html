@@ -1657,6 +1657,10 @@ function _updateProfileUI() {
 }
 
 function startEditBaseAvatar() {
+  if (isProfileIdentityDirty()) {
+    alert('你已變更玩家 ID。\n請先按「確認」完成身份切換，再變更身份頭像。');
+    return;
+  }
   profileAvatarEditMode = 'base';
   document.getElementById('avatar-edit-section').style.display = 'block';
   document.getElementById('avatar-grid-label').textContent = '選擇身份頭像';
@@ -1834,6 +1838,8 @@ function saveProfile() {
   if (!ok) return false;
   document.getElementById('sb-avatar').src = PLAYER.avatarSrc;
   document.getElementById('sb-name').textContent = PLAYER.id;
+  var dirtyHint = document.getElementById('profile-identity-dirty-hint');
+  if (dirtyHint) dirtyHint.style.display = 'none';
   return true;
 }
 
