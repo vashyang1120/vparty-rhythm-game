@@ -1304,7 +1304,16 @@ function normalizePlayerId(id) {
 }
 
 function makePlayerKey(id, baseAvatarKey) {
-  return encodeURIComponent(normalizePlayerId(id)) + '__' + (baseAvatarKey || 'boy1');
+  return encodeFirebaseKeyPart(id) + '__' + (baseAvatarKey || 'boy1');
+}
+
+function encodeFirebaseKeyPart(s) {
+  return encodeURIComponent(normalizePlayerId(s))
+    .replace(/\./g, '%2E')
+    .replace(/#/g, '%23')
+    .replace(/\$/g, '%24')
+    .replace(/\[/g, '%5B')
+    .replace(/\]/g, '%5D');
 }
 
 function getAvatarByKey(key) {
