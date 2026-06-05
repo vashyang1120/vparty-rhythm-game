@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-3</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1004,8 +1004,14 @@ body.portrait-game #s-admin {
     <div class="stat"><div class="stat-l">MISS</div><div class="stat-v" id="r-m">0</div></div>
   </div>
   <div id="r-rec" class="newrec hidden">🎉 NEW RECORD！</div>
-  <div id="r-unlock-notify" style="display:none;margin-top:8px;padding:8px 16px;background:linear-gradient(135deg,#06d6a0,#118ab2);border-radius:12px;text-align:center;">
-    <div style="font-size:13px;font-weight:700;color:#fff;" id="r-unlock-notify-text">🎉 解鎖新頭像！</div>
+  <div id="r-unlock-notify" style="display:none;margin-top:10px;padding:12px 16px;background:linear-gradient(135deg,#06d6a0,#118ab2);border-radius:14px;text-align:center;">
+    <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">🎉 恭喜解鎖新頭像！</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.9);margin-bottom:4px;">你已解鎖：</div>
+    <div id="r-unlock-notify-names" style="font-size:13px;font-weight:700;color:#fff;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-p" style="font-size:12px;padding:6px 14px;" onclick="goToUnlockFromResult()">前往頭像收藏</button>
+      <button class="btn" style="font-size:12px;padding:6px 14px;background:#fff;color:#118ab2;" onclick="document.getElementById('r-unlock-notify').style.display='none'">稍後再說</button>
+    </div>
   </div>
   <div class="btn-row" style="margin-top:10px;">
     <button class="btn btn-p" id="btn-retry">再玩一次</button>
@@ -1420,16 +1426,30 @@ function handleUnlockPin(pin, targetAvatarKey) {
   }
 }
 
-function showUnlockNotify(text) {
-  // 在結算畫面顯示解鎖通知
+function goToUnlockFromResult() {
+  document.getElementById('r-unlock-notify').style.display = 'none';
+  loadUnlockedAvatars().then(function() {
+    renderUnlockPanel();
+    go('s-unlock');
+  });
+}
+
+// 結算畫面整合多頭像解鎖通知
+function showResultUnlockNotify(newlyUnlockedKeys) {
+  if (!newlyUnlockedKeys || !newlyUnlockedKeys.length) return;
   var notifyEl = document.getElementById('r-unlock-notify');
-  var textEl = document.getElementById('r-unlock-notify-text');
-  if (notifyEl && textEl) {
-    textEl.textContent = text;
-    notifyEl.style.display = 'block';
-    setTimeout(function() { notifyEl.style.display = 'none'; }, 5000);
-  }
-  // 也在頭像收藏頁顯示（若已開啟）
+  var namesEl = document.getElementById('r-unlock-notify-names');
+  if (!notifyEl || !namesEl) return;
+  var names = newlyUnlockedKeys.map(function(key) {
+    var av = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
+    return av ? av.name : key;
+  });
+  namesEl.textContent = names.join('、');
+  notifyEl.style.display = 'block';
+}
+
+// 舊的 showUnlockNotify 保留給頭像收藏頁的 flash 提示
+function showUnlockNotify(text) {
   var flashEl = document.getElementById('unlock-flash');
   if (flashEl) {
     flashEl.textContent = text;
@@ -1448,16 +1468,11 @@ function autoUnlockFirstPlayAvatar() {
 }
 
 function autoUnlockRhythmAAvatar(grade) {
-  // balloon_brother_02：節奏遊戲任一首達 A 以上自動解鎖
-  if (unlockedAvatars['balloon_brother_02'] && unlockedAvatars['balloon_brother_02'].unlocked) return;
-  var gradeOrder = ['D','C','B','A','S','SS','SSS','P'];
-  var gradeIdx = gradeOrder.indexOf(grade);
-  if (gradeIdx < gradeOrder.indexOf('A')) return; // 未達 A
-  unlockAvatar('balloon_brother_02', 'game_rhythm').then(function(isNew) {
-    if (isNew) {
-      setTimeout(function() { showUnlockNotify('🎉 解鎖新頭像：氣球哥哥 2！前往「解鎖 / 更換頭像」裝備看看'); }, 600);
-    }
-  });
+  // balloon_brother_02：節奏遊戲任一首達 A / A+ / S 以上自動解鎖
+  if (unlockedAvatars['balloon_brother_02'] && unlockedAvatars['balloon_brother_02'].unlocked) return Promise.resolve(false);
+  var qualifies = (grade === 'A' || grade === 'A+' || grade === 'S' || grade === 'SS' || grade === 'SSS' || grade === 'P');
+  if (!qualifies) return Promise.resolve(false);
+  return unlockAvatar('balloon_brother_02', 'game_rhythm');
 }
 
 function migrateLocalProfile() {
@@ -1497,20 +1512,23 @@ function loadPlayerProfile() {
 
 function savePlayerProfile() {
   var newId = normalizePlayerId(document.getElementById('player-id-input').value);
-  var newBaseKey = PLAYER.baseAvatarKey; // 由 initProfile 的 avatar-grid 點擊更新
+  var oldBaseAvatarKey = PLAYER.baseAvatarKey;
+  var newBaseAvatarKey = PLAYER.baseAvatarKey; // 由 initProfile 的 avatar-grid 點擊更新
   var oldPlayerKey = PLAYER.playerKey;
-  var newPlayerKey = makePlayerKey(newId, newBaseKey);
-  var baseChanged = (newPlayerKey !== oldPlayerKey);
+  var newPlayerKey = makePlayerKey(newId, newBaseAvatarKey);
+
+  var baseChanged = (oldBaseAvatarKey !== newBaseAvatarKey); // baseAvatarKey 真的改變
+  var identityChanged = (oldPlayerKey !== newPlayerKey);     // playerKey 改變（ID 或 base 其一改變）
 
   PLAYER.id = newId;
   PLAYER.playerKey = newPlayerKey;
 
   if (baseChanged) {
-    // 真的換了身份頭像，顯示頭像重設為 baseAvatarKey
-    PLAYER.displayAvatarKey = newBaseKey;
-    PLAYER.avatarKey = newBaseKey;
+    // 只有真的換了身份頭像，才重設 displayAvatarKey
+    PLAYER.displayAvatarKey = newBaseAvatarKey;
+    PLAYER.avatarKey = newBaseAvatarKey;
   }
-  // 若未換身份頭像，保留原本裝備的 displayAvatarKey
+  // 只改 ID 不改 baseAvatarKey → 保留原本裝備的 displayAvatarKey
 
   PLAYER.avatarSrc = getAvatarByKey(PLAYER.displayAvatarKey).src;
 
@@ -1524,8 +1542,8 @@ function savePlayerProfile() {
   localStorage.setItem('vPartyPlayerProfile', JSON.stringify(profile));
   localStorage.setItem('vPartyProfile', JSON.stringify({id: PLAYER.id, avatarKey: PLAYER.avatarKey}));
 
-  // 如果 playerKey 有變化，重新同步雲端資料
-  if (baseChanged) {
+  // 如果 playerKey 有變化（含只改 ID），重新同步雲端
+  if (identityChanged) {
     ensurePlayerProfile();
     loadUnlockedAvatars();
   }
@@ -2446,9 +2464,24 @@ function endGame() {
   // 重設解鎖通知
   var notifyEl = document.getElementById('r-unlock-notify');
   if (notifyEl) notifyEl.style.display = 'none';
-  // 自動解鎖：完成任一首 → xiaov_base；達 A 以上 → balloon_brother_02
-  autoUnlockFirstPlayAvatar();
-  autoUnlockRhythmAAvatar(g);
+
+  // 整合多個自動解鎖，收集後一次顯示
+  var newlyUnlockedKeys = [];
+  var p1 = (unlockedAvatars['xiaov_base'] && unlockedAvatars['xiaov_base'].unlocked)
+    ? Promise.resolve(false)
+    : unlockAvatar('xiaov_base', 'auto_first_play').then(function(ok){ if(ok) newlyUnlockedKeys.push('xiaov_base'); return ok; });
+  var p2 = (function(){
+    var qualifies = (g === 'A' || g === 'A+' || g === 'S' || g === 'SS' || g === 'SSS' || g === 'P');
+    if (!qualifies || (unlockedAvatars['balloon_brother_02'] && unlockedAvatars['balloon_brother_02'].unlocked)) return Promise.resolve(false);
+    return unlockAvatar('balloon_brother_02', 'game_rhythm').then(function(ok){ if(ok) newlyUnlockedKeys.push('balloon_brother_02'); return ok; });
+  })();
+
+  Promise.all([p1, p2]).then(function() {
+    if (newlyUnlockedKeys.length > 0) {
+      setTimeout(function() { showResultUnlockNotify(newlyUnlockedKeys); }, 400);
+    }
+  });
+
   go('s-result');
 }
 
