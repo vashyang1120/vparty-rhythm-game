@@ -901,6 +901,9 @@ body.portrait-game #s-admin {
   <div class="id-box" style="text-align:center;margin-bottom:10px;">
     <label>玩家 ID（最多 12 字）</label>
     <input type="text" id="player-id-input" placeholder="輸入你的名字" maxlength="12">
+    <div id="profile-identity-dirty-hint" style="display:none;font-size:9px;color:var(--pink2);margin-top:4px;text-align:center;">
+      ⚠️ 你已變更玩家 ID，請先按「確認」切換身份。
+    </div>
   </div>
 
   <!-- 頭像選擇格（模式切換） -->
@@ -1622,6 +1625,12 @@ function _saveLocalProfile() {
   localStorage.setItem('vPartyProfile', JSON.stringify({id: PLAYER.id, avatarKey: PLAYER.avatarKey}));
 }
 
+function isProfileIdentityDirty() {
+  var inputId = normalizePlayerId(document.getElementById('player-id-input').value);
+  var inputKey = makePlayerKey(inputId, PLAYER.baseAvatarKey);
+  return inputKey !== PLAYER.playerKey;
+}
+
 var profileAvatarEditMode = 'none'; // 'none' | 'base' | 'display'
 var _pendingBaseAvatarKey = null;   // 暫存選中的 baseAvatarKey 待確認
 
@@ -1656,6 +1665,10 @@ function startEditBaseAvatar() {
 }
 
 function startEditDisplayAvatar() {
+  if (isProfileIdentityDirty()) {
+    alert('你已變更玩家 ID。\n請先按「確認」完成身份切換，再更換顯示頭像。');
+    return;
+  }
   profileAvatarEditMode = 'display';
   document.getElementById('avatar-edit-section').style.display = 'block';
   document.getElementById('avatar-grid-label').textContent = '選擇顯示頭像';
@@ -1806,6 +1819,14 @@ function initProfile() {
   document.getElementById('avatar-edit-section').style.display = 'none';
   _updateProfileUI();
   document.getElementById('player-id-input').value = PLAYER.id;
+
+  // ID 輸入框變動時更新提示
+  var idInput = document.getElementById('player-id-input');
+  var dirtyHint = document.getElementById('profile-identity-dirty-hint');
+  idInput.oninput = function() {
+    if (dirtyHint) dirtyHint.style.display = isProfileIdentityDirty() ? 'block' : 'none';
+  };
+  if (dirtyHint) dirtyHint.style.display = 'none';
 }
 
 function saveProfile() {
@@ -2715,6 +2736,10 @@ function endGame() {
 var _unlockPinTarget = null;
 
 function openUnlockPanel() {
+  if (isProfileIdentityDirty()) {
+    alert('你已變更玩家 ID。\n請先按「確認」完成身份切換，再查看解鎖頭像。');
+    return;
+  }
   loadUnlockedAvatars().then(function() {
     renderUnlockPanel();
     go('s-unlock');
