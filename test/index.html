@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-1</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-2</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1004,6 +1004,9 @@ body.portrait-game #s-admin {
     <div class="stat"><div class="stat-l">MISS</div><div class="stat-v" id="r-m">0</div></div>
   </div>
   <div id="r-rec" class="newrec hidden">🎉 NEW RECORD！</div>
+  <div id="r-unlock-notify" style="display:none;margin-top:8px;padding:8px 16px;background:linear-gradient(135deg,#06d6a0,#118ab2);border-radius:12px;text-align:center;">
+    <div style="font-size:13px;font-weight:700;color:#fff;" id="r-unlock-notify-text">🎉 解鎖新頭像！</div>
+  </div>
   <div class="btn-row" style="margin-top:10px;">
     <button class="btn btn-p" id="btn-retry">再玩一次</button>
     <button class="btn btn-s" id="btn-r-lb">排行榜</button>
@@ -1084,7 +1087,7 @@ var DB_PATHS = TEST_MODE ? {
   gameLogs:             'dev/gameLogs/rhythm',
   leaderboardsBase:     'dev/leaderboards/rhythm',
   legacyScoresReadOnly: 'scores',
-  players:              'dev/players'
+  players:              'players'
 } : {
   writeScores:          'scores',
   gameLogs:             'gameLogs/rhythm',
@@ -1243,7 +1246,7 @@ var UNLOCKABLE_AVATARS = [
   { key: 'dance_sister_01',    name: '唱跳姐姐',    file: 'assets/avatars/dance_sister_01.png',    tier: 'wave1', unlockCategory: 'social_ig_fb', unlockText: '追蹤 IG 或 FB 粉專' },
   { key: 'balloon_sister_01',  name: '氣球姐姐 1',  file: 'assets/avatars/balloon_sister_01.png',  tier: 'wave1', unlockCategory: 'social_line',  unlockText: '加官方 LINE 好友' },
   { key: 'balloon_sister_02',  name: '氣球姐姐 2',  file: 'assets/avatars/balloon_sister_02.png',  tier: 'wave1', unlockCategory: 'social_google',unlockText: 'Google 商家 5 星好評' },
-  { key: 'balloon_brother_01', name: '氣球哥哥 1',  file: 'assets/avatars/balloon_brother_01.png', tier: 'wave2', unlockCategory: 'game_tetris',  unlockText: '方塊遊戲達指定分數' },
+  { key: 'balloon_brother_01', name: '氣球哥哥 1',  file: 'assets/avatars/balloon_brother_01.png', tier: 'wave2', unlockCategory: 'game_tetris',  unlockText: '方塊遊戲達 2,000 分' },
   { key: 'balloon_brother_02', name: '氣球哥哥 2',  file: 'assets/avatars/balloon_brother_02.png', tier: 'wave2', unlockCategory: 'game_rhythm',  unlockText: '節奏遊戲任一首達 A 以上' },
   { key: 'balloon_brother_03', name: '氣球哥哥 3',  file: 'assets/avatars/balloon_brother_03.png', tier: 'wave2', unlockCategory: 'game_adventure',unlockText: '冒險遊戲通過指定進度' },
   { key: 'bubble_brother_01',  name: '泡泡哥哥',    file: 'assets/avatars/bubble_brother_01.png',  tier: 'rare',  unlockCategory: 'event',        unlockText: '泡泡活動限定 / 特別活動' },
@@ -1327,19 +1330,32 @@ function loadUnlockedAvatars() {
 function unlockAvatar(avatarKey, source) {
   if (!avatarKey) return Promise.resolve(false);
   if (unlockedAvatars[avatarKey] && unlockedAvatars[avatarKey].unlocked) return Promise.resolve(false); // 已解鎖
-  var entry = { unlocked: true, source: source || 'manual', unlockedAt: Date.now() };
-  unlockedAvatars[avatarKey] = entry; // 先本機更新
-  if (!FIREBASE_ENABLED) return Promise.resolve(true);
+
+  if (!FIREBASE_ENABLED) {
+    console.warn('[Unlock] Firebase disabled，無法解鎖');
+    return Promise.resolve(false);
+  }
+
   return ensureFirebaseReady().then(function(ok) {
-    if (!ok || !firebaseDb) return true;
+    if (!ok || !firebaseDb) {
+      console.warn('[Unlock] Firebase 未就緒，無法解鎖');
+      return false;
+    }
     var pKey = PLAYER.playerKey;
-    if (!pKey) return true;
-    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/unlockedAvatars/' + avatarKey).set(entry).then(function() {
-      return true;
-    });
+    if (!pKey) {
+      console.warn('[Unlock] playerKey 不存在');
+      return false;
+    }
+    var entry = { unlocked: true, source: source || 'manual', unlockedAt: Date.now() };
+    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/unlockedAvatars/' + avatarKey).set(entry)
+      .then(function() {
+        // Firebase 寫入成功才同步本機
+        unlockedAvatars[avatarKey] = entry;
+        return true;
+      });
   }).catch(function(e) {
-    console.warn('[Unlock] write failed:', e.message);
-    return true; // 本機已更新，仍視為成功
+    console.warn('[Unlock] Firebase 寫入失敗:', e.message);
+    return false; // 不假裝成功
   });
 }
 
@@ -1385,36 +1401,40 @@ function equipDisplayAvatar(avatarKey) {
 function handleUnlockPin(pin, targetAvatarKey) {
   pin = (pin || '').trim();
   if (pin.length === 6 && pin === ADMIN_UNLOCK_PIN) {
-    // 管理員 PIN：解鎖指定 avatarKey
-    if (!targetAvatarKey) {
-      alert('請先選擇要解鎖的頭像');
-      return;
-    }
+    if (!targetAvatarKey) { alert('請先選擇要解鎖的頭像'); return; }
     unlockAvatar(targetAvatarKey, 'admin_pin').then(function(isNew) {
-      if (isNew) {
-        alert('✅ 解鎖成功！');
-        renderUnlockPanel();
-      } else {
-        alert('這個頭像已經解鎖了！');
-      }
+      if (isNew === true) { alert('✅ 解鎖成功！'); renderUnlockPanel(); }
+      else if (isNew === false && (unlockedAvatars[targetAvatarKey] && unlockedAvatars[targetAvatarKey].unlocked)) { alert('這個頭像已經解鎖了！'); }
+      else { alert('雲端同步失敗，請稍後再試'); }
     });
   } else if (pin.length === 4) {
-    // 遠端 PIN
     var mapped = REMOTE_UNLOCK_PINS[pin];
-    if (!mapped) {
-      alert('PIN 錯誤');
-      return;
-    }
+    if (!mapped) { alert('PIN 錯誤'); return; }
     unlockAvatar(mapped, 'remote_pin').then(function(isNew) {
-      if (isNew) {
-        alert('✅ 解鎖成功！');
-        renderUnlockPanel();
-      } else {
-        alert('這個頭像已經解鎖了！');
-      }
+      if (isNew === true) { alert('✅ 解鎖成功！'); renderUnlockPanel(); }
+      else if (isNew === false && (unlockedAvatars[mapped] && unlockedAvatars[mapped].unlocked)) { alert('這個頭像已經解鎖了！'); }
+      else { alert('雲端同步失敗，請稍後再試'); }
     });
   } else {
     alert('PIN 錯誤');
+  }
+}
+
+function showUnlockNotify(text) {
+  // 在結算畫面顯示解鎖通知
+  var notifyEl = document.getElementById('r-unlock-notify');
+  var textEl = document.getElementById('r-unlock-notify-text');
+  if (notifyEl && textEl) {
+    textEl.textContent = text;
+    notifyEl.style.display = 'block';
+    setTimeout(function() { notifyEl.style.display = 'none'; }, 5000);
+  }
+  // 也在頭像收藏頁顯示（若已開啟）
+  var flashEl = document.getElementById('unlock-flash');
+  if (flashEl) {
+    flashEl.textContent = text;
+    flashEl.classList.remove('hidden');
+    setTimeout(function() { flashEl.classList.add('hidden'); }, 3000);
   }
 }
 
@@ -1422,10 +1442,20 @@ function autoUnlockFirstPlayAvatar() {
   if (unlockedAvatars['xiaov_base'] && unlockedAvatars['xiaov_base'].unlocked) return;
   unlockAvatar('xiaov_base', 'auto_first_play').then(function(isNew) {
     if (isNew) {
-      setTimeout(function() {
-        var msg = document.getElementById('unlock-flash');
-        if (msg) { msg.textContent = '🎉 解鎖新頭像：小V！'; msg.classList.remove('hidden'); setTimeout(function(){ msg.classList.add('hidden'); }, 3000); }
-      }, 500);
+      setTimeout(function() { showUnlockNotify('🎉 解鎖新頭像：小V！前往「解鎖 / 更換頭像」裝備看看'); }, 300);
+    }
+  });
+}
+
+function autoUnlockRhythmAAvatar(grade) {
+  // balloon_brother_02：節奏遊戲任一首達 A 以上自動解鎖
+  if (unlockedAvatars['balloon_brother_02'] && unlockedAvatars['balloon_brother_02'].unlocked) return;
+  var gradeOrder = ['D','C','B','A','S','SS','SSS','P'];
+  var gradeIdx = gradeOrder.indexOf(grade);
+  if (gradeIdx < gradeOrder.indexOf('A')) return; // 未達 A
+  unlockAvatar('balloon_brother_02', 'game_rhythm').then(function(isNew) {
+    if (isNew) {
+      setTimeout(function() { showUnlockNotify('🎉 解鎖新頭像：氣球哥哥 2！前往「解鎖 / 更換頭像」裝備看看'); }, 600);
     }
   });
 }
@@ -1466,13 +1496,24 @@ function loadPlayerProfile() {
 }
 
 function savePlayerProfile() {
-  PLAYER.id = normalizePlayerId(document.getElementById('player-id-input').value);
-  // 玩家選頭像時是選 baseAvatarKey（第一階段 display = base）
-  // baseAvatarKey 在選頭像時設定，這裡只儲存
-  PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
-  PLAYER.avatarKey = PLAYER.baseAvatarKey;
-  PLAYER.playerKey = makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
-  PLAYER.avatarSrc = getDisplayAvatarSrc();
+  var newId = normalizePlayerId(document.getElementById('player-id-input').value);
+  var newBaseKey = PLAYER.baseAvatarKey; // 由 initProfile 的 avatar-grid 點擊更新
+  var oldPlayerKey = PLAYER.playerKey;
+  var newPlayerKey = makePlayerKey(newId, newBaseKey);
+  var baseChanged = (newPlayerKey !== oldPlayerKey);
+
+  PLAYER.id = newId;
+  PLAYER.playerKey = newPlayerKey;
+
+  if (baseChanged) {
+    // 真的換了身份頭像，顯示頭像重設為 baseAvatarKey
+    PLAYER.displayAvatarKey = newBaseKey;
+    PLAYER.avatarKey = newBaseKey;
+  }
+  // 若未換身份頭像，保留原本裝備的 displayAvatarKey
+
+  PLAYER.avatarSrc = getAvatarByKey(PLAYER.displayAvatarKey).src;
+
   var profile = {
     id: PLAYER.id,
     baseAvatarKey: PLAYER.baseAvatarKey,
@@ -1481,8 +1522,13 @@ function savePlayerProfile() {
     playerKey: PLAYER.playerKey
   };
   localStorage.setItem('vPartyPlayerProfile', JSON.stringify(profile));
-  // 同步更新舊版 key，避免其他地方讀舊版出錯
   localStorage.setItem('vPartyProfile', JSON.stringify({id: PLAYER.id, avatarKey: PLAYER.avatarKey}));
+
+  // 如果 playerKey 有變化，重新同步雲端資料
+  if (baseChanged) {
+    ensurePlayerProfile();
+    loadUnlockedAvatars();
+  }
 }
 
 function initProfile() {
@@ -1552,7 +1598,19 @@ document.getElementById('btn-lb-go').onclick = function(){
   ensureSongsLoaded().then(function() { renderLB(); go('s-lb'); });
 };
 document.getElementById('btn-profile-back').onclick = function(){ go('s-title'); };
-document.getElementById('btn-profile-ok').onclick   = function(){ saveProfile(); loadSongs(); go('s-songlist'); };
+document.getElementById('btn-profile-ok').onclick = function(){
+  saveProfile();
+  // savePlayerProfile 內部已處理 baseChanged 時的雲端同步
+  // 確保最新 playerKey 的資料載入完成後再進選歌
+  var syncReady = (ensurePlayerProfile && typeof ensurePlayerProfile === 'function')
+    ? ensurePlayerProfile()
+    : Promise.resolve();
+  syncReady.then(function() {
+    loadUnlockedAvatars();
+    loadSongs();
+    go('s-songlist');
+  });
+};
 document.getElementById('btn-back-song').onclick    = function(){ go('s-profile'); };
 document.getElementById('btn-start').onclick        = initGame;
 document.getElementById('btn-resume').onclick       = resumeGame;
@@ -2385,8 +2443,12 @@ function endGame() {
   if (msgEl) msgEl.textContent = getGradeMsg(g);
   var isNew = saveScore(g, acc);
   document.getElementById('r-rec').classList.toggle('hidden', !isNew);
-  // 完成一場遊戲後自動解鎖 xiaov_base
+  // 重設解鎖通知
+  var notifyEl = document.getElementById('r-unlock-notify');
+  if (notifyEl) notifyEl.style.display = 'none';
+  // 自動解鎖：完成任一首 → xiaov_base；達 A 以上 → balloon_brother_02
   autoUnlockFirstPlayAvatar();
+  autoUnlockRhythmAAvatar(g);
   go('s-result');
 }
 
