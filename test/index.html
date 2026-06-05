@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-4</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-5</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -869,9 +869,16 @@ body.portrait-game #s-admin {
 <div id="s-profile" class="screen off">
   <h2>🎀 玩家設定</h2>
   <div class="profile-layout">
-    <div style="display:flex;flex-direction:column;gap:16px;align-items:center;">
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
       <div class="avatar-preview-wrap">
         <img id="avatar-preview" src="" alt="">
+      </div>
+      <div style="font-size:10px;color:var(--text2);text-align:center;line-height:1.6;">
+        <span>目前顯示頭像</span><br>
+        <span style="font-size:9px;color:var(--pink2);font-weight:700;" id="profile-display-label">-</span>
+      </div>
+      <div style="font-size:10px;color:var(--text2);text-align:center;line-height:1.6;">
+        <span>身份頭像：</span><span style="font-weight:700;color:var(--text);" id="profile-base-label">-</span>
       </div>
       <div class="id-box">
         <label>玩家 ID（最多 12 字）</label>
@@ -879,11 +886,17 @@ body.portrait-game #s-admin {
       </div>
     </div>
     <div class="avatar-section">
-      <label>選擇頭像</label>
+      <label>選擇身份頭像</label>
+      <div style="font-size:9px;color:var(--pink2);margin-bottom:6px;line-height:1.5;">
+        更換身份頭像＝切換玩家身份，<br>解鎖頭像會依新身份重新讀取。
+      </div>
       <div id="avatar-grid"></div>
     </div>
   </div>
-  <div class="btn-row" style="margin-top:12px;">
+  <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:8px;">
+    💡 想更換外觀頭像，請到「解鎖 / 更換頭像」
+  </div>
+  <div class="btn-row" style="margin-top:8px;">
     <button class="btn btn-p" id="btn-profile-ok">確認 🎀</button>
     <button class="btn btn-d" id="btn-profile-back">返回</button>
   </div>
@@ -895,9 +908,12 @@ body.portrait-game #s-admin {
 <!-- UNLOCK PANEL -->
 <div id="s-unlock" class="screen off">
   <h2>🔓 頭像收藏</h2>
-  <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-align:center;">
+  <div style="font-size:11px;color:var(--text2);margin-bottom:4px;text-align:center;">
     身份頭像：<strong id="unlock-base-label">-</strong>　
     顯示頭像：<strong id="unlock-display-label">-</strong>
+  </div>
+  <div style="font-size:9px;color:var(--pink2);margin-bottom:8px;text-align:center;">
+    更換顯示頭像不會改變玩家身份，排行榜身份仍依身份頭像判定。
   </div>
   <div id="unlock-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;width:min(600px,94vw);max-height:60vh;overflow-y:auto;padding:4px;"></div>
   <div id="unlock-flash" class="hidden" style="text-align:center;color:#06d6a0;font-weight:700;margin-top:8px;font-size:14px;"></div>
@@ -1607,6 +1623,12 @@ function initProfile() {
   // 確保 Firebase profile 存在，並載入已解鎖頭像
   ensurePlayerProfile();
   loadUnlockedAvatars();
+
+  // 更新身份/顯示頭像標籤
+  var baseLabel = document.getElementById('profile-base-label');
+  var dispLabel = document.getElementById('profile-display-label');
+  if (baseLabel) baseLabel.textContent = PLAYER.baseAvatarKey;
+  if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
 
   var grid = document.getElementById('avatar-grid');
   grid.innerHTML = '';
