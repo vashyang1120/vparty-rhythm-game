@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.7-hotfix4</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-3</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -886,6 +886,35 @@ body.portrait-game #s-admin {
   <div class="btn-row" style="margin-top:12px;">
     <button class="btn btn-p" id="btn-profile-ok">確認 🎀</button>
     <button class="btn btn-d" id="btn-profile-back">返回</button>
+  </div>
+  <div style="margin-top:8px;">
+    <button class="btn btn-b" id="btn-open-unlock" onclick="openUnlockPanel()" style="font-size:12px;padding:6px 16px;">🔓 解鎖 / 更換頭像</button>
+  </div>
+</div>
+
+<!-- UNLOCK PANEL -->
+<div id="s-unlock" class="screen off">
+  <h2>🔓 頭像收藏</h2>
+  <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-align:center;">
+    身份頭像：<strong id="unlock-base-label">-</strong>　
+    顯示頭像：<strong id="unlock-display-label">-</strong>
+  </div>
+  <div id="unlock-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;width:min(600px,94vw);max-height:60vh;overflow-y:auto;padding:4px;"></div>
+  <div id="unlock-flash" class="hidden" style="text-align:center;color:#06d6a0;font-weight:700;margin-top:8px;font-size:14px;"></div>
+  <!-- PIN 輸入區 -->
+  <div id="unlock-pin-area" style="display:none;margin-top:12px;text-align:center;">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">
+      輸入 4 碼遠端 PIN 或 6 碼管理員 PIN
+    </div>
+    <input id="unlock-pin-input" type="tel" maxlength="6" placeholder="輸入 PIN"
+      style="width:120px;padding:8px;font-size:18px;letter-spacing:.2em;text-align:center;border:2px solid var(--pink);border-radius:8px;background:var(--pink-bg);">
+    <div class="btn-row" style="margin-top:8px;justify-content:center;">
+      <button class="btn btn-p" style="font-size:12px;padding:6px 16px;" onclick="submitUnlockPin()">確認</button>
+      <button class="btn btn-d" style="font-size:12px;padding:6px 16px;" onclick="document.getElementById('unlock-pin-area').style.display='none'">取消</button>
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:12px;">
+    <button class="btn btn-d" id="btn-unlock-back">← 返回</button>
   </div>
 </div>
 
@@ -975,6 +1004,15 @@ body.portrait-game #s-admin {
     <div class="stat"><div class="stat-l">MISS</div><div class="stat-v" id="r-m">0</div></div>
   </div>
   <div id="r-rec" class="newrec hidden">🎉 NEW RECORD！</div>
+  <div id="r-unlock-notify" style="display:none;margin-top:10px;padding:12px 16px;background:linear-gradient(135deg,#06d6a0,#118ab2);border-radius:14px;text-align:center;">
+    <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">🎉 恭喜解鎖新頭像！</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.9);margin-bottom:4px;">你已解鎖：</div>
+    <div id="r-unlock-notify-names" style="font-size:13px;font-weight:700;color:#fff;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-p" style="font-size:12px;padding:6px 14px;" onclick="goToUnlockFromResult()">前往頭像收藏</button>
+      <button class="btn" style="font-size:12px;padding:6px 14px;background:#fff;color:#118ab2;" onclick="document.getElementById('r-unlock-notify').style.display='none'">稍後再說</button>
+    </div>
+  </div>
   <div class="btn-row" style="margin-top:10px;">
     <button class="btn btn-p" id="btn-retry">再玩一次</button>
     <button class="btn btn-s" id="btn-r-lb">排行榜</button>
@@ -1048,18 +1086,20 @@ body.portrait-game #s-admin {
 </div><!-- #root -->
 <script>
 // ═══ 全域資源宣告（必須在最前面）═══
-var TEST_MODE = false;
+var TEST_MODE = true;
 var BASE_PATH = TEST_MODE ? '../' : '';
 var DB_PATHS = TEST_MODE ? {
   writeScores:          'dev/scores',
   gameLogs:             'dev/gameLogs/rhythm',
   leaderboardsBase:     'dev/leaderboards/rhythm',
-  legacyScoresReadOnly: 'scores'
+  legacyScoresReadOnly: 'scores',
+  players:              'players'
 } : {
   writeScores:          'scores',
   gameLogs:             'gameLogs/rhythm',
   leaderboardsBase:     'leaderboards/rhythm',
-  legacyScoresReadOnly: 'scores'
+  legacyScoresReadOnly: 'scores',
+  players:              'players'
 };
 
 function resolveAssetPath(url) {
@@ -1193,6 +1233,35 @@ var PLAYER = {
   playerKey: ''
 };
 
+// ═══════════════════════════════════════════════════════
+//  UNLOCK SYSTEM
+// ═══════════════════════════════════════════════════════
+var ADMIN_UNLOCK_PIN = '952740';
+var REMOTE_UNLOCK_PINS = {
+  '1101': 'xiaov_base',
+  '1201': 'dance_sister_01',
+  '1202': 'balloon_sister_01',
+  '1203': 'balloon_sister_02',
+  '2101': 'balloon_brother_01',
+  '2102': 'balloon_brother_02',
+  '2103': 'balloon_brother_03'
+};
+
+var UNLOCKABLE_AVATARS = [
+  { key: 'xiaov_base',         name: '小V',         file: 'assets/avatars/xiaov_base.png',         tier: 'wave1', unlockCategory: 'first_play',   unlockText: '完成任一遊戲 1 場' },
+  { key: 'dance_sister_01',    name: '唱跳姐姐',    file: 'assets/avatars/dance_sister_01.png',    tier: 'wave1', unlockCategory: 'social_ig_fb', unlockText: '追蹤 IG 或 FB 粉專' },
+  { key: 'balloon_sister_01',  name: '氣球姐姐 1',  file: 'assets/avatars/balloon_sister_01.png',  tier: 'wave1', unlockCategory: 'social_line',  unlockText: '加官方 LINE 好友' },
+  { key: 'balloon_sister_02',  name: '氣球姐姐 2',  file: 'assets/avatars/balloon_sister_02.png',  tier: 'wave1', unlockCategory: 'social_google',unlockText: 'Google 商家 5 星好評' },
+  { key: 'balloon_brother_01', name: '氣球哥哥 1',  file: 'assets/avatars/balloon_brother_01.png', tier: 'wave2', unlockCategory: 'game_tetris',  unlockText: '方塊遊戲達 2,000 分' },
+  { key: 'balloon_brother_02', name: '氣球哥哥 2',  file: 'assets/avatars/balloon_brother_02.png', tier: 'wave2', unlockCategory: 'game_rhythm',  unlockText: '節奏遊戲任一首達 A 以上' },
+  { key: 'balloon_brother_03', name: '氣球哥哥 3',  file: 'assets/avatars/balloon_brother_03.png', tier: 'wave2', unlockCategory: 'game_adventure',unlockText: '冒險遊戲通過指定進度' },
+  { key: 'bubble_brother_01',  name: '泡泡哥哥',    file: 'assets/avatars/bubble_brother_01.png',  tier: 'rare',  unlockCategory: 'event',        unlockText: '泡泡活動限定 / 特別活動' },
+  { key: 'xiaov_special',      name: '小V 特別版',  file: 'assets/avatars/xiaov_special.png',      tier: 'rare',  unlockCategory: 'special',      unlockText: '打敗小V / 特別活動 / 高階成就' }
+];
+
+// 本機解鎖狀態 { avatarKey: {unlocked, source, unlockedAt} }
+var unlockedAvatars = {};
+
 // ── 工具函式 ──────────────────────────────────────────
 function normalizePlayerId(id) {
   return (id || '').trim() || '玩家';
@@ -1203,11 +1272,207 @@ function makePlayerKey(id, baseAvatarKey) {
 }
 
 function getAvatarByKey(key) {
+  // 先找 UNLOCKABLE_AVATARS，再找 AVATARS
+  var ua = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
+  if (ua) return { key: ua.key, src: resolveAssetPath(ua.file) };
   return AVATARS.find(function(a){ return a.key === key; }) || AVATARS[0];
 }
 
 function getDisplayAvatarSrc() {
   return getAvatarByKey(PLAYER.displayAvatarKey).src;
+}
+
+// ── 解鎖系統函式 ──────────────────────────────────────
+
+function ensurePlayerProfile() {
+  if (!FIREBASE_ENABLED) return Promise.resolve();
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) return;
+    var pKey = PLAYER.playerKey;
+    if (!pKey) return;
+    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').once('value').then(function(snap) {
+      var profile = snap.val();
+      if (!profile) {
+        // 建立新 profile
+        var newProfile = {
+          id: PLAYER.id,
+          name: PLAYER.id,
+          playerKey: pKey,
+          baseAvatarKey: PLAYER.baseAvatarKey,
+          displayAvatarKey: PLAYER.displayAvatarKey,
+          avatarKey: PLAYER.avatarKey,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+        return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').set(newProfile);
+      } else {
+        // 同步 displayAvatarKey（不改 baseAvatarKey / playerKey）
+        if (profile.displayAvatarKey && profile.displayAvatarKey !== PLAYER.displayAvatarKey) {
+          PLAYER.displayAvatarKey = profile.displayAvatarKey;
+          PLAYER.avatarKey = profile.displayAvatarKey;
+          PLAYER.avatarSrc = getAvatarByKey(profile.displayAvatarKey).src;
+        }
+      }
+    });
+  });
+}
+
+function loadUnlockedAvatars() {
+  if (!FIREBASE_ENABLED) return Promise.resolve({});
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) return {};
+    var pKey = PLAYER.playerKey;
+    if (!pKey) return {};
+    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/unlockedAvatars').once('value').then(function(snap) {
+      unlockedAvatars = {};
+      snap.forEach(function(child) {
+        unlockedAvatars[child.key] = child.val();
+      });
+      return unlockedAvatars;
+    });
+  }).catch(function() { return {}; });
+}
+
+function unlockAvatar(avatarKey, source) {
+  if (!avatarKey) return Promise.resolve(false);
+  if (unlockedAvatars[avatarKey] && unlockedAvatars[avatarKey].unlocked) return Promise.resolve(false); // 已解鎖
+
+  if (!FIREBASE_ENABLED) {
+    console.warn('[Unlock] Firebase disabled，無法解鎖');
+    return Promise.resolve(false);
+  }
+
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) {
+      console.warn('[Unlock] Firebase 未就緒，無法解鎖');
+      return false;
+    }
+    var pKey = PLAYER.playerKey;
+    if (!pKey) {
+      console.warn('[Unlock] playerKey 不存在');
+      return false;
+    }
+    var entry = { unlocked: true, source: source || 'manual', unlockedAt: Date.now() };
+    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/unlockedAvatars/' + avatarKey).set(entry)
+      .then(function() {
+        // Firebase 寫入成功才同步本機
+        unlockedAvatars[avatarKey] = entry;
+        return true;
+      });
+  }).catch(function(e) {
+    console.warn('[Unlock] Firebase 寫入失敗:', e.message);
+    return false; // 不假裝成功
+  });
+}
+
+function equipDisplayAvatar(avatarKey) {
+  if (!avatarKey) return;
+  if (!unlockedAvatars[avatarKey] || !unlockedAvatars[avatarKey].unlocked) {
+    console.warn('[Equip] avatarKey not unlocked:', avatarKey);
+    return;
+  }
+  // 只更新 displayAvatarKey / avatarKey，絕不改 baseAvatarKey / playerKey
+  PLAYER.displayAvatarKey = avatarKey;
+  PLAYER.avatarKey = avatarKey;
+  PLAYER.avatarSrc = getAvatarByKey(avatarKey).src;
+
+  // 同步 UI
+  var sbAv = document.getElementById('sb-avatar');
+  if (sbAv) sbAv.src = PLAYER.avatarSrc;
+  var prev = document.getElementById('avatar-preview');
+  if (prev) prev.src = PLAYER.avatarSrc;
+
+  // 同步 localStorage
+  var profile = JSON.parse(localStorage.getItem('vPartyPlayerProfile') || '{}');
+  profile.displayAvatarKey = avatarKey;
+  profile.avatarKey = avatarKey;
+  localStorage.setItem('vPartyPlayerProfile', JSON.stringify(profile));
+  localStorage.setItem('vPartyProfile', JSON.stringify({ id: PLAYER.id, avatarKey: avatarKey }));
+
+  // 同步 Firebase profile
+  if (FIREBASE_ENABLED) {
+    ensureFirebaseReady().then(function(ok) {
+      if (!ok || !firebaseDb) return;
+      var pKey = PLAYER.playerKey;
+      if (!pKey) return;
+      firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').update({
+        displayAvatarKey: avatarKey,
+        avatarKey: avatarKey,
+        updatedAt: Date.now()
+      });
+    });
+  }
+}
+
+function handleUnlockPin(pin, targetAvatarKey) {
+  pin = (pin || '').trim();
+  if (pin.length === 6 && pin === ADMIN_UNLOCK_PIN) {
+    if (!targetAvatarKey) { alert('請先選擇要解鎖的頭像'); return; }
+    unlockAvatar(targetAvatarKey, 'admin_pin').then(function(isNew) {
+      if (isNew === true) { alert('✅ 解鎖成功！'); renderUnlockPanel(); }
+      else if (isNew === false && (unlockedAvatars[targetAvatarKey] && unlockedAvatars[targetAvatarKey].unlocked)) { alert('這個頭像已經解鎖了！'); }
+      else { alert('雲端同步失敗，請稍後再試'); }
+    });
+  } else if (pin.length === 4) {
+    var mapped = REMOTE_UNLOCK_PINS[pin];
+    if (!mapped) { alert('PIN 錯誤'); return; }
+    unlockAvatar(mapped, 'remote_pin').then(function(isNew) {
+      if (isNew === true) { alert('✅ 解鎖成功！'); renderUnlockPanel(); }
+      else if (isNew === false && (unlockedAvatars[mapped] && unlockedAvatars[mapped].unlocked)) { alert('這個頭像已經解鎖了！'); }
+      else { alert('雲端同步失敗，請稍後再試'); }
+    });
+  } else {
+    alert('PIN 錯誤');
+  }
+}
+
+function goToUnlockFromResult() {
+  document.getElementById('r-unlock-notify').style.display = 'none';
+  loadUnlockedAvatars().then(function() {
+    renderUnlockPanel();
+    go('s-unlock');
+  });
+}
+
+// 結算畫面整合多頭像解鎖通知
+function showResultUnlockNotify(newlyUnlockedKeys) {
+  if (!newlyUnlockedKeys || !newlyUnlockedKeys.length) return;
+  var notifyEl = document.getElementById('r-unlock-notify');
+  var namesEl = document.getElementById('r-unlock-notify-names');
+  if (!notifyEl || !namesEl) return;
+  var names = newlyUnlockedKeys.map(function(key) {
+    var av = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
+    return av ? av.name : key;
+  });
+  namesEl.textContent = names.join('、');
+  notifyEl.style.display = 'block';
+}
+
+// 舊的 showUnlockNotify 保留給頭像收藏頁的 flash 提示
+function showUnlockNotify(text) {
+  var flashEl = document.getElementById('unlock-flash');
+  if (flashEl) {
+    flashEl.textContent = text;
+    flashEl.classList.remove('hidden');
+    setTimeout(function() { flashEl.classList.add('hidden'); }, 3000);
+  }
+}
+
+function autoUnlockFirstPlayAvatar() {
+  if (unlockedAvatars['xiaov_base'] && unlockedAvatars['xiaov_base'].unlocked) return;
+  unlockAvatar('xiaov_base', 'auto_first_play').then(function(isNew) {
+    if (isNew) {
+      setTimeout(function() { showUnlockNotify('🎉 解鎖新頭像：小V！前往「解鎖 / 更換頭像」裝備看看'); }, 300);
+    }
+  });
+}
+
+function autoUnlockRhythmAAvatar(grade) {
+  // balloon_brother_02：節奏遊戲任一首達 A / A+ / S 以上自動解鎖
+  if (unlockedAvatars['balloon_brother_02'] && unlockedAvatars['balloon_brother_02'].unlocked) return Promise.resolve(false);
+  var qualifies = (grade === 'A' || grade === 'A+' || grade === 'S' || grade === 'SS' || grade === 'SSS' || grade === 'P');
+  if (!qualifies) return Promise.resolve(false);
+  return unlockAvatar('balloon_brother_02', 'game_rhythm');
 }
 
 function migrateLocalProfile() {
@@ -1246,13 +1511,27 @@ function loadPlayerProfile() {
 }
 
 function savePlayerProfile() {
-  PLAYER.id = normalizePlayerId(document.getElementById('player-id-input').value);
-  // 玩家選頭像時是選 baseAvatarKey（第一階段 display = base）
-  // baseAvatarKey 在選頭像時設定，這裡只儲存
-  PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
-  PLAYER.avatarKey = PLAYER.baseAvatarKey;
-  PLAYER.playerKey = makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
-  PLAYER.avatarSrc = getDisplayAvatarSrc();
+  var newId = normalizePlayerId(document.getElementById('player-id-input').value);
+  var oldBaseAvatarKey = PLAYER.baseAvatarKey;
+  var newBaseAvatarKey = PLAYER.baseAvatarKey; // 由 initProfile 的 avatar-grid 點擊更新
+  var oldPlayerKey = PLAYER.playerKey;
+  var newPlayerKey = makePlayerKey(newId, newBaseAvatarKey);
+
+  var baseChanged = (oldBaseAvatarKey !== newBaseAvatarKey); // baseAvatarKey 真的改變
+  var identityChanged = (oldPlayerKey !== newPlayerKey);     // playerKey 改變（ID 或 base 其一改變）
+
+  PLAYER.id = newId;
+  PLAYER.playerKey = newPlayerKey;
+
+  if (baseChanged) {
+    // 只有真的換了身份頭像，才重設 displayAvatarKey
+    PLAYER.displayAvatarKey = newBaseAvatarKey;
+    PLAYER.avatarKey = newBaseAvatarKey;
+  }
+  // 只改 ID 不改 baseAvatarKey → 保留原本裝備的 displayAvatarKey
+
+  PLAYER.avatarSrc = getAvatarByKey(PLAYER.displayAvatarKey).src;
+
   var profile = {
     id: PLAYER.id,
     baseAvatarKey: PLAYER.baseAvatarKey,
@@ -1261,12 +1540,20 @@ function savePlayerProfile() {
     playerKey: PLAYER.playerKey
   };
   localStorage.setItem('vPartyPlayerProfile', JSON.stringify(profile));
-  // 同步更新舊版 key，避免其他地方讀舊版出錯
   localStorage.setItem('vPartyProfile', JSON.stringify({id: PLAYER.id, avatarKey: PLAYER.avatarKey}));
+
+  // 如果 playerKey 有變化（含只改 ID），重新同步雲端
+  if (identityChanged) {
+    ensurePlayerProfile();
+    loadUnlockedAvatars();
+  }
 }
 
 function initProfile() {
   loadPlayerProfile();
+  // 確保 Firebase profile 存在，並載入已解鎖頭像
+  ensurePlayerProfile();
+  loadUnlockedAvatars();
 
   var grid = document.getElementById('avatar-grid');
   grid.innerHTML = '';
@@ -1304,7 +1591,7 @@ function saveProfile() {
 // ═══════════════════════════════════════════════════════
 //  SCREENS
 // ═══════════════════════════════════════════════════════
-var ALL_S = ['s-title','s-profile','s-songlist','s-game','s-result','s-lb','s-admin'];
+var ALL_S = ['s-title','s-profile','s-unlock','s-songlist','s-game','s-result','s-lb','s-admin'];
 function go(id) {
   ALL_S.forEach(function(s){ document.getElementById(s).classList.toggle('off', s !== id); });
   // Hide floating fullscreen btn during game (sidebar has its own)
@@ -1329,7 +1616,19 @@ document.getElementById('btn-lb-go').onclick = function(){
   ensureSongsLoaded().then(function() { renderLB(); go('s-lb'); });
 };
 document.getElementById('btn-profile-back').onclick = function(){ go('s-title'); };
-document.getElementById('btn-profile-ok').onclick   = function(){ saveProfile(); loadSongs(); go('s-songlist'); };
+document.getElementById('btn-profile-ok').onclick = function(){
+  saveProfile();
+  // savePlayerProfile 內部已處理 baseChanged 時的雲端同步
+  // 確保最新 playerKey 的資料載入完成後再進選歌
+  var syncReady = (ensurePlayerProfile && typeof ensurePlayerProfile === 'function')
+    ? ensurePlayerProfile()
+    : Promise.resolve();
+  syncReady.then(function() {
+    loadUnlockedAvatars();
+    loadSongs();
+    go('s-songlist');
+  });
+};
 document.getElementById('btn-back-song').onclick    = function(){ go('s-profile'); };
 document.getElementById('btn-start').onclick        = initGame;
 document.getElementById('btn-resume').onclick       = resumeGame;
@@ -1341,6 +1640,8 @@ document.getElementById('btn-r-lb').onclick = function(){
 };
 document.getElementById('btn-r-home').onclick       = function(){ go('s-title'); };
 document.getElementById('btn-lb-home').onclick      = function(){ go('s-title'); };
+
+document.getElementById('btn-unlock-back').onclick = function(){ go('s-profile'); };
 
 // 啟動時提前初始化 Firebase + 載入歌曲，減少等待
 ensureFirebaseReady();
@@ -2160,12 +2461,120 @@ function endGame() {
   if (msgEl) msgEl.textContent = getGradeMsg(g);
   var isNew = saveScore(g, acc);
   document.getElementById('r-rec').classList.toggle('hidden', !isNew);
+  // 重設解鎖通知
+  var notifyEl = document.getElementById('r-unlock-notify');
+  if (notifyEl) notifyEl.style.display = 'none';
+
+  // 整合多個自動解鎖，收集後一次顯示
+  var newlyUnlockedKeys = [];
+  var p1 = (unlockedAvatars['xiaov_base'] && unlockedAvatars['xiaov_base'].unlocked)
+    ? Promise.resolve(false)
+    : unlockAvatar('xiaov_base', 'auto_first_play').then(function(ok){ if(ok) newlyUnlockedKeys.push('xiaov_base'); return ok; });
+  var p2 = (function(){
+    var qualifies = (g === 'A' || g === 'A+' || g === 'S' || g === 'SS' || g === 'SSS' || g === 'P');
+    if (!qualifies || (unlockedAvatars['balloon_brother_02'] && unlockedAvatars['balloon_brother_02'].unlocked)) return Promise.resolve(false);
+    return unlockAvatar('balloon_brother_02', 'game_rhythm').then(function(ok){ if(ok) newlyUnlockedKeys.push('balloon_brother_02'); return ok; });
+  })();
+
+  Promise.all([p1, p2]).then(function() {
+    if (newlyUnlockedKeys.length > 0) {
+      setTimeout(function() { showResultUnlockNotify(newlyUnlockedKeys); }, 400);
+    }
+  });
+
   go('s-result');
 }
 
 // ═══════════════════════════════════════════════════════
 //  LEADERBOARD
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  UNLOCK PANEL UI
+// ═══════════════════════════════════════════════════════
+var _unlockPinTarget = null;
+
+function openUnlockPanel() {
+  loadUnlockedAvatars().then(function() {
+    renderUnlockPanel();
+    go('s-unlock');
+  });
+}
+
+function renderUnlockPanel() {
+  var baseLabel = document.getElementById('unlock-base-label');
+  var dispLabel = document.getElementById('unlock-display-label');
+  if (baseLabel) baseLabel.textContent = PLAYER.baseAvatarKey;
+  if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
+
+  var grid = document.getElementById('unlock-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  UNLOCKABLE_AVATARS.forEach(function(av) {
+    var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
+    var isEquipped = PLAYER.displayAvatarKey === av.key;
+    var src = resolveAssetPath(av.file);
+
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:2px solid ' + (isEquipped ? 'var(--pink)' : (isUnlocked ? 'var(--pink-lt)' : '#ccc')) + ';border-radius:12px;padding:10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;';
+
+    var imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'width:64px;height:64px;border-radius:50%;overflow:hidden;background:var(--pink-bg);' + (!isUnlocked ? 'filter:grayscale(1) opacity(.4);' : '');
+    var img = document.createElement('img');
+    img.src = src;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+    imgWrap.appendChild(img);
+    card.appendChild(imgWrap);
+
+    var name = document.createElement('div');
+    name.textContent = av.name;
+    name.style.cssText = 'font-size:12px;font-weight:700;color:var(--text);';
+    card.appendChild(name);
+
+    if (isEquipped) {
+      var badge = document.createElement('div');
+      badge.textContent = '✅ 使用中';
+      badge.style.cssText = 'font-size:10px;color:var(--pink);font-weight:700;';
+      card.appendChild(badge);
+    } else if (isUnlocked) {
+      var btn = document.createElement('button');
+      btn.textContent = '設為顯示頭像';
+      btn.className = 'btn btn-s';
+      btn.style.cssText = 'font-size:10px;padding:4px 8px;';
+      btn.onclick = (function(key) { return function() {
+        equipDisplayAvatar(key);
+        renderUnlockPanel();
+      }; })(av.key);
+      card.appendChild(btn);
+    } else {
+      var unlockText = document.createElement('div');
+      unlockText.textContent = av.unlockText;
+      unlockText.style.cssText = 'font-size:9px;color:#999;line-height:1.3;';
+      card.appendChild(unlockText);
+
+      var pinBtn = document.createElement('button');
+      pinBtn.textContent = '🔑 輸入 PIN';
+      pinBtn.className = 'btn btn-b';
+      pinBtn.style.cssText = 'font-size:10px;padding:4px 8px;';
+      pinBtn.onclick = (function(key) { return function() {
+        _unlockPinTarget = key;
+        var pinArea = document.getElementById('unlock-pin-area');
+        if (pinArea) { pinArea.style.display = 'block'; document.getElementById('unlock-pin-input').value = ''; document.getElementById('unlock-pin-input').focus(); }
+      }; })(av.key);
+      card.appendChild(pinBtn);
+    }
+
+    grid.appendChild(card);
+  });
+}
+
+function submitUnlockPin() {
+  var pin = (document.getElementById('unlock-pin-input').value || '').trim();
+  document.getElementById('unlock-pin-area').style.display = 'none';
+  handleUnlockPin(pin, _unlockPinTarget);
+  _unlockPinTarget = null;
+}
+
 // ═══════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════
