@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-5</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.8-test-6</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -868,33 +868,53 @@ body.portrait-game #s-admin {
 <!-- PROFILE -->
 <div id="s-profile" class="screen off">
   <h2>🎀 玩家設定</h2>
-  <div class="profile-layout">
-    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
-      <div class="avatar-preview-wrap">
-        <img id="avatar-preview" src="" alt="">
+
+  <!-- 雙頭像區塊 -->
+  <div style="display:flex;gap:12px;justify-content:center;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;">
+    <!-- 身份頭像 -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:130px;">
+      <div style="font-size:10px;font-weight:700;color:var(--pink2);letter-spacing:.05em;">身份頭像</div>
+      <div class="avatar-preview-wrap" style="width:64px;height:64px;">
+        <img id="base-avatar-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
       </div>
-      <div style="font-size:10px;color:var(--text2);text-align:center;line-height:1.6;">
-        <span>目前顯示頭像</span><br>
-        <span style="font-size:9px;color:var(--pink2);font-weight:700;" id="profile-display-label">-</span>
+      <div style="font-size:9px;color:var(--text2);text-align:center;" id="profile-base-label">boy1</div>
+      <div style="font-size:8px;color:var(--text2);text-align:center;line-height:1.4;">
+        代表玩家身份。<br>ID + 身份頭像決定解鎖進度。
       </div>
-      <div style="font-size:10px;color:var(--text2);text-align:center;line-height:1.6;">
-        <span>身份頭像：</span><span style="font-weight:700;color:var(--text);" id="profile-base-label">-</span>
-      </div>
-      <div class="id-box">
-        <label>玩家 ID（最多 12 字）</label>
-        <input type="text" id="player-id-input" placeholder="輸入你的名字" maxlength="12">
-      </div>
+      <button class="btn btn-s" style="font-size:10px;padding:4px 10px;" onclick="startEditBaseAvatar()">變更身份頭像</button>
     </div>
-    <div class="avatar-section">
-      <label>選擇身份頭像</label>
-      <div style="font-size:9px;color:var(--pink2);margin-bottom:6px;line-height:1.5;">
-        更換身份頭像＝切換玩家身份，<br>解鎖頭像會依新身份重新讀取。
+    <!-- 顯示頭像 -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:130px;">
+      <div style="font-size:10px;font-weight:700;color:var(--pink2);letter-spacing:.05em;">顯示頭像</div>
+      <div class="avatar-preview-wrap" style="width:64px;height:64px;">
+        <img id="display-avatar-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
       </div>
-      <div id="avatar-grid"></div>
+      <div style="font-size:9px;color:var(--text2);text-align:center;" id="profile-display-label">boy1</div>
+      <div style="font-size:8px;color:var(--text2);text-align:center;line-height:1.4;">
+        只影響外觀。<br>可選排行榜顯示的頭像。
+      </div>
+      <button class="btn btn-b" style="font-size:10px;padding:4px 10px;" onclick="startEditDisplayAvatar()">變更顯示頭像</button>
     </div>
   </div>
-  <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:8px;">
-    💡 想更換外觀頭像，請到「解鎖 / 更換頭像」
+
+  <!-- ID 輸入 -->
+  <div class="id-box" style="text-align:center;margin-bottom:10px;">
+    <label>玩家 ID（最多 12 字）</label>
+    <input type="text" id="player-id-input" placeholder="輸入你的名字" maxlength="12">
+  </div>
+
+  <!-- 頭像選擇格（模式切換） -->
+  <div id="avatar-edit-section" style="display:none;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;justify-content:center;">
+      <label id="avatar-grid-label" style="font-weight:700;color:var(--text);font-size:13px;">選擇身份頭像</label>
+      <button class="btn btn-d" style="font-size:10px;padding:3px 10px;" onclick="closeAvatarEdit()">✕ 收起</button>
+    </div>
+    <div id="avatar-grid-hint" style="font-size:9px;color:var(--pink2);margin-bottom:6px;text-align:center;"></div>
+    <div id="avatar-grid"></div>
+  </div>
+
+  <div style="font-size:9px;color:var(--text2);text-align:center;margin-top:6px;">
+    💡 想管理解鎖頭像，請到「解鎖 / 更換頭像」
   </div>
   <div class="btn-row" style="margin-top:8px;">
     <button class="btn btn-p" id="btn-profile-ok">確認 🎀</button>
@@ -1528,81 +1548,55 @@ function loadPlayerProfile() {
 
 function savePlayerProfile() {
   var newId = normalizePlayerId(document.getElementById('player-id-input').value);
-  var oldBaseAvatarKey = PLAYER.baseAvatarKey;
-  var newBaseAvatarKey = PLAYER.baseAvatarKey; // 由 avatar-grid 點擊更新
+  var oldId = PLAYER.id;
   var oldPlayerKey = PLAYER.playerKey;
-  var newPlayerKey = makePlayerKey(newId, newBaseAvatarKey);
-
-  var baseChanged = (oldBaseAvatarKey !== newBaseAvatarKey);
+  var newPlayerKey = makePlayerKey(newId, PLAYER.baseAvatarKey);
   var identityChanged = (oldPlayerKey !== newPlayerKey);
 
-  PLAYER.id = newId;
-  PLAYER.playerKey = newPlayerKey;
-
-  if (baseChanged) {
-    // 換了身份頭像，顯示頭像直接重設為 baseAvatarKey
-    PLAYER.displayAvatarKey = newBaseAvatarKey;
-    PLAYER.avatarKey = newBaseAvatarKey;
-    PLAYER.avatarSrc = getAvatarByKey(newBaseAvatarKey).src;
-    _saveLocalProfile();
-    if (identityChanged) {
-      ensurePlayerProfile();
-      loadUnlockedAvatars();
+  // ID 有改變，跳警告
+  if (newId !== oldId) {
+    var confirmed = confirm('⚠️ 更改玩家 ID 會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新 ID 重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？');
+    if (!confirmed) {
+      // 還原 ID 輸入框
+      document.getElementById('player-id-input').value = oldId;
+      return;
     }
-    return;
   }
 
-  if (!identityChanged) {
-    // 什麼都沒變，直接存即可，不改 displayAvatarKey
+  PLAYER.id = newId;
+
+  if (identityChanged) {
+    PLAYER.playerKey = newPlayerKey;
+    // 先暫時設 displayAvatarKey = baseAvatarKey，等雲端回來
+    PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
+    PLAYER.avatarKey = PLAYER.baseAvatarKey;
+    PLAYER.avatarSrc = getAvatarByKey(PLAYER.baseAvatarKey).src;
+    _saveLocalProfile();
+
+    ensurePlayerProfile().then(function() {
+      return loadUnlockedAvatars();
+    }).then(function(unlocked) {
+      if (!FIREBASE_ENABLED || !firebaseDb) return;
+      var pKey = PLAYER.playerKey;
+      firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').once('value').then(function(snap) {
+        var fbProfile = snap.val();
+        var fbDisplayKey = fbProfile && fbProfile.displayAvatarKey;
+        if (fbDisplayKey && _isDisplayAvatarValid(fbDisplayKey, unlocked)) {
+          PLAYER.displayAvatarKey = fbDisplayKey;
+          PLAYER.avatarKey = fbDisplayKey;
+          PLAYER.avatarSrc = getAvatarByKey(fbDisplayKey).src;
+        }
+        _saveLocalProfile();
+        _updateProfileUI();
+        var sbAv = document.getElementById('sb-avatar');
+        if (sbAv) sbAv.src = PLAYER.avatarSrc;
+      });
+    });
+  } else {
+    // ID 沒變，不改 displayAvatarKey
     PLAYER.avatarSrc = getAvatarByKey(PLAYER.displayAvatarKey).src;
     _saveLocalProfile();
-    return;
   }
-
-  // identityChanged（只改 ID）：
-  // 必須以新 playerKey 的 Firebase 資料為準
-  // 先暫時把 displayAvatarKey 設回 baseAvatarKey，等雲端資料回來再決定
-  PLAYER.displayAvatarKey = newBaseAvatarKey;
-  PLAYER.avatarKey = newBaseAvatarKey;
-  PLAYER.avatarSrc = getAvatarByKey(newBaseAvatarKey).src;
-  _saveLocalProfile();
-
-  // 載入新 playerKey 的 profile 和 unlockedAvatars
-  ensurePlayerProfile().then(function() {
-    return loadUnlockedAvatars();
-  }).then(function(unlocked) {
-    // 檢查 Firebase profile 的 displayAvatarKey 是否在新 playerKey 已解鎖
-    if (!FIREBASE_ENABLED || !firebaseDb) return;
-    var pKey = PLAYER.playerKey;
-    firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').once('value').then(function(snap) {
-      var fbProfile = snap.val();
-      var fbDisplayKey = fbProfile && fbProfile.displayAvatarKey;
-      var isUnlockable = fbDisplayKey && UNLOCKABLE_AVATARS.find(function(a){ return a.key === fbDisplayKey; });
-      var isUnlockedInNew = fbDisplayKey && unlocked && unlocked[fbDisplayKey] && unlocked[fbDisplayKey].unlocked;
-
-      if (fbDisplayKey && (!isUnlockable || isUnlockedInNew)) {
-        // A. Firebase profile 的 displayAvatarKey 存在且已解鎖（或是 baseAvatarKey 等非解鎖類）
-        PLAYER.displayAvatarKey = fbDisplayKey;
-        PLAYER.avatarKey = fbDisplayKey;
-        PLAYER.avatarSrc = getAvatarByKey(fbDisplayKey).src;
-      } else {
-        // B. 新身份沒有解鎖舊 displayAvatarKey，保持 baseAvatarKey
-        PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
-        PLAYER.avatarKey = PLAYER.baseAvatarKey;
-        PLAYER.avatarSrc = getAvatarByKey(PLAYER.baseAvatarKey).src;
-        // 更新 Firebase profile
-        firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').update({
-          displayAvatarKey: PLAYER.baseAvatarKey,
-          avatarKey: PLAYER.baseAvatarKey,
-          updatedAt: Date.now()
-        });
-      }
-      _saveLocalProfile();
-      // 更新 UI
-      var sbAv = document.getElementById('sb-avatar');
-      if (sbAv) sbAv.src = PLAYER.avatarSrc;
-    });
-  });
 }
 
 // 儲存到 localStorage（不含 Firebase 操作）
@@ -1618,42 +1612,189 @@ function _saveLocalProfile() {
   localStorage.setItem('vPartyProfile', JSON.stringify({id: PLAYER.id, avatarKey: PLAYER.avatarKey}));
 }
 
-function initProfile() {
-  loadPlayerProfile();
-  // 確保 Firebase profile 存在，並載入已解鎖頭像
-  ensurePlayerProfile();
-  loadUnlockedAvatars();
+var profileAvatarEditMode = 'none'; // 'none' | 'base' | 'display'
+var _pendingBaseAvatarKey = null;   // 暫存選中的 baseAvatarKey 待確認
 
-  // 更新身份/顯示頭像標籤
+function _isBuiltinAvatar(key) {
+  return AVATARS.some(function(a){ return a.key === key; });
+}
+
+function _isDisplayAvatarValid(displayKey, currentUnlocked) {
+  // 內建頭像永遠有效
+  if (_isBuiltinAvatar(displayKey)) return true;
+  // 解鎖頭像需要已解鎖
+  return !!(currentUnlocked && currentUnlocked[displayKey] && currentUnlocked[displayKey].unlocked);
+}
+
+function _updateProfileUI() {
   var baseLabel = document.getElementById('profile-base-label');
   var dispLabel = document.getElementById('profile-display-label');
   if (baseLabel) baseLabel.textContent = PLAYER.baseAvatarKey;
   if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
+  var basePrev = document.getElementById('base-avatar-preview');
+  var dispPrev = document.getElementById('display-avatar-preview');
+  if (basePrev) basePrev.src = getAvatarByKey(PLAYER.baseAvatarKey).src;
+  if (dispPrev) dispPrev.src = getAvatarByKey(PLAYER.displayAvatarKey).src;
+}
 
+function startEditBaseAvatar() {
+  profileAvatarEditMode = 'base';
+  document.getElementById('avatar-edit-section').style.display = 'block';
+  document.getElementById('avatar-grid-label').textContent = '選擇身份頭像';
+  document.getElementById('avatar-grid-hint').textContent = '更換身份頭像＝切換玩家身份，解鎖頭像會依新身份重新讀取。';
+  _renderAvatarGrid();
+}
+
+function startEditDisplayAvatar() {
+  profileAvatarEditMode = 'display';
+  document.getElementById('avatar-edit-section').style.display = 'block';
+  document.getElementById('avatar-grid-label').textContent = '選擇顯示頭像';
+  document.getElementById('avatar-grid-hint').textContent = '更換顯示頭像只改變外觀，不會改變玩家身份。';
+  _renderAvatarGrid();
+}
+
+function closeAvatarEdit() {
+  profileAvatarEditMode = 'none';
+  document.getElementById('avatar-edit-section').style.display = 'none';
+}
+
+function _renderAvatarGrid() {
   var grid = document.getElementById('avatar-grid');
   grid.innerHTML = '';
-  AVATARS.forEach(function(av) {
-    var img = document.createElement('img');
-    img.className = 'av-item';
-    img.src = av.src;
-    img.alt = '';
-    img.dataset.key = av.key;
-    if (av.key === PLAYER.baseAvatarKey) img.classList.add('selected');
-    img.onclick = function() {
-      document.querySelectorAll('.av-item').forEach(function(i){ i.classList.remove('selected'); });
-      img.classList.add('selected');
-      PLAYER.baseAvatarKey = av.key;
-      PLAYER.displayAvatarKey = av.key;
-      PLAYER.avatarKey = av.key;
-      PLAYER.avatarSrc = av.src;
-      document.getElementById('avatar-preview').src = av.src;
-    };
-    grid.appendChild(img);
-  });
 
-  var cur = getAvatarByKey(PLAYER.baseAvatarKey);
-  PLAYER.avatarSrc = cur.src;
-  document.getElementById('avatar-preview').src = cur.src;
+  if (profileAvatarEditMode === 'base') {
+    // 只顯示內建頭像
+    AVATARS.forEach(function(av) {
+      var img = document.createElement('img');
+      img.className = 'av-item';
+      img.src = av.src;
+      img.alt = '';
+      img.dataset.key = av.key;
+      if (av.key === PLAYER.baseAvatarKey) img.classList.add('selected');
+      img.onclick = function() {
+        if (av.key === PLAYER.baseAvatarKey) return; // 沒改，不做事
+        var confirmed = confirm('⚠️ 更換身份頭像會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新身份重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？');
+        if (!confirmed) return;
+        // 確認後直接更新 baseAvatarKey
+        PLAYER.baseAvatarKey = av.key;
+        document.querySelectorAll('.av-item').forEach(function(i){ i.classList.remove('selected'); });
+        img.classList.add('selected');
+        // 先重設 displayAvatarKey，等重新同步後決定
+        PLAYER.displayAvatarKey = av.key;
+        PLAYER.avatarKey = av.key;
+        PLAYER.avatarSrc = av.src;
+        PLAYER.playerKey = makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+        _saveLocalProfile();
+        _updateProfileUI();
+        // 重新同步新 playerKey
+        ensurePlayerProfile().then(function() {
+          return loadUnlockedAvatars();
+        }).then(function(unlocked) {
+          if (!FIREBASE_ENABLED || !firebaseDb) return;
+          var pKey = PLAYER.playerKey;
+          firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').once('value').then(function(snap) {
+            var fbProfile = snap.val();
+            var fbDisplayKey = fbProfile && fbProfile.displayAvatarKey;
+            if (fbDisplayKey && _isDisplayAvatarValid(fbDisplayKey, unlocked)) {
+              PLAYER.displayAvatarKey = fbDisplayKey;
+              PLAYER.avatarKey = fbDisplayKey;
+              PLAYER.avatarSrc = getAvatarByKey(fbDisplayKey).src;
+            }
+            _saveLocalProfile();
+            _updateProfileUI();
+            // 更新 sidebar
+            var sbAv = document.getElementById('sb-avatar');
+            if (sbAv) sbAv.src = PLAYER.avatarSrc;
+          });
+        });
+      };
+      grid.appendChild(img);
+    });
+  } else if (profileAvatarEditMode === 'display') {
+    // 顯示內建頭像（全部可選）
+    AVATARS.forEach(function(av) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;cursor:pointer;';
+      var img = document.createElement('img');
+      img.className = 'av-item';
+      img.src = av.src;
+      img.alt = '';
+      img.dataset.key = av.key;
+      if (av.key === PLAYER.displayAvatarKey) img.classList.add('selected');
+      img.onclick = function() {
+        _applyDisplayAvatar(av.key, av.src);
+        document.querySelectorAll('.av-item').forEach(function(i){ i.classList.remove('selected'); });
+        img.classList.add('selected');
+      };
+      wrap.appendChild(img);
+      grid.appendChild(wrap);
+    });
+
+    // 顯示解鎖頭像（已解鎖可選，未解鎖灰階）
+    UNLOCKABLE_AVATARS.forEach(function(av) {
+      var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
+      var src = resolveAssetPath(av.file);
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;' + (isUnlocked ? 'cursor:pointer;' : 'cursor:default;');
+
+      var img = document.createElement('img');
+      img.className = 'av-item';
+      img.src = src;
+      img.alt = '';
+      img.dataset.key = av.key;
+      if (!isUnlocked) img.style.cssText = 'filter:grayscale(1) opacity(.35);';
+      if (av.key === PLAYER.displayAvatarKey && isUnlocked) img.classList.add('selected');
+
+      if (isUnlocked) {
+        img.onclick = function() {
+          _applyDisplayAvatar(av.key, src);
+          document.querySelectorAll('.av-item').forEach(function(i){ i.classList.remove('selected'); });
+          img.classList.add('selected');
+        };
+      } else {
+        // 未解鎖：顯示鎖頭和條件
+        var lock = document.createElement('div');
+        lock.style.cssText = 'position:absolute;bottom:0;right:0;font-size:9px;background:rgba(0,0,0,.6);color:#fff;border-radius:4px;padding:1px 3px;';
+        lock.textContent = '🔒';
+        lock.title = av.unlockText;
+        wrap.appendChild(lock);
+      }
+      wrap.appendChild(img);
+      grid.appendChild(wrap);
+    });
+  }
+}
+
+function _applyDisplayAvatar(key, src) {
+  PLAYER.displayAvatarKey = key;
+  PLAYER.avatarKey = key;
+  PLAYER.avatarSrc = src || getAvatarByKey(key).src;
+  _saveLocalProfile();
+  _updateProfileUI();
+  var sbAv = document.getElementById('sb-avatar');
+  if (sbAv) sbAv.src = PLAYER.avatarSrc;
+  // 同步 Firebase profile
+  if (FIREBASE_ENABLED) {
+    ensureFirebaseReady().then(function(ok) {
+      if (!ok || !firebaseDb) return;
+      var pKey = PLAYER.playerKey;
+      if (!pKey) return;
+      firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').update({
+        displayAvatarKey: key,
+        avatarKey: key,
+        updatedAt: Date.now()
+      });
+    });
+  }
+}
+
+function initProfile() {
+  loadPlayerProfile();
+  ensurePlayerProfile();
+  loadUnlockedAvatars();
+  profileAvatarEditMode = 'none';
+  document.getElementById('avatar-edit-section').style.display = 'none';
+  _updateProfileUI();
   document.getElementById('player-id-input').value = PLAYER.id;
 }
 
@@ -2580,15 +2721,12 @@ function renderUnlockPanel() {
 
   // 防呆：如果 displayAvatarKey 是 UNLOCKABLE_AVATARS 但未解鎖，自動修正回 baseAvatarKey
   var displayIsUnlockable = UNLOCKABLE_AVATARS.find(function(a){ return a.key === PLAYER.displayAvatarKey; });
-  if (displayIsUnlockable) {
-    var displayIsUnlocked = unlockedAvatars[PLAYER.displayAvatarKey] && unlockedAvatars[PLAYER.displayAvatarKey].unlocked;
-    if (!displayIsUnlocked) {
-      PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
-      PLAYER.avatarKey = PLAYER.baseAvatarKey;
-      PLAYER.avatarSrc = getAvatarByKey(PLAYER.baseAvatarKey).src;
-      _saveLocalProfile();
-      if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
-    }
+  if (displayIsUnlockable && !_isDisplayAvatarValid(PLAYER.displayAvatarKey, unlockedAvatars)) {
+    PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
+    PLAYER.avatarKey = PLAYER.baseAvatarKey;
+    PLAYER.avatarSrc = getAvatarByKey(PLAYER.baseAvatarKey).src;
+    _saveLocalProfile();
+    if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
   }
 
   UNLOCKABLE_AVATARS.forEach(function(av) {
