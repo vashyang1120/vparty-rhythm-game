@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>氣球小V 頭像解鎖後台</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg:       #fef3fb;
+  --bg2:      #fff8fe;
+  --surface:  #ffffff;
+  --border:   #f0d4ef;
+  --border2:  #e8bce6;
+  --accent:   #c026d3;
+  --accent2:  #f59e0b;
+  --accent3:  #10b981;
+  --danger:   #ef4444;
+  --warn:     #f97316;
+  --text:     #2d1f33;
+  --text2:    #7c5e86;
+  --text3:    #b89dbd;
+  --unlocked-bg: #f0fdf4;
+  --unlocked-border: #86efac;
+  --locked-bg: #f8f4fb;
+  --locked-border: #e8d5f0;
+  --radius:   14px;
+  --radius-sm: 8px;
+  --shadow:   0 2px 16px rgba(150,40,180,0.08);
+  --shadow-lg:0 8px 40px rgba(150,40,180,0.14);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  padding-bottom: 60px;
+}
+
+/* ── LOGIN ─────────────────────────────────────────── */
+#loginScreen {
+  position: fixed; inset: 0;
+  background: linear-gradient(145deg, #fef0ff 0%, #ffe8fb 50%, #fef3e2 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999; gap: 0;
+  padding: 24px;
+}
+.login-logo {
+  font-size: 3.2rem; margin-bottom: 6px;
+  animation: bounce 2s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.login-title {
+  font-size: 1.3rem; font-weight: 900; color: var(--accent);
+  letter-spacing: -0.5px; margin-bottom: 4px;
+}
+.login-sub {
+  font-size: 0.72rem; color: var(--text3);
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 32px;
+}
+.login-box {
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: 20px;
+  padding: 32px 28px;
+  width: 100%; max-width: 340px;
+  box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.login-box label {
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--text2); letter-spacing: 1px; text-transform: uppercase;
+}
+.login-box input[type="password"] {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text); font-size: 1.6rem;
+  padding: 14px 16px; letter-spacing: 10px;
+  width: 100%; outline: none;
+  font-family: 'Space Mono', monospace;
+  transition: border-color 0.2s;
+  text-align: center;
+}
+.login-box input[type="password"]:focus { border-color: var(--accent); }
+.login-err { color: var(--danger); font-size: 0.8rem; min-height: 18px; text-align: center; }
+#loginBtn {
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  border: none; border-radius: 50px;
+  color: #fff; font-weight: 900; font-size: 1rem;
+  padding: 16px; cursor: pointer; width: 100%;
+  font-family: 'Noto Sans TC', sans-serif;
+  box-shadow: 0 4px 20px rgba(192,38,211,0.35);
+  transition: opacity 0.2s, transform 0.15s;
+}
+#loginBtn:hover   { opacity: 0.9; transform: translateY(-2px); }
+#loginBtn:active  { transform: translateY(0); }
+.login-notice {
+  font-size: 0.65rem; color: var(--text3);
+  text-align: center; margin-top: 8px;
+}
+
+/* ── MAIN ─────────────────────────────────────────── */
+#mainApp { display: none; }
+
+header {
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+  padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 10px rgba(150,40,180,0.06);
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-logo { font-size: 1.5rem; }
+.header-title {
+  font-size: 1rem; font-weight: 900; color: var(--accent);
+  letter-spacing: -0.3px;
+}
+.header-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem; background: var(--accent);
+  color: #fff; border-radius: 4px; padding: 2px 7px;
+}
+.header-path {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem; color: var(--text3);
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 3px 8px;
+}
+#logoutBtn {
+  background: none; border: 1.5px solid var(--border2);
+  color: var(--text2); border-radius: 50px;
+  padding: 6px 16px; font-size: 0.8rem; cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+#logoutBtn:hover { border-color: var(--danger); color: var(--danger); }
+
+main {
+  max-width: 900px; margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* ── CARDS ─────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 0.72rem; font-weight: 700; color: var(--text2);
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.card-title .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); display: inline-block;
+}
+
+/* ── FORM FIELDS ─────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field label { font-size: 0.7rem; font-weight: 700; color: var(--text2); letter-spacing: 0.8px; text-transform: uppercase; }
+.field input[type="text"] {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text); font-size: 1rem;
+  padding: 12px 14px; outline: none; width: 100%;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: border-color 0.2s;
+}
+.field input[type="text"]:focus { border-color: var(--accent); }
+
+.playerkey-display {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.82rem; color: var(--accent);
+  word-break: break-all; min-height: 42px;
+}
+
+/* ── AVATAR BASE GRID ────────────────────────────── */
+.base-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  gap: 8px;
+}
+.base-av-btn {
+  background: var(--locked-bg);
+  border: 2px solid var(--locked-border);
+  border-radius: 10px;
+  padding: 8px 4px 6px;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.base-av-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+.base-av-btn.selected {
+  border-color: var(--accent);
+  background: #fdf4ff;
+  box-shadow: 0 0 0 3px rgba(192,38,211,0.15);
+}
+.base-av-btn img { width: 44px; height: 44px; border-radius: 6px; object-fit: contain; }
+.base-av-btn span { font-size: 0.6rem; color: var(--text2); font-family: 'Space Mono', monospace; }
+
+/* ── BUTTONS ─────────────────────────────────────── */
+.btn {
+  border: none; border-radius: 50px;
+  padding: 13px 28px; font-size: 0.92rem; font-weight: 700;
+  cursor: pointer; width: 100%; margin-top: 4px;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+.btn:hover   { opacity: 0.88; transform: translateY(-2px); }
+.btn:active  { transform: translateY(0); opacity: 1; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  color: #fff; box-shadow: 0 4px 16px rgba(192,38,211,0.28);
+}
+.btn-success {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff; box-shadow: 0 4px 16px rgba(16,185,129,0.28);
+}
+.btn-danger {
+  background: linear-gradient(135deg, var(--danger), #dc2626);
+  color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,0.28);
+  font-size: 0.82rem; padding: 10px 18px; width: auto;
+}
+.btn-ghost {
+  background: var(--bg);
+  border: 1.5px solid var(--border2);
+  color: var(--text2); font-size: 0.82rem;
+  padding: 10px 18px; width: auto;
+}
+
+/* ── PROFILE DISPLAY ─────────────────────────────── */
+.profile-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.profile-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.profile-table td:first-child {
+  color: var(--text3); font-family: 'Space Mono', monospace;
+  font-size: 0.72rem; width: 140px; white-space: nowrap;
+}
+.profile-table td:last-child { color: var(--text); word-break: break-all; }
+
+.notice-box {
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  font-size: 0.82rem; line-height: 1.6; margin-bottom: 10px;
+}
+.notice-warn  { background: #fff8ed; border: 1.5px solid #fed7aa; color: var(--warn); }
+.notice-ok    { background: var(--unlocked-bg); border: 1.5px solid var(--unlocked-border); color: #065f46; }
+.notice-err   { background: #fef2f2; border: 1.5px solid #fecaca; color: var(--danger); }
+.notice-info  { background: #f0f9ff; border: 1.5px solid #bae6fd; color: #0369a1; }
+
+/* ── STATUS MESSAGE ──────────────────────────────── */
+#statusMsg {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--accent3); color: #fff;
+  font-size: 0.88rem; font-weight: 700;
+  padding: 12px 24px; border-radius: 50px;
+  z-index: 9998; display: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  max-width: 90vw; text-align: center;
+  pointer-events: none;
+}
+#statusMsg.show { display: block; animation: slideDown 0.25s ease; }
+#statusMsg.err  { background: var(--danger); }
+@keyframes slideDown { from { opacity:0; top: 68px; } to { opacity:1; top: 80px; } }
+
+/* ── UNLOCK AVATAR GRID ──────────────────────────── */
+.unlock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+.unlock-card {
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  border: 2px solid;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.unlock-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+.unlock-card.locked   { background: var(--locked-bg);   border-color: var(--locked-border); }
+.unlock-card.unlocked { background: var(--unlocked-bg); border-color: var(--unlocked-border); }
+.unlock-card img {
+  width: 68px; height: 68px; border-radius: 10px;
+  object-fit: contain;
+  transition: filter 0.2s;
+}
+.unlock-card.locked img { filter: grayscale(1) opacity(0.5); }
+.unlock-card .av-name {
+  font-size: 0.82rem; font-weight: 700; text-align: center;
+  color: var(--text);
+}
+.unlock-card.locked .av-name { color: var(--text3); }
+.unlock-card .av-cond {
+  font-size: 0.65rem; color: var(--text3); text-align: center; line-height: 1.4;
+}
+.unlock-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.68rem; font-weight: 700; border-radius: 4px;
+  padding: 2px 8px;
+}
+.unlock-badge.yes { background: #dcfce7; color: #15803d; }
+.unlock-badge.no  { background: #f3e8ff; color: var(--accent); }
+.unlock-card .av-meta {
+  font-size: 0.62rem; color: var(--text3); text-align: center;
+  line-height: 1.5; word-break: break-all;
+}
+.unlock-card .card-btns {
+  display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 2px;
+}
+.btn-unlock {
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  color: #fff; border: none; border-radius: 50px;
+  padding: 9px 12px; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; width: 100%;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: opacity 0.2s, transform 0.1s;
+  box-shadow: 0 3px 10px rgba(192,38,211,0.25);
+}
+.btn-unlock:hover  { opacity: 0.85; transform: translateY(-1px); }
+.btn-remove {
+  background: var(--surface); color: var(--danger);
+  border: 1.5px solid #fecaca; border-radius: 50px;
+  padding: 7px 12px; font-size: 0.72rem; font-weight: 700;
+  cursor: pointer; width: 100%;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-remove:hover { background: #fef2f2; transform: translateY(-1px); }
+
+/* ── GUIDE BOX ────────────────────────────────────── */
+.guide-box {
+  background: linear-gradient(135deg, #fdf4ff, #fff8ed);
+  border: 1.5px solid #f0abfc;
+  border-radius: var(--radius); padding: 16px 18px;
+  font-size: 0.78rem; color: var(--text2); line-height: 1.8;
+  margin-bottom: 20px;
+}
+.guide-box strong { color: var(--accent); }
+.guide-steps { margin-top: 8px; padding-left: 4px; }
+.guide-steps li { margin-bottom: 3px; list-style: none; }
+.guide-steps li::before { content: '▸ '; color: var(--accent); font-weight: 700; }
+
+/* ── SECTION DIVIDER ─────────────────────────────── */
+.section-sep {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 0.78rem; font-weight: 700; color: var(--text2);
+  margin: 24px 0 16px; letter-spacing: 0.5px;
+}
+.section-sep::before, .section-sep::after {
+  content: ''; flex: 1; height: 1.5px; background: var(--border);
+}
+
+/* ── SPINNER ─────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2.5px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 500px) {
+  .unlock-grid { grid-template-columns: repeat(2, 1fr); }
+  .base-avatar-grid { grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── STATUS MSG ── -->
+<div id="statusMsg"></div>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="login-logo">🎈</div>
+  <div class="login-title">氣球小V 頭像解鎖後台</div>
+  <div class="login-sub">Admin · Avatar Unlock · v1.0</div>
+  <div class="login-box">
+    <label for="pwInput">管理員密碼</label>
+    <input type="password" id="pwInput" placeholder="••••••" maxlength="20" autofocus>
+    <div class="login-err" id="loginErr"></div>
+    <button id="loginBtn">進入後台</button>
+    <div class="login-notice">🔒 正式 players 路徑 · 不含排行榜</div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="mainApp">
+  <header>
+    <div class="header-left">
+      <span class="header-logo">🎈</span>
+      <span class="header-title">頭像解鎖後台</span>
+      <span class="header-badge">v1.0</span>
+      <span class="header-path">players/{playerKey}</span>
+    </div>
+    <button id="logoutBtn" onclick="doLogout()">登出</button>
+  </header>
+
+  <main>
+    <!-- Guide -->
+    <div class="guide-box">
+      <strong>🎓 學生專屬頭像快速流程</strong>
+      <ul class="guide-steps">
+        <li>輸入學生 ID，選擇學生身份頭像</li>
+        <li>點「查詢玩家」——沒有 profile 時先建立</li>
+        <li>在下方頭像清單中找到要解鎖的頭像</li>
+        <li>按「解鎖給此玩家」即完成</li>
+        <li>學生下次進遊戲，頭像收藏即可看到</li>
+      </ul>
+    </div>
+
+    <!-- ① 玩家身份查詢 -->
+    <div class="card" id="queryCard">
+      <div class="card-title"><span class="dot"></span>① 玩家身份查詢</div>
+
+      <div class="field">
+        <label>玩家 ID</label>
+        <input type="text" id="inputId" placeholder="請輸入玩家 ID" oninput="updatePlayerKey()">
+      </div>
+
+      <div class="field">
+        <label>身份頭像 baseAvatarKey（點選）</label>
+        <div class="base-avatar-grid" id="baseAvatarGrid"></div>
+      </div>
+
+      <div class="field" style="margin-top:8px;">
+        <label>目前 playerKey</label>
+        <div class="playerkey-display" id="pkDisplay">—</div>
+      </div>
+
+      <button class="btn btn-primary" onclick="queryPlayer()" id="queryBtn">
+        🔍 查詢玩家
+      </button>
+    </div>
+
+    <!-- ② 玩家資料 -->
+    <div class="card" id="profileCard" style="display:none;">
+      <div class="card-title"><span class="dot"></span>② 玩家資料</div>
+      <div id="profileContent"></div>
+    </div>
+
+    <!-- ③ 頭像解鎖管理 -->
+    <div class="card" id="avatarsCard" style="display:none;">
+      <div class="card-title"><span class="dot"></span>③ 頭像解鎖管理</div>
+      <div id="avatarNotice" style="margin-bottom:12px;"></div>
+      <div class="unlock-grid" id="avatarGrid"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+// ── CONSTANTS ────────────────────────────────────────────────────────────────
+const ADMIN_PASSWORD = '952740';
+
+const AVATAR_BASE_URL = 'https://vashyang1120.github.io/vparty-rhythm-game/assets/avatars/';
+
+const BASE_AVATARS = [
+  'boy1','girl1','boy2','girl2','cat1','cat2','fat1','girl3',
+  'curl1','boy3','girl4','girl5','curl2','dog1','dog2','dog3','dog4'
+];
+
+const UNLOCKABLE_AVATARS = [
+  { key: 'xiaov_base',         name: '小V',         unlockText: '完成任一遊戲 1 場' },
+  { key: 'dance_sister_01',    name: '唱跳姐姐',    unlockText: '追蹤 IG 或 FB 粉專' },
+  { key: 'balloon_sister_01',  name: '氣球姐姐 1',  unlockText: '加官方 LINE 好友' },
+  { key: 'balloon_sister_02',  name: '氣球姐姐 2',  unlockText: 'Google 商家 5 星好評' },
+  { key: 'balloon_brother_01', name: '氣球哥哥 1',  unlockText: '方塊遊戲達 2,000 分' },
+  { key: 'balloon_brother_02', name: '氣球哥哥 2',  unlockText: '節奏遊戲任一首達 A 以上' },
+  { key: 'balloon_brother_03', name: '氣球哥哥 3',  unlockText: '冒險遊戲通過指定進度' },
+  { key: 'bubble_brother_01',  name: '泡泡哥哥',    unlockText: '泡泡活動限定 / 特別活動' },
+  { key: 'xiaov_special',      name: '小V 特別版',  unlockText: '打敗小V / 特別活動 / 高階成就' },
+];
+
+const FB_CONFIG = {
+  apiKey:            "AIzaSyAZ8WTuAHOslZSa4eqqX3dHR771mkaSNd8",
+  authDomain:        "vparty-rhythm-game.firebaseapp.com",
+  databaseURL:       "https://vparty-rhythm-game-default-rtdb.firebaseio.com",
+  projectId:         "vparty-rhythm-game",
+  storageBucket:     "vparty-rhythm-game.firebasestorage.app",
+  messagingSenderId: "1043884247859",
+  appId:             "1:1043884247859:web:24b1c030d159d1e9374c46",
+  measurementId:     "G-ZB7430NTBR"
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let db        = null;
+let fbReady   = false;
+let selectedBase = 'boy1';
+
+let currentPlayerId        = '';
+let currentBaseAvatarKey   = '';
+let currentPlayerKey       = '';
+let currentProfile         = null;
+let currentUnlockedAvatars = {};
+
+// ── FIREBASE ──────────────────────────────────────────────────────────────────
+firebase.initializeApp(FB_CONFIG);
+const auth = firebase.auth();
+
+function ensureFirebaseReady() {
+  return new Promise((resolve, reject) => {
+    if (fbReady && db) { resolve(); return; }
+    auth.signInAnonymously()
+      .then(() => { db = firebase.database(); fbReady = true; resolve(); })
+      .catch(reject);
+  });
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+document.getElementById('loginBtn').addEventListener('click', tryLogin);
+document.getElementById('pwInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') tryLogin();
+});
+
+function tryLogin() {
+  const val = document.getElementById('pwInput').value;
+  if (val === ADMIN_PASSWORD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    initApp();
+  } else {
+    const err = document.getElementById('loginErr');
+    err.textContent = '❌ 密碼錯誤，請再試一次';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    setTimeout(() => { err.textContent = ''; }, 2800);
+  }
+}
+
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('pwInput').value = '';
+}
+
+// ── APP INIT ──────────────────────────────────────────────────────────────────
+function initApp() {
+  buildBaseAvatarGrid();
+  updatePlayerKey();
+}
+
+// ── playerKey encoding (matches rhythm game v2.4.9) ──────────────────────────
+function normalizePlayerId(id) {
+  return (id || '').trim() || '玩家';
+}
+function encodeFirebaseKeyPart(s) {
+  return encodeURIComponent(normalizePlayerId(s))
+    .replace(/\./g, '%2E')
+    .replace(/#/g, '%23')
+    .replace(/\$/g, '%24')
+    .replace(/\[/g, '%5B')
+    .replace(/\]/g, '%5D');
+}
+function makePlayerKey(id, baseAvatarKey) {
+  return encodeFirebaseKeyPart(id) + '__' + (baseAvatarKey || 'boy1');
+}
+
+// ── BASE AVATAR GRID ──────────────────────────────────────────────────────────
+function buildBaseAvatarGrid() {
+  const grid = document.getElementById('baseAvatarGrid');
+  grid.innerHTML = BASE_AVATARS.map(key => `
+    <button class="base-av-btn${key === selectedBase ? ' selected' : ''}"
+            onclick="selectBase('${key}')" title="${key}">
+      <img src="${AVATAR_BASE_URL}${key}.png" alt="${key}"
+           onerror="this.style.opacity='0.3'">
+      <span>${key}</span>
+    </button>
+  `).join('');
+}
+
+function selectBase(key) {
+  selectedBase = key;
+  document.querySelectorAll('.base-av-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.title === key);
+  });
+  updatePlayerKey();
+}
+
+function updatePlayerKey() {
+  const id = document.getElementById('inputId').value;
+  const pk = makePlayerKey(id, selectedBase);
+  document.getElementById('pkDisplay').textContent = pk;
+}
+
+// ── QUERY PLAYER ──────────────────────────────────────────────────────────────
+async function queryPlayer() {
+  const id = document.getElementById('inputId').value.trim();
+  if (!id) {
+    showStatus('請輸入玩家 ID', true);
+    return;
+  }
+
+  const btn = document.getElementById('queryBtn');
+  btn.innerHTML = '<span class="spinner"></span>查詢中…';
+  btn.disabled = true;
+
+  const pk = makePlayerKey(id, selectedBase);
+  currentPlayerId      = id;
+  currentBaseAvatarKey = selectedBase;
+  currentPlayerKey     = pk;
+
+  try {
+    await ensureFirebaseReady();
+    const result = await loadPlayer(pk);
+    currentProfile         = result.profile;
+    currentUnlockedAvatars = result.unlockedAvatars || {};
+
+    renderProfile();
+    renderAvatarGrid();
+
+    document.getElementById('profileCard').style.display = 'block';
+    document.getElementById('avatarsCard').style.display = 'block';
+    document.getElementById('profileCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(err) {
+    showStatus('查詢失敗：' + err.message, true);
+  } finally {
+    btn.textContent = '🔍 查詢玩家';
+    btn.disabled = false;
+  }
+}
+
+// ── LOAD PLAYER ───────────────────────────────────────────────────────────────
+async function loadPlayer(playerKey) {
+  const [profileSnap, unlockedSnap] = await Promise.all([
+    db.ref(`players/${playerKey}/profile`).once('value'),
+    db.ref(`players/${playerKey}/unlockedAvatars`).once('value'),
+  ]);
+  return {
+    profile:         profileSnap.exists()  ? profileSnap.val()  : null,
+    unlockedAvatars: unlockedSnap.exists() ? unlockedSnap.val() : {},
+  };
+}
+
+// ── RENDER PROFILE ────────────────────────────────────────────────────────────
+function renderProfile() {
+  const box = document.getElementById('profileContent');
+  const p   = currentProfile;
+
+  if (!p) {
+    box.innerHTML = `
+      <div class="notice-box notice-warn">
+        ⚠ 尚未建立玩家 profile。<br>
+        請先建立 profile，再進行頭像解鎖。
+      </div>
+      <button class="btn btn-ghost" onclick="createProfile()">＋ 建立玩家 Profile</button>
+    `;
+    return;
+  }
+
+  const fmt = ts => ts ? new Date(ts).toLocaleString('zh-TW', { hour12: false }) : '—';
+  box.innerHTML = `
+    <table class="profile-table">
+      <tr><td>id</td><td>${esc(p.id || '')}</td></tr>
+      <tr><td>playerKey</td><td>${esc(p.playerKey || '')}</td></tr>
+      <tr><td>baseAvatarKey</td><td>${esc(p.baseAvatarKey || '')}</td></tr>
+      <tr><td>displayAvatarKey</td><td>${esc(p.displayAvatarKey || '')}</td></tr>
+      <tr><td>avatarKey</td><td>${esc(p.avatarKey || '')}</td></tr>
+      <tr><td>createdAt</td><td>${fmt(p.createdAt)}</td></tr>
+      <tr><td>updatedAt</td><td>${fmt(p.updatedAt)}</td></tr>
+    </table>
+  `;
+}
+
+// ── CREATE PROFILE ────────────────────────────────────────────────────────────
+async function createProfile() {
+  const id = currentPlayerId;
+  const base = currentBaseAvatarKey;
+  const pk   = currentPlayerKey;
+
+  if (!window.confirm(`即將建立玩家 profile\n\nplayerKey：${pk}\nid：${id}\nbaseAvatarKey：${base}\n\n確認建立？`)) return;
+
+  try {
+    await ensureFirebaseReady();
+    const existing = await db.ref(`players/${pk}/profile`).once('value');
+    if (existing.exists()) {
+      showStatus('⚠ Profile 已存在，未覆蓋', false);
+      return;
+    }
+    // Write only players/{pk}/profile — no other paths
+    await db.ref(`players/${pk}/profile`).set({
+      id,
+      name:             id,
+      playerKey:        pk,
+      baseAvatarKey:    base,
+      displayAvatarKey: base,
+      avatarKey:        base,
+      createdAt:        Date.now(),
+      updatedAt:        Date.now(),
+      createdBy:        'admin-unlock',
+    });
+    currentProfile = (await db.ref(`players/${pk}/profile`).once('value')).val();
+    renderProfile();
+    showStatus('✅ 已建立 Profile');
+  } catch(err) {
+    showStatus('建立失敗：' + err.message, true);
+  }
+}
+
+// ── RENDER AVATAR GRID ────────────────────────────────────────────────────────
+function renderAvatarGrid() {
+  const grid   = document.getElementById('avatarGrid');
+  const notice = document.getElementById('avatarNotice');
+  const ua     = currentUnlockedAvatars;
+
+  const total    = UNLOCKABLE_AVATARS.length;
+  const unlocked = UNLOCKABLE_AVATARS.filter(a => ua[a.key]?.unlocked).length;
+
+  notice.innerHTML = `
+    <div class="notice-box notice-info" style="margin-bottom:0;">
+      玩家：<strong>${esc(currentPlayerId)}</strong> ／
+      身份：<strong>${esc(currentBaseAvatarKey)}</strong> ／
+      playerKey：<code style="font-family:'Space Mono',monospace;font-size:0.78rem;">${esc(currentPlayerKey)}</code>
+      <br>已解鎖 <strong style="color:var(--accent3);">${unlocked}</strong> / ${total} 個頭像
+    </div>
+  `;
+
+  grid.innerHTML = UNLOCKABLE_AVATARS.map(av => {
+    const entry  = ua[av.key];
+    const isUnlocked = !!(entry && entry.unlocked);
+    const cls    = isUnlocked ? 'unlocked' : 'locked';
+    const badge  = isUnlocked
+      ? '<span class="unlock-badge yes">✅ 已解鎖</span>'
+      : '<span class="unlock-badge no">🔒 未解鎖</span>';
+    const meta   = isUnlocked
+      ? `<div class="av-meta">
+           來源：${esc(entry.source || '—')}<br>
+           時間：${entry.unlockedAt ? new Date(entry.unlockedAt).toLocaleString('zh-TW',{hour12:false}) : '—'}
+         </div>`
+      : '';
+    const btns = isUnlocked
+      ? `<div class="card-btns">
+           <button class="btn-remove" onclick="removeUnlock('${av.key}','${av.name}')">✕ 移除此解鎖</button>
+         </div>`
+      : `<div class="card-btns">
+           <button class="btn-unlock" onclick="grantUnlock('${av.key}','${av.name}')">解鎖給此玩家</button>
+         </div>`;
+
+    return `
+      <div class="unlock-card ${cls}">
+        <img src="${AVATAR_BASE_URL}${av.key}.png" alt="${av.name}"
+             onerror="this.style.opacity='0.25'">
+        <div class="av-name">${esc(av.name)}</div>
+        ${badge}
+        <div class="av-cond">${esc(av.unlockText)}</div>
+        ${meta}
+        ${btns}
+      </div>
+    `;
+  }).join('');
+}
+
+// ── GRANT UNLOCK ─────────────────────────────────────────────────────────────
+async function grantUnlock(avatarKey, avatarName) {
+  if (!currentPlayerKey) { showStatus('請先查詢玩家', true); return; }
+  if (!currentProfile)   { showStatus('此玩家 profile 尚未建立，請先建立 profile。', true); return; }
+
+  const confirmed = window.confirm(
+    `確定要幫「${currentPlayerId}」的身份「${currentBaseAvatarKey}」\n解鎖「${avatarName}」嗎？`
+  );
+  if (!confirmed) return;
+
+  try {
+    await ensureFirebaseReady();
+    // Safety: check not already unlocked
+    const existing = await db.ref(`players/${currentPlayerKey}/unlockedAvatars/${avatarKey}`).once('value');
+    if (existing.exists() && existing.val().unlocked === true) {
+      showStatus(`⚠ 此玩家已擁有「${avatarName}」`, false);
+      return;
+    }
+    // Write ONLY to players/{playerKey}/unlockedAvatars/{avatarKey}
+    // Never touching scores / leaderboards / gameLogs / profile.displayAvatarKey
+    await db.ref(`players/${currentPlayerKey}/unlockedAvatars/${avatarKey}`).set({
+      unlocked:   true,
+      source:     'admin_manual',
+      unlockedAt: Date.now(),
+      unlockedBy: 'admin-unlock',
+    });
+
+    // Refresh
+    const snap = await db.ref(`players/${currentPlayerKey}/unlockedAvatars`).once('value');
+    currentUnlockedAvatars = snap.exists() ? snap.val() : {};
+    renderAvatarGrid();
+    showStatus(`✅ 已解鎖：${avatarName}`);
+  } catch(err) {
+    showStatus('解鎖失敗，請稍後再試：' + err.message, true);
+  }
+}
+
+// ── REMOVE UNLOCK ─────────────────────────────────────────────────────────────
+async function removeUnlock(avatarKey, avatarName) {
+  if (!currentPlayerKey) { showStatus('請先查詢玩家', true); return; }
+
+  const confirmed = window.confirm(
+    `確定要移除「${currentPlayerId}」的「${avatarName}」解鎖嗎？\n\n如果玩家目前正在使用這個顯示頭像，進遊戲後會自動回到身份頭像。`
+  );
+  if (!confirmed) return;
+
+  try {
+    await ensureFirebaseReady();
+    // Delete ONLY players/{playerKey}/unlockedAvatars/{avatarKey}
+    await db.ref(`players/${currentPlayerKey}/unlockedAvatars/${avatarKey}`).remove();
+
+    // Refresh
+    const snap = await db.ref(`players/${currentPlayerKey}/unlockedAvatars`).once('value');
+    currentUnlockedAvatars = snap.exists() ? snap.val() : {};
+    renderAvatarGrid();
+    showStatus(`🗑 已移除解鎖：${avatarName}`);
+  } catch(err) {
+    showStatus('移除失敗，請稍後再試：' + err.message, true);
+  }
+}
+
+// ── STATUS TOAST ──────────────────────────────────────────────────────────────
+let statusTimer = null;
+function showStatus(msg, isErr = false) {
+  const el = document.getElementById('statusMsg');
+  if (statusTimer) clearTimeout(statusTimer);
+  el.textContent = msg;
+  el.className   = 'show' + (isErr ? ' err' : '');
+  statusTimer = setTimeout(() => {
+    el.className = '';
+    statusTimer = null;
+  }, 3000);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
