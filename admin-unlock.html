@@ -396,7 +396,7 @@ main {
 <div id="loginScreen">
   <div class="login-logo">🎈</div>
   <div class="login-title">氣球小V 頭像解鎖後台</div>
-  <div class="login-sub">Admin · Avatar Unlock · v1.0</div>
+  <div class="login-sub">Admin · Avatar Unlock · v1.0.1</div>
   <div class="login-box">
     <label for="pwInput">管理員密碼</label>
     <input type="password" id="pwInput" placeholder="••••••" maxlength="20" autofocus>
@@ -412,7 +412,7 @@ main {
     <div class="header-left">
       <span class="header-logo">🎈</span>
       <span class="header-title">頭像解鎖後台</span>
-      <span class="header-badge">v1.0</span>
+      <span class="header-badge">v1.0.1</span>
       <span class="header-path">players/{playerKey}</span>
     </div>
     <button id="logoutBtn" onclick="doLogout()">登出</button>
@@ -437,7 +437,8 @@ main {
 
       <div class="field">
         <label>玩家 ID</label>
-        <input type="text" id="inputId" placeholder="請輸入玩家 ID" oninput="updatePlayerKey()">
+        <input type="text" id="inputId" placeholder="請輸入玩家 ID" maxlength="12" oninput="updatePlayerKey()">
+        <div style="font-size:0.68rem;color:var(--text3);margin-top:3px;">玩家 ID 最多 12 字，需與遊戲中輸入完全一致。</div>
       </div>
 
       <div class="field">
