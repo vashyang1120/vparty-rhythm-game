@@ -396,7 +396,7 @@ main {
 <div id="loginScreen">
   <div class="login-logo">🎈</div>
   <div class="login-title">氣球小V 頭像解鎖後台</div>
-  <div class="login-sub">Admin · Avatar Unlock · v1.0.2</div>
+  <div class="login-sub">Admin · Avatar Unlock · v1.0.3</div>
   <div class="login-box">
     <label for="pwInput">管理員密碼</label>
     <input type="password" id="pwInput" placeholder="••••••" maxlength="20" autofocus>
@@ -412,7 +412,7 @@ main {
     <div class="header-left">
       <span class="header-logo">🎈</span>
       <span class="header-title">頭像解鎖後台</span>
-      <span class="header-badge">v1.0.2</span>
+      <span class="header-badge">v1.0.3</span>
       <span class="header-path">players/{playerKey}</span>
     </div>
     <button id="logoutBtn" onclick="doLogout()">登出</button>
@@ -498,8 +498,8 @@ const UNLOCKABLE_AVATARS = [
   { key: 'bubble_brother_01',  name: '泡泡哥哥',    unlockText: '泡泡活動限定 / 特別活動' },
   { key: 'xiaov_special',      name: '小V 特別版',  unlockText: '打敗小V / 特別活動 / 高階成就' },
   // ── 學生專屬頭像 ──
-  { key: 'student_hanhan',    name: '涵涵',          unlockText: '學生專屬', source: 'admin-student' },
-  { key: 'student_xuanxuan',  name: '萱萱',          unlockText: '學生專屬', source: 'admin-student' },
+  { key: 'student_hanhan',   name: '涵涵', unlockText: '學生專屬', source: 'admin-student', file: 'assets/avatars/student_hanhan_01.png' },
+  { key: 'student_xuanxuan', name: '萱萱', unlockText: '學生專屬', source: 'admin-student', file: 'assets/avatars/student_xuanxuan_01.png' },
 ];
 
 const FB_CONFIG = {
@@ -765,10 +765,12 @@ function renderAvatarGrid() {
       : `<div class="card-btns">
            <button class="btn-unlock" onclick="grantUnlock('${av.key}','${av.name}')">解鎖給此玩家</button>
          </div>`;
-    // Student avatars use relative path (file lives in same repo assets folder)
-    const imgSrc = av.key.startsWith('student_')
-      ? `assets/avatars/${av.key}.png`
-      : `${AVATAR_BASE_URL}${av.key}.png`;
+    // Use av.file if defined; fallback to student_ relative path; else remote URL
+    const imgSrc = av.file
+      ? av.file
+      : av.key.startsWith('student_')
+        ? `assets/avatars/${av.key}.png`
+        : `${AVATAR_BASE_URL}${av.key}.png`;
 
     return `
       <div class="unlock-card ${cls}">
