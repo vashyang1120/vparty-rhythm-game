@@ -385,6 +385,99 @@ main {
   .unlock-grid { grid-template-columns: repeat(2, 1fr); }
   .base-avatar-grid { grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); }
 }
+
+/* ── CATALOG SECTION ─────────────────────────────── */
+.catalog-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+@media (max-width: 600px) { .catalog-form-grid { grid-template-columns: 1fr; } }
+
+.field select {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text); font-size: 0.95rem;
+  padding: 11px 14px; outline: none; width: 100%;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: border-color 0.2s; cursor: pointer;
+}
+.field select:focus { border-color: var(--accent); }
+.field select option { background: #fff; }
+
+.check-row {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
+}
+.check-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 50px; padding: 7px 14px;
+  cursor: pointer; font-size: 0.82rem; color: var(--text2);
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.check-pill:has(input:checked) {
+  border-color: var(--accent); background: #fdf4ff; color: var(--accent);
+  font-weight: 700;
+}
+.check-pill input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+.img-preview-wrap {
+  margin-bottom: 12px; min-height: 80px;
+  display: flex; align-items: center; gap: 12px;
+}
+.img-preview-wrap img {
+  width: 72px; height: 72px; border-radius: 10px; object-fit: contain;
+  border: 1.5px solid var(--border); background: var(--bg);
+}
+.img-preview-warn { font-size: 0.72rem; color: var(--warn); }
+
+.catalog-list { margin-top: 4px; display: flex; flex-direction: column; gap: 10px; }
+.catalog-row {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap;
+}
+.catalog-row.inactive { opacity: 0.55; }
+.catalog-row img {
+  width: 44px; height: 44px; border-radius: 8px;
+  object-fit: contain; flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.catalog-row-info { flex: 1; min-width: 0; }
+.catalog-row-name { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+.catalog-row-key  { font-size: 0.68rem; color: var(--text3); font-family: 'Space Mono', monospace; }
+.catalog-row-meta { font-size: 0.68rem; color: var(--text2); margin-top: 2px; }
+.catalog-row-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-cat {
+  border: 1.5px solid var(--border2); border-radius: 50px;
+  padding: 5px 13px; font-size: 0.75rem; font-weight: 700;
+  cursor: pointer; background: var(--surface); color: var(--text2);
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-cat:hover { border-color: var(--accent); color: var(--accent); }
+.btn-cat.del  { border-color: #fecaca; color: var(--danger); }
+.btn-cat.del:hover { background: #fef2f2; }
+.type-badge {
+  display: inline-block; font-size: 0.62rem; font-weight: 700;
+  border-radius: 4px; padding: 1px 6px; margin-left: 4px;
+  vertical-align: middle;
+}
+.type-badge.student    { background: #fce7f3; color: #be185d; }
+.type-badge.team       { background: #ede9fe; color: #7c3aed; }
+.type-badge.event      { background: #fef3c7; color: #b45309; }
+.type-badge.achievement{ background: #d1fae5; color: #065f46; }
+.type-badge.special    { background: #fef2f2; color: #dc2626; }
+.vis-badge {
+  display: inline-block; font-size: 0.6rem;
+  border-radius: 4px; padding: 1px 6px;
+  background: #f0f9ff; color: #0369a1;
+}
 </style>
 </head>
 <body>
@@ -396,7 +489,7 @@ main {
 <div id="loginScreen">
   <div class="login-logo">🎈</div>
   <div class="login-title">氣球小V 頭像解鎖後台</div>
-  <div class="login-sub">Admin · Avatar Unlock · v1.0.3</div>
+  <div class="login-sub">Admin · Avatar Unlock · v1.1.0</div>
   <div class="login-box">
     <label for="pwInput">管理員密碼</label>
     <input type="password" id="pwInput" placeholder="••••••" maxlength="20" autofocus>
@@ -412,8 +505,8 @@ main {
     <div class="header-left">
       <span class="header-logo">🎈</span>
       <span class="header-title">頭像解鎖後台</span>
-      <span class="header-badge">v1.0.3</span>
-      <span class="header-path">players/{playerKey}</span>
+      <span class="header-badge">v1.1.0</span>
+      <span class="header-path">players · avatarCatalog</span>
     </div>
     <button id="logoutBtn" onclick="doLogout()">登出</button>
   </header>
@@ -467,6 +560,102 @@ main {
       <div class="card-title"><span class="dot"></span>③ 頭像解鎖管理</div>
       <div id="avatarNotice" style="margin-bottom:12px;"></div>
       <div class="unlock-grid" id="avatarGrid"></div>
+    </div>
+
+    <!-- ④ 頭像資料管理 -->
+    <div class="section-sep">④ 頭像資料管理 · avatarCatalog</div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2);"></span>新增 / 編輯頭像資料</div>
+
+      <div class="catalog-form-grid">
+        <div>
+          <!-- key -->
+          <div class="field">
+            <label>頭像 Key <span style="color:var(--danger);">*</span></label>
+            <input type="text" id="cf-key" placeholder="例如 student_mina_01" oninput="cfKeyInput()">
+            <div style="font-size:0.67rem;color:var(--text3);margin-top:2px;">英文、數字、底線、短橫線。student_ 開頭代表學生專屬。</div>
+          </div>
+          <!-- name -->
+          <div class="field">
+            <label>顯示名稱 <span style="color:var(--danger);">*</span></label>
+            <input type="text" id="cf-name" placeholder="例如 小美">
+          </div>
+          <!-- file -->
+          <div class="field">
+            <label>圖片檔名 <span style="color:var(--danger);">*</span></label>
+            <input type="text" id="cf-file" placeholder="例如 student_mina_01.png" oninput="cfFileInput()">
+            <div style="font-size:0.67rem;color:var(--text3);margin-top:2px;">圖片需先上傳到 assets/avatars/，系統自動組成完整路徑。</div>
+          </div>
+          <!-- unlock text -->
+          <div class="field">
+            <label>解鎖條件文字</label>
+            <input type="text" id="cf-unlock-text" placeholder="例如 學生專屬 / 老師手動發放">
+          </div>
+        </div>
+
+        <div>
+          <!-- type -->
+          <div class="field">
+            <label>頭像類型</label>
+            <select id="cf-type" onchange="cfTypeChange()">
+              <option value="student">student — 學生專屬</option>
+              <option value="team">team — 團隊頭像</option>
+              <option value="event">event — 活動限定</option>
+              <option value="achievement">achievement — 遊戲成就</option>
+              <option value="special">special — 特殊頭像</option>
+            </select>
+          </div>
+          <!-- visibility -->
+          <div class="field">
+            <label>顯示方式</label>
+            <div class="check-row">
+              <label class="check-pill">
+                <input type="checkbox" id="cf-vis-student" onchange="cfVisChange('student')"> 🎓 學生專屬（隱藏）
+              </label>
+              <label class="check-pill">
+                <input type="checkbox" id="cf-vis-public" onchange="cfVisChange('public')"> 🌐 公開頭像
+              </label>
+            </div>
+            <div style="font-size:0.67rem;color:var(--text3);">學生專屬 = 未解鎖玩家看不到；公開 = 未解鎖玩家可見但灰階。</div>
+          </div>
+          <!-- checkboxes -->
+          <div class="field">
+            <label>其他設定</label>
+            <div class="check-row">
+              <label class="check-pill">
+                <input type="checkbox" id="cf-base" onchange="cfCheckChange()"> 可作為身份頭像
+              </label>
+              <label class="check-pill">
+                <input type="checkbox" id="cf-manual" checked onchange="cfCheckChange()"> 允許後台手動解鎖
+              </label>
+              <label class="check-pill">
+                <input type="checkbox" id="cf-active" checked onchange="cfCheckChange()"> 啟用
+              </label>
+            </div>
+          </div>
+          <!-- img preview -->
+          <div class="field">
+            <label>圖片預覽</label>
+            <div class="img-preview-wrap">
+              <img id="cf-img-preview" src="" alt="預覽" style="display:none;"
+                   onerror="cfImgError()" onload="cfImgOk()">
+              <div id="cf-img-warn" class="img-preview-warn">輸入圖片檔名後預覽</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" id="cf-editing-key">
+      <button class="btn btn-success" style="margin-top:4px;" onclick="cfSave()">💾 儲存頭像資料</button>
+      <button class="btn btn-ghost" style="margin-top:8px;" onclick="cfReset()">✕ 清除表單</button>
+      <div id="cf-status" style="margin-top:10px;font-size:0.82rem;min-height:20px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2);"></span>目前 avatarCatalog 清單</div>
+      <button class="btn btn-ghost" style="width:auto;padding:7px 18px;margin-bottom:14px;" onclick="cfLoadCatalog()">↺ 重新讀取</button>
+      <div id="catalogList"><div style="color:var(--text3);font-size:0.82rem;">尚未讀取，請點「重新讀取」或儲存一筆資料後自動更新。</div></div>
     </div>
 
   </main>
@@ -523,6 +712,7 @@ let currentBaseAvatarKey   = '';
 let currentPlayerKey       = '';
 let currentProfile         = null;
 let currentUnlockedAvatars = {};
+let catalogAvatars         = [];   // loaded from avatarCatalog
 
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
 firebase.initializeApp(FB_CONFIG);
@@ -568,6 +758,9 @@ function doLogout() {
 function initApp() {
   buildBaseAvatarGrid();
   updatePlayerKey();
+  // Pre-check vis: student type selected by default
+  document.getElementById('cf-vis-student').checked = true;
+  ensureFirebaseReady().then(() => cfLoadCatalog()).catch(() => {});
 }
 
 // ── playerKey encoding (matches rhythm game v2.4.9) ──────────────────────────
@@ -728,24 +921,47 @@ async function createProfile() {
 }
 
 // ── RENDER AVATAR GRID ────────────────────────────────────────────────────────
+function buildMergedList() {
+  // Start with fixed list
+  const merged = [...UNLOCKABLE_AVATARS];
+  // Merge catalog: active && manualUnlock !== false
+  catalogAvatars.forEach(cat => {
+    if (cat.active === false || cat.manualUnlock === false) return;
+    const idx = merged.findIndex(a => a.key === cat.key);
+    const av = {
+      key:        cat.key,
+      name:       cat.name,
+      unlockText: cat.unlockText || '學生專屬',
+      file:       cat.file || null,
+      source:     cat.type === 'student' ? 'admin-student' : (cat.source || 'admin_manual'),
+      type:       cat.type,
+      visibility: cat.visibility,
+      fromCatalog: true,
+    };
+    if (idx >= 0) merged[idx] = av;   // catalog overrides fixed
+    else merged.push(av);
+  });
+  return merged;
+}
+
 function renderAvatarGrid() {
   const grid   = document.getElementById('avatarGrid');
   const notice = document.getElementById('avatarNotice');
   const ua     = currentUnlockedAvatars;
+  const list   = buildMergedList();
 
-  const total    = UNLOCKABLE_AVATARS.length;
-  const unlocked = UNLOCKABLE_AVATARS.filter(a => ua[a.key]?.unlocked).length;
+  const unlockedCount = list.filter(a => ua[a.key]?.unlocked).length;
 
   notice.innerHTML = `
     <div class="notice-box notice-info" style="margin-bottom:0;">
       玩家：<strong>${esc(currentPlayerId)}</strong> ／
       身份：<strong>${esc(currentBaseAvatarKey)}</strong> ／
       playerKey：<code style="font-family:'Space Mono',monospace;font-size:0.78rem;">${esc(currentPlayerKey)}</code>
-      <br>已解鎖 <strong style="color:var(--accent3);">${unlocked}</strong> / ${total} 個頭像
+      <br>已解鎖 <strong style="color:var(--accent3);">${unlockedCount}</strong> / ${list.length} 個頭像
     </div>
   `;
 
-  grid.innerHTML = UNLOCKABLE_AVATARS.map(av => {
+  grid.innerHTML = list.map(av => {
     const entry  = ua[av.key];
     const isUnlocked = !!(entry && entry.unlocked);
     const cls    = isUnlocked ? 'unlocked' : 'locked';
@@ -765,20 +981,19 @@ function renderAvatarGrid() {
       : `<div class="card-btns">
            <button class="btn-unlock" onclick="grantUnlock('${av.key}','${av.name}')">解鎖給此玩家</button>
          </div>`;
-    // Use av.file if defined; fallback to student_ relative path; else remote URL
     const imgSrc = av.file
       ? av.file
       : av.key.startsWith('student_')
         ? `assets/avatars/${av.key}.png`
         : `${AVATAR_BASE_URL}${av.key}.png`;
+    const catTag = av.fromCatalog ? `<span style="font-size:0.58rem;color:var(--accent2);display:block;">catalog</span>` : '';
 
     return `
       <div class="unlock-card ${cls}">
-        <img src="${imgSrc}" alt="${av.name}"
-             onerror="this.style.opacity='0.25'">
-        <div class="av-name">${esc(av.name)}</div>
+        <img src="${imgSrc}" alt="${av.name}" onerror="this.style.opacity='0.25'">
+        <div class="av-name">${esc(av.name)}${catTag}</div>
         ${badge}
-        <div class="av-cond">${esc(av.unlockText)}</div>
+        <div class="av-cond">${esc(av.unlockText || '')}</div>
         ${meta}
         ${btns}
       </div>
@@ -798,24 +1013,41 @@ async function grantUnlock(avatarKey, avatarName) {
 
   try {
     await ensureFirebaseReady();
-    // Safety: check not already unlocked
     const existing = await db.ref(`players/${currentPlayerKey}/unlockedAvatars/${avatarKey}`).once('value');
     if (existing.exists() && existing.val().unlocked === true) {
       showStatus(`⚠ 此玩家已擁有「${avatarName}」`, false);
       return;
     }
-    // Write ONLY to players/{playerKey}/unlockedAvatars/{avatarKey}
-    // Never touching scores / leaderboards / gameLogs / profile.displayAvatarKey
-    const avatarDef = UNLOCKABLE_AVATARS.find(a => a.key === avatarKey);
-    const writeSource = (avatarDef && avatarDef.source) ? avatarDef.source : 'admin_manual';
-    await db.ref(`players/${currentPlayerKey}/unlockedAvatars/${avatarKey}`).set({
+    // Find avatar def from merged list (includes catalog)
+    const mergedList = buildMergedList();
+    const avatarDef  = mergedList.find(a => a.key === avatarKey);
+
+    // Determine source
+    let writeSource = 'admin_manual';
+    if (avatarDef?.source)              writeSource = avatarDef.source;
+    else if (avatarDef?.type === 'student') writeSource = 'admin-student';
+
+    // Build write payload — include metadata if from catalog
+    const payload = {
       unlocked:   true,
       source:     writeSource,
       unlockedAt: Date.now(),
       unlockedBy: 'admin-unlock',
-    });
+    };
+    if (avatarDef?.fromCatalog) {
+      if (avatarDef.name)       payload.name       = avatarDef.name;
+      if (avatarDef.file)       payload.file       = avatarDef.file;
+      if (avatarDef.type)       payload.type       = avatarDef.type;
+      if (avatarDef.visibility) {
+        payload.visibility           = avatarDef.visibility;
+        payload.hiddenUntilUnlocked  = (avatarDef.visibility === 'hiddenUntilUnlocked');
+      }
+    }
 
-    // Refresh
+    // Write ONLY to players/{playerKey}/unlockedAvatars/{avatarKey}
+    // Never touching scores / leaderboards / gameLogs / profile.displayAvatarKey
+    await db.ref(`players/${currentPlayerKey}/unlockedAvatars/${avatarKey}`).set(payload);
+
     const snap = await db.ref(`players/${currentPlayerKey}/unlockedAvatars`).once('value');
     currentUnlockedAvatars = snap.exists() ? snap.val() : {};
     renderAvatarGrid();
@@ -867,6 +1099,268 @@ function esc(s) {
   return String(s || '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
+}
+
+// ── AVATAR CATALOG ────────────────────────────────────────────────────────────
+const CF_KEY_RE = /^[a-zA-Z0-9_-]+$/;
+const CF_IMG_RE = /\.(png|jpg|jpeg|webp)$/i;
+
+function cfStatus(msg, isErr = false) {
+  const el = document.getElementById('cf-status');
+  el.style.color = isErr ? 'var(--danger)' : 'var(--accent3)';
+  el.textContent = msg;
+}
+
+function cfKeyInput() {
+  const key = document.getElementById('cf-key').value.trim();
+  // Auto-detect student type
+  if (key.startsWith('student_') && !document.getElementById('cf-vis-public').checked) {
+    document.getElementById('cf-type').value = 'student';
+    document.getElementById('cf-vis-student').checked = true;
+  }
+}
+
+function cfFileInput() {
+  const file = document.getElementById('cf-file').value.trim();
+  const img  = document.getElementById('cf-img-preview');
+  const warn = document.getElementById('cf-img-warn');
+  if (!file) { img.style.display = 'none'; warn.textContent = '輸入圖片檔名後預覽'; return; }
+  img.src = `assets/avatars/${file}`;
+  img.style.display = 'block';
+  warn.textContent = '';
+}
+function cfImgError() {
+  document.getElementById('cf-img-warn').textContent = '⚠ 圖片目前無法預覽，請確認檔案已上傳到 assets/avatars/';
+}
+function cfImgOk() {
+  document.getElementById('cf-img-warn').textContent = '';
+}
+
+function cfTypeChange() {
+  const type = document.getElementById('cf-type').value;
+  if (type === 'student') {
+    document.getElementById('cf-vis-student').checked = true;
+    document.getElementById('cf-vis-public').checked  = false;
+    document.getElementById('cf-base').checked = false;
+  }
+}
+
+function cfVisChange(which) {
+  const student = document.getElementById('cf-vis-student');
+  const pub     = document.getElementById('cf-vis-public');
+  if (which === 'student' && student.checked && pub.checked) {
+    cfStatus('學生專屬頭像不應同時設為公開頭像。請取消其中一項。', true);
+    pub.checked = false; return;
+  }
+  if (which === 'public' && pub.checked && student.checked) {
+    cfStatus('學生專屬頭像不應同時設為公開頭像。請取消其中一項。', true);
+    student.checked = false; return;
+  }
+  cfStatus('');
+  // Auto set type
+  if (student.checked) {
+    document.getElementById('cf-type').value = 'student';
+    document.getElementById('cf-base').checked = false;
+  }
+}
+
+function cfCheckChange() { /* live update — no extra logic needed */ }
+
+function cfReset() {
+  document.getElementById('cf-key').value = '';
+  document.getElementById('cf-name').value = '';
+  document.getElementById('cf-file').value = '';
+  document.getElementById('cf-unlock-text').value = '';
+  document.getElementById('cf-type').value = 'student';
+  document.getElementById('cf-vis-student').checked = true;
+  document.getElementById('cf-vis-public').checked  = false;
+  document.getElementById('cf-base').checked    = false;
+  document.getElementById('cf-manual').checked  = true;
+  document.getElementById('cf-active').checked  = true;
+  document.getElementById('cf-editing-key').value = '';
+  document.getElementById('cf-img-preview').style.display = 'none';
+  document.getElementById('cf-img-warn').textContent = '輸入圖片檔名後預覽';
+  cfStatus('');
+}
+
+async function cfSave() {
+  const key        = document.getElementById('cf-key').value.trim();
+  const name       = document.getElementById('cf-name').value.trim();
+  const fileName   = document.getElementById('cf-file').value.trim();
+  const unlockText = document.getElementById('cf-unlock-text').value.trim();
+  const type       = document.getElementById('cf-type').value;
+  const isStudent  = document.getElementById('cf-vis-student').checked;
+  const isPublic   = document.getElementById('cf-vis-public').checked;
+  const allowBase  = document.getElementById('cf-base').checked;
+  const manualUnlock = document.getElementById('cf-manual').checked;
+  const active     = document.getElementById('cf-active').checked;
+
+  // Validation
+  if (!key)      { cfStatus('頭像 key 不可空白', true); return; }
+  if (!name)     { cfStatus('顯示名稱不可空白', true); return; }
+  if (!fileName) { cfStatus('圖片檔名不可空白', true); return; }
+  if (!CF_KEY_RE.test(key)) { cfStatus('頭像 key 只能使用英文、數字、底線或短橫線', true); return; }
+  if (!CF_IMG_RE.test(fileName)) { cfStatus('圖片檔名必須以 .png / .jpg / .jpeg / .webp 結尾', true); return; }
+  if (isStudent && isPublic) { cfStatus('學生專屬頭像不應同時設為公開頭像。請取消其中一項。', true); return; }
+  if (isPublic && !unlockText) { cfStatus('公開頭像請填寫解鎖條件文字', true); return; }
+
+  const visibility = isPublic ? 'public' : 'hiddenUntilUnlocked';
+  const finalUnlockText = unlockText || (isStudent ? '學生專屬' : '');
+  const editingKey = document.getElementById('cf-editing-key').value;
+  const targetKey  = editingKey || key;
+
+  try {
+    await ensureFirebaseReady();
+    // Preserve createdAt / createdBy if already exists
+    const existing = await db.ref(`avatarCatalog/${targetKey}`).once('value');
+    const payload = {
+      key:              targetKey,
+      name,
+      file:             `assets/avatars/${fileName}`,
+      fileName,
+      type,
+      visibility,
+      allowAsBaseAvatar: allowBase,
+      manualUnlock,
+      unlockText:       finalUnlockText,
+      active,
+      updatedAt:        Date.now(),
+      updatedBy:        'admin-unlock',
+    };
+    if (!existing.exists()) {
+      payload.createdAt  = Date.now();
+      payload.createdBy  = 'admin-unlock';
+    } else {
+      const prev = existing.val();
+      payload.createdAt  = prev.createdAt  || Date.now();
+      payload.createdBy  = prev.createdBy  || 'admin-unlock';
+    }
+    // Write ONLY to avatarCatalog/{key}
+    await db.ref(`avatarCatalog/${targetKey}`).set(payload);
+    cfStatus('✅ 已儲存頭像資料：' + targetKey);
+    cfReset();
+    await cfLoadCatalog();
+    // Re-render avatar grid if player is loaded
+    if (currentPlayerKey) renderAvatarGrid();
+  } catch(err) {
+    cfStatus('儲存失敗：' + err.message, true);
+  }
+}
+
+async function cfLoadCatalog() {
+  try {
+    await ensureFirebaseReady();
+    const snap = await db.ref('avatarCatalog').once('value');
+    catalogAvatars = [];
+    if (snap.exists()) {
+      snap.forEach(child => { catalogAvatars.push(child.val()); });
+    }
+    cfRenderList();
+  } catch(err) {
+    document.getElementById('catalogList').innerHTML =
+      `<div style="color:var(--danger);font-size:0.82rem;">讀取失敗：${esc(err.message)}</div>`;
+  }
+}
+
+function cfRenderList() {
+  const el = document.getElementById('catalogList');
+  if (!catalogAvatars.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:0.82rem;">目前 avatarCatalog 沒有資料。</div>';
+    return;
+  }
+  const fmt = ts => ts ? new Date(ts).toLocaleString('zh-TW', {hour12:false}) : '—';
+  const TYPE_LABELS = { student:'學生', team:'團隊', event:'活動', achievement:'成就', special:'特殊' };
+
+  el.innerHTML = '<div class="catalog-list">' + catalogAvatars.map(a => {
+    const inactive = a.active === false;
+    const imgSrc   = a.file || `assets/avatars/${a.key}.png`;
+    return `
+      <div class="catalog-row${inactive ? ' inactive' : ''}">
+        <img src="${esc(imgSrc)}" alt="${esc(a.name)}" onerror="this.style.opacity='0.2'">
+        <div class="catalog-row-info">
+          <div class="catalog-row-name">
+            ${esc(a.name)}
+            <span class="type-badge ${esc(a.type || '')}">${esc(TYPE_LABELS[a.type] || a.type || '')}</span>
+            <span class="vis-badge">${a.visibility === 'public' ? '🌐 公開' : '🔒 隱藏'}</span>
+            ${inactive ? '<span style="font-size:0.62rem;color:var(--danger);margin-left:4px;">停用中</span>' : ''}
+          </div>
+          <div class="catalog-row-key">${esc(a.key)}</div>
+          <div class="catalog-row-meta">
+            ${esc(a.unlockText || '')} ·
+            manual: ${a.manualUnlock !== false ? '✓' : '✗'} ·
+            更新：${fmt(a.updatedAt)}
+          </div>
+        </div>
+        <div class="catalog-row-btns">
+          <button class="btn-cat" onclick="cfEdit('${esc(a.key)}')">✏ 編輯</button>
+          <button class="btn-cat" onclick="cfToggleActive('${esc(a.key)}', ${!inactive})">
+            ${inactive ? '▶ 啟用' : '⏸ 停用'}
+          </button>
+          <button class="btn-cat del" onclick="cfDelete('${esc(a.key)}', '${esc(a.name)}')">🗑 刪除</button>
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
+
+function cfEdit(key) {
+  const a = catalogAvatars.find(x => x.key === key);
+  if (!a) return;
+  document.getElementById('cf-key').value          = a.key;
+  document.getElementById('cf-name').value         = a.name || '';
+  document.getElementById('cf-file').value         = a.fileName || (a.file ? a.file.replace('assets/avatars/','') : '');
+  document.getElementById('cf-unlock-text').value  = a.unlockText || '';
+  document.getElementById('cf-type').value         = a.type || 'student';
+  document.getElementById('cf-vis-student').checked = (a.visibility !== 'public');
+  document.getElementById('cf-vis-public').checked  = (a.visibility === 'public');
+  document.getElementById('cf-base').checked       = !!a.allowAsBaseAvatar;
+  document.getElementById('cf-manual').checked     = a.manualUnlock !== false;
+  document.getElementById('cf-active').checked     = a.active !== false;
+  document.getElementById('cf-editing-key').value  = key;
+  // Show preview
+  if (a.file) {
+    const img = document.getElementById('cf-img-preview');
+    img.src = a.file; img.style.display = 'block';
+  }
+  cfStatus('已載入「' + a.name + '」的資料，修改後按儲存。');
+  document.getElementById('cf-key').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function cfToggleActive(key, setActive) {
+  try {
+    await ensureFirebaseReady();
+    // Write ONLY active / updatedAt / updatedBy inside avatarCatalog/{key}
+    await db.ref(`avatarCatalog/${key}`).update({
+      active:    setActive,
+      updatedAt: Date.now(),
+      updatedBy: 'admin-unlock',
+    });
+    await cfLoadCatalog();
+    if (currentPlayerKey) renderAvatarGrid();
+  } catch(err) {
+    showStatus('操作失敗：' + err.message, true);
+  }
+}
+
+async function cfDelete(key, name) {
+  const ok = window.confirm(
+    `⚠ 確定要刪除這筆頭像資料嗎？\n\n` +
+    `key：${key}\n名稱：${name}\n\n` +
+    `這只會刪除 avatarCatalog 清單資料，不會刪除玩家已解鎖紀錄。\n` +
+    `如果玩家已經解鎖此頭像，未來前台可能仍會依 unlockedAvatars metadata 顯示。\n\n` +
+    `是否繼續？`
+  );
+  if (!ok) return;
+  try {
+    await ensureFirebaseReady();
+    // Delete ONLY avatarCatalog/{key}
+    await db.ref(`avatarCatalog/${key}`).remove();
+    await cfLoadCatalog();
+    if (currentPlayerKey) renderAvatarGrid();
+    showStatus(`🗑 已刪除 avatarCatalog：${name}`);
+  } catch(err) {
+    showStatus('刪除失敗：' + err.message, true);
+  }
 }
 </script>
 </body>
