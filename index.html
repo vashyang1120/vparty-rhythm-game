@@ -850,7 +850,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.4.9</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.5.0</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1301,6 +1301,24 @@ var UNLOCKABLE_AVATARS = [
 // 本機解鎖狀態 { avatarKey: {unlocked, source, unlockedAt} }
 var unlockedAvatars = {};
 
+// avatarCatalog：從 Firebase 讀取的 catalog 頭像資料
+var AVATAR_CATALOG = {};
+
+function loadAvatarCatalog() {
+  if (!FIREBASE_ENABLED) return Promise.resolve({});
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) return {};
+    return firebaseDb.ref('avatarCatalog').once('value').then(function(snap) {
+      AVATAR_CATALOG = snap.val() || {};
+      return AVATAR_CATALOG;
+    });
+  }).catch(function(e) {
+    console.warn('[AvatarCatalog] load failed:', e.message);
+    AVATAR_CATALOG = {};
+    return {};
+  });
+}
+
 // ── 工具函式 ──────────────────────────────────────────
 function normalizePlayerId(id) {
   return (id || '').trim() || '玩家';
@@ -1320,10 +1338,20 @@ function encodeFirebaseKeyPart(s) {
 }
 
 function getAvatarByKey(key) {
-  // 先找 UNLOCKABLE_AVATARS，再找 AVATARS
+  if (!key) return AVATARS[0];
+  // 1. 內建頭像
+  var builtin = AVATARS.find(function(a){ return a.key === key; });
+  if (builtin) return builtin;
+  // 2. 固定解鎖頭像
   var ua = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
   if (ua) return { key: ua.key, src: resolveAssetPath(ua.file) };
-  return AVATARS.find(function(a){ return a.key === key; }) || AVATARS[0];
+  // 3. avatarCatalog
+  var cat = AVATAR_CATALOG[key];
+  if (cat && cat.file) return { key: key, src: resolveAssetPath(cat.file) };
+  // 4. unlockedAvatars metadata（fallback：即使 catalog 已刪，玩家資料仍有 file）
+  var unlocked = unlockedAvatars[key];
+  if (unlocked && unlocked.file) return { key: key, src: resolveAssetPath(unlocked.file) };
+  return AVATARS[0];
 }
 
 function getDisplayAvatarSrc() {
@@ -1605,8 +1633,9 @@ function savePlayerProfile() {
   PLAYER.avatarSrc = getAvatarByKey(newBase).src;
   _saveLocalProfile();
 
-  return ensurePlayerProfile()
+  return loadAvatarCatalog()
     .then(function() { return loadUnlockedAvatars(); })
+    .then(function() { return ensurePlayerProfile(); })
     .then(function() {
       validateDisplayAvatarForCurrentIdentity();
       _saveLocalProfile();
@@ -1658,8 +1687,15 @@ var isBuiltinAvatar = _isBuiltinAvatar;
 
 function isDisplayAvatarAllowed(key) {
   if (!key) return false;
+  // 1. 內建頭像永遠允許
   if (_isBuiltinAvatar(key)) return true;
-  return !!(unlockedAvatars[key] && unlockedAvatars[key].unlocked);
+  // 2. 必須 unlockedAvatars 裡有 unlocked === true
+  var uEntry = unlockedAvatars[key];
+  if (!uEntry || !uEntry.unlocked) return false;
+  // 3. hiddenUntilUnlocked / student 已解鎖 → 允許
+  // 4. catalog 已解鎖 → 允許
+  // 5. unknown unlocked（有 file/name metadata）→ 允許
+  return true;
 }
 
 function _isDisplayAvatarValid(displayKey, currentUnlocked) {
@@ -1723,7 +1759,10 @@ function startEditDisplayAvatar() {
   document.getElementById('avatar-edit-section').style.display = 'block';
   document.getElementById('avatar-grid-label').textContent = '選擇顯示頭像';
   document.getElementById('avatar-grid-hint').textContent = '更換顯示頭像只改變外觀，不會改變玩家身份。';
-  _renderAvatarGrid();
+  // 確保 catalog 已讀取後再渲染
+  loadAvatarCatalog().then(function() {
+    _renderAvatarGrid();
+  });
 }
 
 function closeAvatarEdit() {
@@ -1836,12 +1875,74 @@ function _renderAvatarGrid() {
           var condition = av.unlockText || av.hint || '尚未開放';
           alert('🔒 ' + av.name + ' 尚未解鎖\n解鎖條件：' + condition);
         };
-        // 鎖頭標示
         var lock = document.createElement('div');
         lock.style.cssText = 'position:absolute;bottom:0;right:0;font-size:9px;background:rgba(0,0,0,.6);color:#fff;border-radius:4px;padding:1px 3px;pointer-events:none;';
         lock.textContent = '🔒';
         wrap.appendChild(lock);
       }
+      wrap.appendChild(img);
+      grid.appendChild(wrap);
+    });
+
+    // catalog 頭像（已解鎖才顯示；hiddenUntilUnlocked 未解鎖完全不顯示）
+    Object.keys(AVATAR_CATALOG).forEach(function(avKey) {
+      if (UNLOCKABLE_AVATARS.find(function(a){ return a.key === avKey; })) return;
+      var cat = AVATAR_CATALOG[avKey];
+      var isHidden = cat.hiddenUntilUnlocked || cat.visibility === 'hiddenUntilUnlocked';
+      var isUnlocked = !!(unlockedAvatars[avKey] && unlockedAvatars[avKey].unlocked);
+      if (isHidden && !isUnlocked) return; // 未解鎖完全不顯示
+      var src = resolveAssetPath(cat.file || 'assets/avatars/' + avKey + '.png');
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;' + (isUnlocked ? 'cursor:pointer;' : 'cursor:default;');
+      var img = document.createElement('img');
+      img.className = 'av-item';
+      img.src = src;
+      img.alt = '';
+      img.dataset.key = avKey;
+      if (!isUnlocked) img.style.cssText = 'filter:grayscale(1) opacity(.35);';
+      if (avKey === PLAYER.displayAvatarKey && isUnlocked) img.classList.add('selected');
+      if (isUnlocked) {
+        img.onclick = function() {
+          _applyDisplayAvatar(avKey, src);
+          document.querySelectorAll('.av-item').forEach(function(i){ i.classList.remove('selected'); });
+          img.classList.add('selected');
+        };
+      } else if (!isHidden) {
+        // public 未解鎖：點擊顯示條件
+        wrap.style.cursor = 'pointer';
+        wrap.onclick = function() {
+          var condition = cat.unlockText || cat.hint || '尚未開放';
+          alert('🔒 ' + (cat.name || avKey) + ' 尚未解鎖\n解鎖條件：' + condition);
+        };
+        var lock2 = document.createElement('div');
+        lock2.style.cssText = 'position:absolute;bottom:0;right:0;font-size:9px;background:rgba(0,0,0,.6);color:#fff;border-radius:4px;padding:1px 3px;pointer-events:none;';
+        lock2.textContent = '🔒';
+        wrap.appendChild(lock2);
+      }
+      wrap.appendChild(img);
+      grid.appendChild(wrap);
+    });
+
+    // unknown unlocked 頭像（unlockedAvatars 有 file+name 但不在上述清單）
+    Object.keys(unlockedAvatars).forEach(function(avKey) {
+      var uEntry = unlockedAvatars[avKey];
+      if (!uEntry || !uEntry.unlocked || !uEntry.file) return;
+      if (UNLOCKABLE_AVATARS.find(function(a){ return a.key === avKey; })) return;
+      if (AVATAR_CATALOG[avKey]) return;
+      var src = resolveAssetPath(uEntry.file);
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;cursor:pointer;';
+      var img = document.createElement('img');
+      img.className = 'av-item';
+      img.src = src;
+      img.alt = '';
+      img.dataset.key = avKey;
+      if (avKey === PLAYER.displayAvatarKey) img.classList.add('selected');
+      img.onclick = function() {
+        _applyDisplayAvatar(avKey, src);
+        document.querySelectorAll('.av-item').forEach(function(i){ i.classList.remove('selected'); });
+        img.classList.add('selected');
+      };
       wrap.appendChild(img);
       grid.appendChild(wrap);
     });
@@ -1878,8 +1979,10 @@ function initProfile() {
   profileAvatarEditMode = 'none';
   document.getElementById('avatar-edit-section').style.display = 'none';
 
-  // 先載入解鎖頭像，再驗證 displayAvatarKey，再確保 profile
-  loadUnlockedAvatars().then(function() {
+  // 先載入 avatarCatalog，再載入解鎖頭像，再驗證 displayAvatarKey，再確保 profile
+  loadAvatarCatalog().then(function() {
+    return loadUnlockedAvatars();
+  }).then(function() {
     validateDisplayAvatarForCurrentIdentity();
     ensurePlayerProfile();
     _updateProfileUI();
@@ -2811,7 +2914,9 @@ function openUnlockPanel() {
     alert('你已變更玩家身份。\n請先按「確認」完成身份切換，再查看頭像收藏。');
     return;
   }
-  loadUnlockedAvatars().then(function() {
+  loadAvatarCatalog().then(function() {
+    return loadUnlockedAvatars();
+  }).then(function() {
     renderUnlockPanel();
     go('s-unlock');
   });
@@ -2827,9 +2932,8 @@ function renderUnlockPanel() {
   if (!grid) return;
   grid.innerHTML = '';
 
-  // 防呆：如果 displayAvatarKey 是 UNLOCKABLE_AVATARS 但未解鎖，自動修正回 baseAvatarKey
-  var displayIsUnlockable = UNLOCKABLE_AVATARS.find(function(a){ return a.key === PLAYER.displayAvatarKey; });
-  if (displayIsUnlockable && !isDisplayAvatarAllowed(PLAYER.displayAvatarKey)) {
+  // 防呆：displayAvatarKey 若不合法，修正回 baseAvatarKey
+  if (!isDisplayAvatarAllowed(PLAYER.displayAvatarKey)) {
     PLAYER.displayAvatarKey = PLAYER.baseAvatarKey;
     PLAYER.avatarKey = PLAYER.baseAvatarKey;
     PLAYER.avatarSrc = getAvatarByKey(PLAYER.baseAvatarKey).src;
@@ -2837,26 +2941,24 @@ function renderUnlockPanel() {
     if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
   }
 
-  UNLOCKABLE_AVATARS.forEach(function(av) {
-    var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
-    var isEquipped = (PLAYER.displayAvatarKey === av.key) && isUnlocked; // 必須已解鎖才能顯示使用中
-    var src = resolveAssetPath(av.file);
-
+  // 工具函式：建立一個頭像收藏卡片
+  function _makeAvatarCard(avKey, avName, avSrc, isUnlocked, unlockText) {
+    var isEquipped = (PLAYER.displayAvatarKey === avKey) && isUnlocked;
     var card = document.createElement('div');
     card.style.cssText = 'background:#fff;border:2px solid ' + (isEquipped ? 'var(--pink)' : (isUnlocked ? 'var(--pink-lt)' : '#ccc')) + ';border-radius:12px;padding:10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;';
 
     var imgWrap = document.createElement('div');
     imgWrap.style.cssText = 'width:64px;height:64px;border-radius:50%;overflow:hidden;background:var(--pink-bg);' + (!isUnlocked ? 'filter:grayscale(1) opacity(.4);' : '');
     var img = document.createElement('img');
-    img.src = src;
+    img.src = avSrc;
     img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
     imgWrap.appendChild(img);
     card.appendChild(imgWrap);
 
-    var name = document.createElement('div');
-    name.textContent = av.name;
-    name.style.cssText = 'font-size:12px;font-weight:700;color:var(--text);';
-    card.appendChild(name);
+    var nameEl = document.createElement('div');
+    nameEl.textContent = avName;
+    nameEl.style.cssText = 'font-size:12px;font-weight:700;color:var(--text);';
+    card.appendChild(nameEl);
 
     if (isEquipped) {
       var badge = document.createElement('div');
@@ -2868,30 +2970,58 @@ function renderUnlockPanel() {
       btn.textContent = '設為顯示頭像';
       btn.className = 'btn btn-s';
       btn.style.cssText = 'font-size:10px;padding:4px 8px;';
-      btn.onclick = (function(key) { return function() {
-        equipDisplayAvatar(key);
+      btn.onclick = (function(k) { return function() {
+        equipDisplayAvatar(k);
         renderUnlockPanel();
-      }; })(av.key);
+      }; })(avKey);
       card.appendChild(btn);
-    } else {
-      var unlockText = document.createElement('div');
-      unlockText.textContent = av.unlockText;
-      unlockText.style.cssText = 'font-size:9px;color:#999;line-height:1.3;';
-      card.appendChild(unlockText);
+    } else if (unlockText) {
+      var utEl = document.createElement('div');
+      utEl.textContent = unlockText;
+      utEl.style.cssText = 'font-size:9px;color:#999;line-height:1.3;';
+      card.appendChild(utEl);
 
       var pinBtn = document.createElement('button');
       pinBtn.textContent = '🔑 輸入 PIN';
       pinBtn.className = 'btn btn-b';
       pinBtn.style.cssText = 'font-size:10px;padding:4px 8px;';
-      pinBtn.onclick = (function(key) { return function() {
-        _unlockPinTarget = key;
+      pinBtn.onclick = (function(k) { return function() {
+        _unlockPinTarget = k;
         var pinArea = document.getElementById('unlock-pin-area');
         if (pinArea) { pinArea.style.display = 'block'; document.getElementById('unlock-pin-input').value = ''; document.getElementById('unlock-pin-input').focus(); }
-      }; })(av.key);
+      }; })(avKey);
       card.appendChild(pinBtn);
     }
+    return card;
+  }
 
-    grid.appendChild(card);
+  // 1. 固定解鎖頭像 UNLOCKABLE_AVATARS
+  UNLOCKABLE_AVATARS.forEach(function(av) {
+    var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
+    var src = resolveAssetPath(av.file);
+    grid.appendChild(_makeAvatarCard(av.key, av.name, src, isUnlocked, av.unlockText));
+  });
+
+  // 2. catalog 頭像（不在 UNLOCKABLE_AVATARS 裡的）
+  Object.keys(AVATAR_CATALOG).forEach(function(avKey) {
+    if (UNLOCKABLE_AVATARS.find(function(a){ return a.key === avKey; })) return; // 已在上面顯示
+    var cat = AVATAR_CATALOG[avKey];
+    var isHidden = cat.hiddenUntilUnlocked || cat.visibility === 'hiddenUntilUnlocked';
+    var isUnlocked = !!(unlockedAvatars[avKey] && unlockedAvatars[avKey].unlocked);
+    if (isHidden && !isUnlocked) return; // 未解鎖隱藏頭像完全不顯示
+    var src = resolveAssetPath(cat.file || 'assets/avatars/' + avKey + '.png');
+    var unlockTextStr = (!isHidden && !isUnlocked) ? (cat.unlockText || cat.hint || '') : '';
+    grid.appendChild(_makeAvatarCard(avKey, cat.name || avKey, src, isUnlocked, unlockTextStr));
+  });
+
+  // 3. unlockedAvatars 裡有 file+name 但不在上述來源的 unknown unlocked 頭像
+  Object.keys(unlockedAvatars).forEach(function(avKey) {
+    var uEntry = unlockedAvatars[avKey];
+    if (!uEntry || !uEntry.unlocked || !uEntry.file) return;
+    if (UNLOCKABLE_AVATARS.find(function(a){ return a.key === avKey; })) return;
+    if (AVATAR_CATALOG[avKey]) return;
+    var src = resolveAssetPath(uEntry.file);
+    grid.appendChild(_makeAvatarCard(avKey, uEntry.name || avKey, src, true, null));
   });
 }
 
@@ -3124,11 +3254,9 @@ function renderLB() {
   }
 
   // 如果 SONGS 還沒載入，先確保載入再渲染
-  if (SONGS && SONGS.length) {
-    _doRender();
-  } else {
-    ensureSongsLoaded().then(function() { _doRender(); });
-  }
+  // 同時確保 avatarCatalog 已讀取（支援排行榜顯示 catalog 頭像）
+  var songsReady = (SONGS && SONGS.length) ? Promise.resolve() : ensureSongsLoaded();
+  Promise.all([songsReady, loadAvatarCatalog()]).then(function() { _doRender(); });
 }
 
 function renderLBFromFirebase() {
