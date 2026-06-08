@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>氣球小V品牌遊戲統一後台 v0.1.5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0d0d14;
+    --bg2: #14141f;
+    --bg3: #1c1c2e;
+    --border: #2a2a40;
+    --accent: #c084fc;
+    --accent2: #fb923c;
+    --accent3: #34d399;
+    --accent4: #60a5fa;
+    --accent-rhythm: #f472b6;
+    --accent-tetris: #60a5fa;
+    --accent-adventure: #34d399;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #475569;
+    --card-bg: #1a1a2e;
+    --input-bg: #111122;
+    --danger: #f87171;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── LOGIN SCREEN ── */
+  #loginScreen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999;
+    gap: 24px;
+  }
+  #loginScreen .logo {
+    font-size: 2.4rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+  }
+  #loginScreen .sub {
+    color: var(--text2);
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+  }
+  #loginBox {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+    display: flex; flex-direction: column; gap: 16px;
+    min-width: 320px;
+    box-shadow: 0 0 60px rgba(192,132,252,0.08);
+  }
+  #loginBox label { color: var(--text2); font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; }
+  #loginBox input[type="password"] {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 1.4rem;
+    padding: 12px 16px;
+    letter-spacing: 8px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: 'Space Mono', monospace;
+  }
+  #loginBox input[type="password"]:focus { border-color: var(--accent); }
+  #loginBox .err { color: var(--danger); font-size: 0.8rem; min-height: 18px; }
+  #loginBtn {
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    border: none; border-radius: 8px;
+    color: #fff; font-weight: 700;
+    font-size: 1rem; padding: 14px;
+    cursor: pointer; width: 100%;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  #loginBtn:hover { opacity: 0.9; transform: translateY(-1px); }
+  #loginBtn:active { transform: translateY(0); }
+
+  /* ── MAIN ── */
+  #mainApp { display: none; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  header .title {
+    font-size: 1.1rem; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  header .title .badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 7px;
+    letter-spacing: 1px;
+  }
+  header .right { display: flex; align-items: center; gap: 12px; }
+  #statusDot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text3);
+    transition: background 0.3s;
+  }
+  #statusDot.ok { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); }
+  #statusDot.err { background: var(--danger); }
+  #statusText { font-size: 0.75rem; color: var(--text2); font-family: 'Space Mono', monospace; }
+  #logoutBtn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text2); border-radius: 6px;
+    padding: 6px 14px; font-size: 0.8rem; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  #logoutBtn:hover { border-color: var(--danger); color: var(--danger); }
+
+  main { max-width: 1600px; margin: 0 auto; padding: 28px 32px; }
+
+  /* ── STATS CARDS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--accent); }
+  .stat-card .val {
+    font-size: 2rem; font-weight: 900;
+    font-family: 'Space Mono', monospace;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-card .label { font-size: 0.75rem; color: var(--text2); letter-spacing: 0.5px; }
+  .stat-card .dot {
+    position: absolute; top: 14px; right: 14px;
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .stat-card.total .val { color: var(--accent); }
+  .stat-card.rhythm .val { color: var(--accent-rhythm); }
+  .stat-card.tetris .val { color: var(--accent-tetris); }
+  .stat-card.adventure .val { color: var(--accent-adventure); }
+  .stat-card.players .val { color: var(--accent2); }
+  .stat-card.topscore .val { color: #fbbf24; }
+
+  /* ── FILTERS ── */
+  .filter-bar {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 140px; }
+  .filter-group label { font-size: 0.7rem; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+  .filter-group select,
+  .filter-group input[type="text"] {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    outline: none;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .filter-group select:focus,
+  .filter-group input:focus { border-color: var(--accent); }
+  .filter-group select option { background: var(--bg3); }
+
+  .export-btns { margin-left: auto; display: flex; gap: 10px; align-items: flex-end; }
+  .btn {
+    border: none; border-radius: 7px;
+    padding: 8px 18px; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    font-family: 'Noto Sans TC', sans-serif;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-json { background: var(--accent); color: #fff; }
+  .btn-csv { background: var(--accent3); color: #0d1117; }
+  .btn-reload { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-info {
+    padding: 14px 20px;
+    font-size: 0.78rem;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+  .table-info .count { color: var(--accent); font-weight: 700; }
+  .table-scroll { overflow-x: auto; }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.78rem; min-width: 1200px;
+  }
+  thead tr { background: var(--bg3); }
+  thead th {
+    padding: 10px 12px;
+    text-align: left;
+    color: var(--text3);
+    font-size: 0.7rem;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(42,42,64,0.6);
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: rgba(192,132,252,0.04); }
+  tbody td {
+    padding: 9px 12px;
+    color: var(--text);
+    white-space: nowrap;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+  }
+  .tag.rhythm { background: rgba(244,114,182,0.15); color: var(--accent-rhythm); }
+  .tag.tetris { background: rgba(96,165,250,0.15); color: var(--accent-tetris); }
+  .tag.adventure { background: rgba(52,211,153,0.15); color: var(--accent-adventure); }
+  .empty-row td {
+    text-align: center; color: var(--text3);
+    padding: 40px; font-size: 0.9rem;
+  }
+  .loading-row td {
+    text-align: center; color: var(--accent);
+    padding: 40px; font-size: 0.85rem;
+    font-family: 'Space Mono', monospace;
+  }
+  .mono { font-family: 'Space Mono', monospace; font-size: 0.72rem; }
+  .score-val { color: #fbbf24; font-weight: 700; font-family: 'Space Mono', monospace; }
+  .grade-val { color: var(--accent2); font-weight: 700; }
+  td.dim { color: var(--text3); }
+
+  /* ── LOADING SPINNER ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  /* ── INFO NOTE ── */
+  .info-note {
+    background: rgba(192,132,252,0.06);
+    border: 1px solid rgba(192,132,252,0.18);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .info-note strong { color: var(--accent); }
+
+  /* ── SOURCE STATUS ── */
+  .source-status {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 20px;
+  }
+  .source-chip {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+    font-family: 'Space Mono', monospace;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .source-chip .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .source-chip.rhythm  .dot { background: var(--accent-rhythm); }
+  .source-chip.tetris  .dot { background: var(--accent-tetris); }
+  .source-chip.adventure .dot { background: var(--accent-adventure); }
+  .source-chip .chip-count { color: var(--text); font-weight: 700; }
+  .source-chip .chip-zero  { color: var(--text3); }
+
+  /* ── EXPORT HINT ── */
+  .export-hint {
+    font-size: 0.68rem;
+    color: var(--text3);
+    text-align: right;
+    margin-top: 4px;
+    width: 100%;
+  }
+
+  /* ── TOAST ── */
+  @keyframes toastIn  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes toastOut { from { opacity:1; } to { opacity:0; } }
+  #toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--accent3); color: #0d1117;
+    font-size: 0.82rem; font-weight: 700;
+    padding: 10px 22px; border-radius: 20px;
+    pointer-events: none; z-index: 9999;
+    display: none;
+  }
+  /* ── UNLOCK PANEL ── */
+  .section-divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 36px 0 28px;
+  }
+  .section-title {
+    font-size: 1.05rem; font-weight: 700;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .unlock-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 800px) { .unlock-grid { grid-template-columns: 1fr; } }
+  .unlock-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+  }
+  .unlock-card h3 {
+    font-size: 0.78rem; font-weight: 700;
+    color: var(--text2); letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 16px;
+  }
+  .field-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+  .field-row label { font-size: 0.7rem; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+  .field-row input[type="text"],
+  .field-row select {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-size: 0.88rem;
+    padding: 9px 13px;
+    outline: none;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .field-row input:focus,
+  .field-row select:focus { border-color: var(--accent); }
+  .field-row select option { background: var(--bg3); }
+  .playerkey-preview {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 13px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    word-break: break-all;
+    min-height: 38px;
+  }
+  .btn-query {
+    background: var(--accent4); color: #fff;
+    border: none; border-radius: 7px;
+    padding: 10px 22px; font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; width: 100%; margin-top: 4px;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-query:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-grant {
+    background: linear-gradient(135deg, #a855f7, var(--accent));
+    color: #fff; border: none; border-radius: 7px;
+    padding: 11px 22px; font-size: 0.92rem; font-weight: 700;
+    cursor: pointer; width: 100%; margin-top: 6px;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-grant:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-create-profile {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 7px;
+    padding: 8px 16px; font-size: 0.8rem; font-weight: 700;
+    cursor: pointer; margin-top: 8px;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .btn-create-profile:hover { border-color: var(--accent); color: var(--accent); }
+  .query-result-box {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 0.78rem;
+    line-height: 1.8;
+    color: var(--text2);
+    min-height: 60px;
+    margin-top: 2px;
+  }
+  .query-result-box .kv { display: flex; gap: 8px; }
+  .query-result-box .k { color: var(--text3); min-width: 130px; flex-shrink: 0; font-family: 'Space Mono', monospace; font-size: 0.7rem; }
+  .query-result-box .val-hl { color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.72rem; word-break: break-all; }
+  .unlock-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(192,132,252,0.1); border: 1px solid rgba(192,132,252,0.25);
+    border-radius: 6px; padding: 3px 10px;
+    font-size: 0.72rem; margin: 3px 3px 0 0;
+    font-family: 'Space Mono', monospace; color: var(--accent);
+  }
+  .unlock-chip.already { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.3); color: var(--accent3); }
+  .unlock-status {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem; font-weight: 600;
+    display: none;
+  }
+  .unlock-status.ok  { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); color: var(--accent3); display: block; }
+  .unlock-status.err { background: rgba(248,113,113,0.1);  border: 1px solid rgba(248,113,113,0.3); color: var(--danger);  display: block; }
+  .unlock-status.warn{ background: rgba(251,146,60,0.1);   border: 1px solid rgba(251,146,60,0.3);  color: var(--accent2); display: block; }
+
+  /* ── CLEANUP TOOL ── */
+  .cleanup-section { margin-top: 40px; }
+  .cleanup-title {
+    font-size: 1rem; font-weight: 700; color: var(--danger);
+    margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+  }
+  .cleanup-search-bar {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 22px; margin-bottom: 16px;
+  }
+  .cleanup-search-bar .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .cleanup-input {
+    background: var(--input-bg); border: 1px solid var(--border);
+    border-radius: 7px; color: var(--text); font-size: 0.9rem;
+    padding: 9px 13px; outline: none; flex: 1; min-width: 200px;
+    font-family: 'Space Mono', monospace;
+    transition: border-color 0.2s;
+  }
+  .cleanup-input:focus { border-color: var(--danger); }
+  .btn-search-cleanup {
+    background: var(--accent4); color: #fff; border: none; border-radius: 7px;
+    padding: 9px 20px; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: opacity 0.2s;
+  }
+  .btn-search-cleanup:hover { opacity: 0.85; }
+  .cleanup-hint { font-size: 0.7rem; color: var(--text3); margin-top: 8px; line-height: 1.6; }
+  .cleanup-warn-box {
+    background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.22);
+    border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;
+    font-size: 0.78rem; color: var(--danger); line-height: 1.7;
+  }
+
+  .cleanup-results-header {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-top-left-radius: var(--radius); border-top-right-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .cleanup-results-header .count-badge {
+    background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3);
+    color: var(--danger); border-radius: 5px; padding: 2px 10px;
+    font-size: 0.72rem; font-weight: 700; font-family: 'Space Mono', monospace;
+  }
+  .btn-sel {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 5px;
+    padding: 4px 11px; font-size: 0.72rem; cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .btn-sel:hover { border-color: var(--accent); color: var(--accent); }
+
+  .cleanup-table-wrap {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius);
+    overflow: hidden; margin-bottom: 20px;
+  }
+  .cleanup-table-scroll { overflow-x: auto; }
+  .cleanup-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.76rem; min-width: 900px;
+  }
+  .cleanup-table thead tr { background: var(--bg3); }
+  .cleanup-table thead th {
+    padding: 9px 10px; text-align: left;
+    color: var(--text3); font-size: 0.68rem;
+    letter-spacing: 0.8px; text-transform: uppercase; font-weight: 700;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .cleanup-table tbody tr { border-bottom: 1px solid rgba(42,42,64,0.5); transition: background 0.15s; }
+  .cleanup-table tbody tr:hover { background: rgba(248,113,113,0.04); }
+  .cleanup-table tbody tr.is-player { opacity: 0.45; }
+  .cleanup-table tbody td { padding: 8px 10px; color: var(--text); white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+  .cleanup-table input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--danger); cursor: pointer; }
+  .type-chip {
+    display: inline-block; padding: 1px 7px; border-radius: 4px;
+    font-size: 0.65rem; font-weight: 700; font-family: 'Space Mono', monospace;
+  }
+  .type-chip.gameLog  { background: rgba(244,114,182,0.15); color: var(--accent-rhythm); }
+  .type-chip.leaderboard { background: rgba(96,165,250,0.15); color: var(--accent-tetris); }
+  .type-chip.old      { background: rgba(251,146,60,0.15); color: var(--accent2); }
+  .type-chip.dev      { background: rgba(52,211,153,0.12); color: var(--accent3); }
+  .type-chip.player   { background: rgba(192,132,252,0.12); color: var(--accent); }
+
+  .cleanup-confirm-area {
+    background: var(--card-bg); border: 1px solid rgba(248,113,113,0.3);
+    border-radius: var(--radius); padding: 20px 22px; margin-bottom: 20px;
+  }
+  .cleanup-summary { font-size: 0.82rem; color: var(--text2); line-height: 1.9; margin-bottom: 14px; }
+  .cleanup-summary strong { color: var(--danger); }
+  .cleanup-summary .safe { color: var(--accent3); }
+  .confirm-input-wrap { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .confirm-input {
+    background: var(--input-bg); border: 1px solid rgba(248,113,113,0.4);
+    border-radius: 7px; color: var(--danger);
+    font-family: 'Space Mono', monospace; font-size: 0.85rem;
+    padding: 9px 13px; outline: none; flex: 1; min-width: 200px;
+    transition: border-color 0.2s; letter-spacing: 2px;
+  }
+  .confirm-input:focus { border-color: var(--danger); }
+  .btn-delete-confirm {
+    background: var(--danger); color: #fff; border: none; border-radius: 7px;
+    padding: 9px 22px; font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: opacity 0.2s;
+  }
+  .btn-delete-confirm:hover { opacity: 0.85; }
+  .btn-delete-confirm:disabled { opacity: 0.35; cursor: not-allowed; }
+  .cleanup-result-log {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
+    font-size: 0.75rem; font-family: 'Space Mono', monospace;
+    color: var(--text2); max-height: 200px; overflow-y: auto;
+    margin-top: 12px; line-height: 1.7; display: none;
+  }
+  .cleanup-result-log.show { display: block; }
+  .log-ok  { color: var(--accent3); }
+  .log-err { color: var(--danger); }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="logo">🎈 氣球小V</div>
+  <div class="sub">Brand Games · Admin Panel · v0.1.5</div>
+  <div id="loginBox">
+    <label for="pwInput">後台密碼</label>
+    <input type="password" id="pwInput" placeholder="••••" maxlength="20" autofocus>
+    <div class="err" id="loginErr"></div>
+    <button class="btn" id="loginBtn" style="background:linear-gradient(135deg,#c084fc,#a855f7);color:#fff;padding:14px;">進入後台</button>
+  </div>
+  <div style="font-size:0.72rem;color:var(--text3);font-family:'Space Mono',monospace;">gameLogs 唯讀 · 玩家解鎖可寫入 · 測試資料可刪除</div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast">✓ 已複製表格，可直接貼到試算表</div>
+
+<!-- ── MAIN APP ── -->
+<div id="mainApp">
+  <header>
+    <div class="title">
+      🎈 氣球小V品牌遊戲統一後台
+      <span class="badge">v0.1.5</span>
+    </div>
+    <div class="right">
+      <div id="statusDot"></div>
+      <span id="statusText">connecting…</span>
+      <button class="btn btn-reload" onclick="loadAllData()">↺ 重新整理</button>
+      <button id="logoutBtn" onclick="doLogout()">登出</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Info note -->
+    <div class="info-note">
+      <strong>⚠ 資料來源說明：</strong>
+      目前統一後台只讀取新版 <strong>gameLogs</strong> 資料，不包含舊 scores、舊排行榜或 leaderboards。若舊玩家紀錄尚未遷移，這裡不會顯示。
+    </div>
+
+    <!-- Source status chips -->
+    <div class="source-status">
+      <div class="source-chip rhythm">
+        <span class="dot"></span>
+        gameLogs/rhythm：<span class="chip-count" id="src-rhythm">—</span>
+      </div>
+      <div class="source-chip tetris">
+        <span class="dot"></span>
+        gameLogs/tetris：<span class="chip-count" id="src-tetris">—</span>
+      </div>
+      <div class="source-chip adventure">
+        <span class="dot"></span>
+        gameLogs/adventure：<span id="src-adventure"><span class="chip-count">—</span></span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="val" id="s-total">—</div>
+        <div class="label">總遊玩紀錄數</div>
+      </div>
+      <div class="stat-card rhythm">
+        <div class="val" id="s-rhythm">—</div>
+        <div class="label">節奏遊戲紀錄</div>
+      </div>
+      <div class="stat-card tetris">
+        <div class="val" id="s-tetris">—</div>
+        <div class="label">方塊遊戲紀錄</div>
+      </div>
+      <div class="stat-card adventure">
+        <div class="val" id="s-adventure">—</div>
+        <div class="label">冒險遊戲紀錄</div>
+      </div>
+      <div class="stat-card players">
+        <div class="val" id="s-players">—</div>
+        <div class="label">不重複玩家數</div>
+      </div>
+      <div class="stat-card topscore">
+        <div class="val" id="s-topscore">—</div>
+        <div class="label">最高分</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label>遊戲類別</label>
+        <select id="f-game">
+          <option value="">全部</option>
+          <option value="rhythm">rhythm</option>
+          <option value="tetris">tetris</option>
+          <option value="adventure">adventure</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>玩家 ID / Name</label>
+        <input type="text" id="f-player" placeholder="搜尋…">
+      </div>
+      <div class="filter-group">
+        <label>頭像 Key 搜尋</label>
+        <input type="text" id="f-avatar" placeholder="baseAvatarKey / avatarKey…">
+      </div>
+      <div class="filter-group">
+        <label>日期排序</label>
+        <select id="f-date-sort">
+          <option value="desc">最新 → 最舊</option>
+          <option value="asc">最舊 → 最新</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>分數排序</label>
+        <select id="f-score-sort">
+          <option value="">不排序</option>
+          <option value="desc">高 → 低</option>
+          <option value="asc">低 → 高</option>
+        </select>
+      </div>
+      <div class="filter-group" style="justify-content:flex-end;">
+        <label style="visibility:hidden;">清除</label>
+        <button class="btn btn-reload" onclick="clearFilters()">✕ 清除篩選</button>
+      </div>
+      <div class="export-btns" style="flex-direction:column;align-items:flex-end;gap:6px;">
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-json" onclick="exportJSON()">匯出 JSON</button>
+          <button class="btn btn-csv" onclick="exportCSV()">匯出 CSV</button>
+          <button class="btn" style="background:var(--accent4);color:#fff;" onclick="copyCSV()">複製表格</button>
+        </div>
+        <div class="export-hint">匯出 / 複製內容為目前篩選後的資料。</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-info">
+        顯示 <span class="count" id="t-count">0</span> 筆 / 共 <span id="t-total">0</span> 筆
+      </div>
+      <div class="table-scroll">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th>日期時間</th>
+              <th>遊戲</th>
+              <th>玩家 ID</th>
+              <th>分數</th>
+              <th>難度</th>
+              <th>grade</th>
+              <th>songTitle</th>
+              <th>songId</th>
+              <th>level</th>
+              <th>lines</th>
+              <th>progressLabel</th>
+              <th>reachedStage</th>
+              <th>baseAvatarKey</th>
+              <th>displayAvatarKey</th>
+              <th>avatarKey</th>
+              <th>playerKey</th>
+              <th>accuracy</th>
+              <th>maxCombo</th>
+              <th>perfect</th>
+              <th>good</th>
+              <th>miss</th>
+              <th>combo</th>
+              <th>peakCombo</th>
+              <th>recipes</th>
+              <th>treasures</th>
+              <th>retryCount</th>
+              <th>damageTaken</th>
+              <th>coins</th>
+              <th>completed</th>
+              <th>abandoned</th>
+              <th>sourcePath</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr class="loading-row"><td colspan="31"><span class="spinner"></span>載入中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── CLEANUP TOOL (injected at bottom of main) ── -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const mainEl = document.querySelector('#mainApp main');
+
+  // ── Cleanup section HTML ──
+  const cleanupSection = document.createElement('div');
+  cleanupSection.className = 'cleanup-section';
+  cleanupSection.innerHTML = `
+    <hr class="section-divider">
+    <div class="cleanup-title">🗑 測試資料清理工具</div>
+
+    <div class="cleanup-warn-box">
+      ⚠ 危險功能。此工具可刪除 Firebase 正式路徑中的資料。<br>
+      僅供刪除測試資料。<strong style="color:var(--danger);">avatarCatalog 與 players 永遠不會被刪除。</strong><br>
+      刪除前請仔細確認勾選項目。若資料量較大，搜尋可能需要幾秒。
+    </div>
+
+    <div class="cleanup-search-bar">
+      <div class="row">
+        <input class="cleanup-input" id="cu-keyword" placeholder="輸入玩家 ID / playerKey / 關鍵字…" type="text">
+        <button class="btn-search-cleanup" onclick="cuSearch()">🔍 搜尋測試資料</button>
+      </div>
+      <div class="cleanup-hint">
+        支援原始 ID（如 admin.test.02）、encoded（admin%2Etest%2E02）、大小寫不敏感。<br>
+        搜尋範圍：gameLogs、leaderboards、scores、tetris-balloon/leaderboard，以及 dev/ 對應路徑。
+      </div>
+    </div>
+
+    <div id="cu-results-wrap" style="display:none;">
+      <div class="cleanup-results-header">
+        <span style="font-size:0.78rem;color:var(--text2);font-family:'Space Mono',monospace;">搜尋結果</span>
+        <span class="count-badge" id="cu-hit-count">0 筆</span>
+        <button class="btn-sel" onclick="cuSelectAll(true)">全選</button>
+        <button class="btn-sel" onclick="cuSelectAll(false)">全不選</button>
+        <button class="btn-sel" onclick="cuSelectByFilter('prod')">只選正式資料</button>
+        <button class="btn-sel" onclick="cuSelectByFilter('dev')">只選 dev</button>
+        <button class="btn-sel" onclick="cuSelectByFilter('gameLog')">只選 gameLogs</button>
+        <button class="btn-sel" onclick="cuSelectByFilter('leaderboard')">只選 leaderboards</button>
+      </div>
+      <div class="cleanup-table-wrap">
+        <div class="cleanup-table-scroll">
+          <table class="cleanup-table">
+            <thead>
+              <tr>
+                <th>☑</th>
+                <th>來源路徑</th>
+                <th>類型</th>
+                <th>name</th>
+                <th>playerKey</th>
+                <th>baseAvatarKey</th>
+                <th>displayAvatarKey</th>
+                <th>score</th>
+                <th>日期</th>
+                <th>Firebase Path</th>
+              </tr>
+            </thead>
+            <tbody id="cu-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="cleanup-confirm-area" id="cu-confirm-area" style="display:none;">
+        <div class="cleanup-summary" id="cu-summary"></div>
+        <div class="confirm-input-wrap">
+          <input class="confirm-input" id="cu-confirm-input" placeholder='輸入 DELETE TEST DATA 確認' oninput="cuConfirmChange()">
+          <button class="btn-delete-confirm" id="cu-delete-btn" disabled onclick="cuExecuteDelete()">🗑 刪除勾選資料</button>
+        </div>
+        <div class="cleanup-result-log" id="cu-log"></div>
+      </div>
+    </div>
+  `;
+  mainEl.appendChild(cleanupSection);
+});
+</script>
+
+<!-- ── UNLOCK PANEL (injected at bottom of main) ── -->
+<script>
+// Inject unlock panel HTML into main after DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+  const mainEl = document.querySelector('#mainApp main');
+  const panel = document.createElement('div');
+  panel.id = 'unlockSection';
+  panel.innerHTML = `
+    <hr class="section-divider">
+    <div class="section-title">🔓 玩家頭像解鎖管理</div>
+
+    <div class="unlock-grid">
+      <!-- LEFT: 查詢玩家 -->
+      <div class="unlock-card">
+        <h3>① 輸入玩家資訊 · 查詢</h3>
+        <div class="field-row">
+          <label>玩家 ID</label>
+          <input type="text" id="ul-id" placeholder="例：test001" oninput="ulUpdateKey()">
+        </div>
+        <div class="field-row">
+          <label>身份頭像 baseAvatarKey</label>
+          <select id="ul-base" onchange="ulUpdateKey()">
+            <option value="boy1">boy1</option>
+            <option value="girl1">girl1</option>
+            <option value="boy2">boy2</option>
+            <option value="girl2">girl2</option>
+            <option value="cat1">cat1</option>
+            <option value="cat2">cat2</option>
+            <option value="fat1">fat1</option>
+            <option value="girl3">girl3</option>
+            <option value="curl1">curl1</option>
+            <option value="boy3">boy3</option>
+            <option value="girl4">girl4</option>
+            <option value="girl5">girl5</option>
+            <option value="curl2">curl2</option>
+            <option value="dog1">dog1</option>
+            <option value="dog2">dog2</option>
+            <option value="dog3">dog3</option>
+            <option value="dog4">dog4</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>playerKey（自動產生）</label>
+          <div class="playerkey-preview" id="ul-playerkey-preview">—</div>
+        </div>
+        <button class="btn-query" onclick="ulQueryPlayer()">🔍 查詢玩家</button>
+
+        <!-- profile result -->
+        <div style="margin-top:18px;">
+          <div style="font-size:0.7rem;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">玩家 Profile</div>
+          <div class="query-result-box" id="ul-profile-box">尚未查詢</div>
+          <div id="ul-create-profile-wrap" style="display:none;">
+            <button class="btn-create-profile" onclick="ulCreateProfile()">＋ 建立基本 Profile</button>
+          </div>
+        </div>
+
+        <!-- unlocked result -->
+        <div style="margin-top:14px;">
+          <div style="font-size:0.7rem;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">已解鎖頭像</div>
+          <div class="query-result-box" id="ul-unlocked-box">尚未查詢</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: 授予解鎖 -->
+      <div class="unlock-card">
+        <h3>② 授予解鎖</h3>
+        <div class="field-row">
+          <label>要授予的頭像</label>
+          <select id="ul-avatar-select"></select>
+        </div>
+        <div class="field-row">
+          <label>解鎖來源</label>
+          <select id="ul-source">
+            <option value="admin_grant">admin_grant</option>
+            <option value="student_reward">student_reward</option>
+            <option value="event_reward">event_reward</option>
+            <option value="family_test">family_test</option>
+            <option value="manual_social">manual_social</option>
+            <option value="manual_google_review">manual_google_review</option>
+            <option value="manual_line_friend">manual_line_friend</option>
+            <option value="manual_ig_fb_follow">manual_ig_fb_follow</option>
+          </select>
+        </div>
+        <button class="btn-grant" onclick="ulGrantAvatar()">🔓 授予解鎖</button>
+        <div class="unlock-status" id="ul-status"></div>
+
+        <!-- quick ref -->
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="font-size:0.7rem;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">可授予頭像清單</div>
+          <div id="ul-avatar-list-display"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  mainEl.appendChild(panel);
+  ulBuildAvatarSelect();
+  ulBuildAvatarListDisplay();
+  ulUpdateKey();
+});
+</script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const ADMIN_PW_KEY = 'vparty_admin_pw';
+const DEFAULT_PW   = '0000';
+
+const FB_CONFIG = {
+  apiKey:            "AIzaSyAZ8WTuAHOslZSa4eqqX3dHR771mkaSNd8",
+  authDomain:        "vparty-rhythm-game.firebaseapp.com",
+  databaseURL:       "https://vparty-rhythm-game-default-rtdb.firebaseio.com",
+  projectId:         "vparty-rhythm-game",
+  storageBucket:     "vparty-rhythm-game.firebasestorage.app",
+  messagingSenderId: "1043884247859",
+  appId:             "1:1043884247859:web:24b1c030d159d1e9374c46",
+  measurementId:     "G-ZB7430NTBR"
+};
+
+// Only read these paths — never scores, leaderboard, etc.
+const READ_PATHS = [
+  { path: 'gameLogs/rhythm',    type: 'rhythm'    },
+  { path: 'gameLogs/tetris',    type: 'tetris'    },
+  { path: 'gameLogs/adventure', type: 'adventure' },
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let allRecords  = [];
+let filteredRec = [];
+let db          = null;
+let fbReady     = false;
+
+// ── FIREBASE INIT ────────────────────────────────────────────────────────────
+firebase.initializeApp(FB_CONFIG);
+const auth = firebase.auth();
+
+function ensureFirebaseReady() {
+  return new Promise((resolve, reject) => {
+    if (fbReady && db) { resolve(); return; }
+    auth.signInAnonymously()
+      .then(() => {
+        db = firebase.database();
+        fbReady = true;
+        setStatus('ok', '已連線');
+        resolve();
+      })
+      .catch(err => {
+        setStatus('err', '連線失敗');
+        reject(err);
+      });
+  });
+}
+
+// ── LOGIN ────────────────────────────────────────────────────────────────────
+function getSavedPw() {
+  return localStorage.getItem(ADMIN_PW_KEY) || DEFAULT_PW;
+}
+
+document.getElementById('loginBtn').addEventListener('click', tryLogin);
+document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+function tryLogin() {
+  const input = document.getElementById('pwInput').value;
+  const saved  = getSavedPw();
+  if (input === saved) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    loadAllData();
+  } else {
+    const err = document.getElementById('loginErr');
+    err.textContent = '密碼錯誤，請再試一次';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    setTimeout(() => { err.textContent = ''; }, 2500);
+  }
+}
+
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('pwInput').value = '';
+}
+
+// ── STATUS ────────────────────────────────────────────────────────────────────
+function setStatus(state, msg) {
+  const dot  = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  dot.className = state;
+  text.textContent = msg;
+}
+
+// ── LOAD DATA ────────────────────────────────────────────────────────────────
+async function loadAllData() {
+  setStatus('', '連線中…');
+  document.getElementById('tableBody').innerHTML =
+    '<tr class="loading-row"><td colspan="31"><span class="spinner"></span>讀取 Firebase gameLogs…</td></tr>';
+
+  try {
+    await ensureFirebaseReady();
+
+    const snapshots = await Promise.all(
+      READ_PATHS.map(({ path }) => db.ref(path).once('value'))
+    );
+
+    allRecords = [];
+
+    snapshots.forEach((snap, i) => {
+      const { type, path } = READ_PATHS[i];
+      if (!snap.exists()) return; // no data → skip silently
+      const data = snap.val();
+      Object.values(data).forEach(entry => {
+        if (!entry || typeof entry !== 'object') return;
+        allRecords.push({
+          ...entry,
+          gameType:    type,
+          _sourcePath: path,
+        });
+      });
+    });
+
+    updateStats();
+    applyFilters();
+    setStatus('ok', `已載入 ${allRecords.length} 筆`);
+  } catch (err) {
+    console.error(err);
+    setStatus('err', '讀取失敗: ' + err.message);
+    document.getElementById('tableBody').innerHTML =
+      `<tr class="empty-row"><td colspan="31">❌ 讀取失敗：${err.message}</td></tr>`;
+  }
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const r = allRecords;
+  const byType = t => r.filter(x => x.gameType === t).length;
+
+  // unique players: prefer playerKey, fallback id/name + avatar
+  const keys = new Set();
+  r.forEach(x => {
+    if (x.playerKey) { keys.add('pk:' + x.playerKey); return; }
+    const id  = x.id || x.name || '';
+    const av  = x.baseAvatarKey || x.avatarKey || '';
+    keys.add('id:' + id + ':' + av);
+  });
+
+  const scores = r.map(x => Number(x.score) || 0).filter(Boolean);
+  const top = scores.length ? Math.max(...scores) : 0;
+
+  set('s-total',     r.length);
+  set('s-rhythm',    byType('rhythm'));
+  set('s-tetris',    byType('tetris'));
+  set('s-adventure', byType('adventure'));
+  set('s-players',   keys.size);
+  set('s-topscore',  top ? top.toLocaleString() : '—');
+
+  // source chips
+  const cRhythm    = byType('rhythm');
+  const cTetris    = byType('tetris');
+  const cAdventure = byType('adventure');
+  document.getElementById('src-rhythm').textContent  = cRhythm + ' 筆';
+  document.getElementById('src-tetris').textContent  = cTetris + ' 筆';
+  const advEl = document.getElementById('src-adventure');
+  if (cAdventure === 0) {
+    advEl.innerHTML = '<span class="chip-zero">尚無資料</span>';
+  } else {
+    advEl.innerHTML = `<span class="chip-count">${cAdventure} 筆</span>`;
+  }
+}
+
+function set(id, val) {
+  document.getElementById(id).textContent = val;
+}
+
+function clearFilters() {
+  document.getElementById('f-game').value       = '';
+  document.getElementById('f-player').value     = '';
+  document.getElementById('f-avatar').value     = '';
+  document.getElementById('f-date-sort').value  = 'desc';
+  document.getElementById('f-score-sort').value = '';
+  applyFilters();
+}
+
+// ── FILTERS ──────────────────────────────────────────────────────────────────
+['f-game','f-player','f-avatar','f-date-sort','f-score-sort'].forEach(id => {
+  document.getElementById(id).addEventListener('input', applyFilters);
+});
+
+function applyFilters() {
+  const game      = document.getElementById('f-game').value;
+  const player    = document.getElementById('f-player').value.trim().toLowerCase();
+  const avatar    = document.getElementById('f-avatar').value.trim().toLowerCase();
+  const dateSort  = document.getElementById('f-date-sort').value;
+  const scoreSort = document.getElementById('f-score-sort').value;
+
+  let rows = allRecords.slice();
+
+  if (game)   rows = rows.filter(r => r.gameType === game);
+  if (player) rows = rows.filter(r => {
+    const id = String(r.id || r.name || '').toLowerCase();
+    return id.includes(player);
+  });
+  if (avatar) rows = rows.filter(r => {
+    const keys = [r.baseAvatarKey, r.displayAvatarKey, r.avatarKey]
+      .map(v => String(v || '').toLowerCase()).join(' ');
+    return keys.includes(avatar);
+  });
+
+  // sort
+  if (scoreSort) {
+    rows.sort((a, b) => scoreSort === 'desc'
+      ? (Number(b.score)||0) - (Number(a.score)||0)
+      : (Number(a.score)||0) - (Number(b.score)||0));
+  } else {
+    rows.sort((a, b) => {
+      const ta = getTimestamp(a);
+      const tb = getTimestamp(b);
+      return dateSort === 'asc' ? ta - tb : tb - ta;
+    });
+  }
+
+  filteredRec = rows;
+  renderTable(rows);
+  document.getElementById('t-count').textContent = rows.length;
+  document.getElementById('t-total').textContent = allRecords.length;
+}
+
+function getTimestamp(r) {
+  if (r.ts)         return typeof r.ts         === 'number' ? r.ts         : new Date(r.ts).getTime();
+  if (r.timestamp)  return typeof r.timestamp  === 'number' ? r.timestamp  : new Date(r.timestamp).getTime();
+  if (r.createdAt)  return typeof r.createdAt  === 'number' ? r.createdAt  : new Date(r.createdAt).getTime();
+  if (r.playedAt)   return typeof r.playedAt   === 'number' ? r.playedAt   : new Date(r.playedAt).getTime();
+  return 0;
+}
+
+function formatDatetime(r) {
+  const ts = getTimestamp(r);
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleString('zh-TW', { hour12: false });
+}
+
+// ── TABLE ────────────────────────────────────────────────────────────────────
+function v(val) {
+  if (val === undefined || val === null || val === '') return '';
+  return String(val);
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('tableBody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="31">找不到符合條件的資料</td></tr>';
+    return;
+  }
+
+  const html = rows.map(r => {
+    const gt   = r.gameType || '';
+    const type = gt ? `<span class="tag ${gt}">${gt}</span>` : '';
+
+    // adventure: recipes / treasures combined
+    const recipes   = (v(r.recipesFound) || v(r.recipesTotal))
+      ? `${v(r.recipesFound)}/${v(r.recipesTotal)}` : '';
+    const treasures = (v(r.treasuresFound) || v(r.treasuresTotal))
+      ? `${v(r.treasuresFound)}/${v(r.treasuresTotal)}` : '';
+
+    return `<tr>
+      <td class="mono">${formatDatetime(r)}</td>
+      <td>${type}</td>
+      <td>${v(r.id || r.name)}</td>
+      <td class="score-val">${v(r.score)}</td>
+      <td>${v(r.difficulty)}</td>
+      <td class="grade-val">${v(r.grade)}</td>
+      <td>${v(r.songTitle)}</td>
+      <td class="mono dim">${v(r.songId)}</td>
+      <td>${v(r.level)}</td>
+      <td>${v(r.lines)}</td>
+      <td>${v(r.progressLabel)}</td>
+      <td>${v(r.reachedStageId)}</td>
+      <td class="mono dim">${v(r.baseAvatarKey)}</td>
+      <td class="mono dim">${v(r.displayAvatarKey)}</td>
+      <td class="mono dim">${v(r.avatarKey)}</td>
+      <td class="mono dim">${v(r.playerKey)}</td>
+      <td>${v(r.accuracy)}</td>
+      <td>${v(r.maxCombo)}</td>
+      <td>${v(r.perfect)}</td>
+      <td>${v(r.good)}</td>
+      <td>${v(r.miss)}</td>
+      <td>${v(r.combo)}</td>
+      <td>${v(r.peakCombo)}</td>
+      <td>${recipes}</td>
+      <td>${treasures}</td>
+      <td>${v(r.retryCount)}</td>
+      <td>${v(r.damageTaken)}</td>
+      <td>${v(r.coins)}</td>
+      <td>${v(r.challengeCompleted)}</td>
+      <td>${v(r.abandoned)}</td>
+      <td class="mono dim">${v(r._sourcePath)}</td>
+    </tr>`;
+  }).join('');
+
+  tbody.innerHTML = html;
+}
+
+// ── EXPORT ───────────────────────────────────────────────────────────────────
+const CSV_COLS = [
+  'datetime','gameType','id','name','playerKey',
+  'baseAvatarKey','displayAvatarKey','avatarKey',
+  'score','difficulty','grade',
+  'songId','songTitle','accuracy','maxCombo','perfect','good','miss',
+  'level','lines','combo','peakCombo',
+  'progressLabel','reachedStageId',
+  'recipesFound','recipesTotal','treasuresFound','treasuresTotal',
+  'retryCount','damageTaken','coins','challengeCompleted','abandoned',
+  'sourcePath'
+];
+
+function recordToFlat(r) {
+  return {
+    datetime:           formatDatetime(r),
+    gameType:           v(r.gameType),
+    id:                 v(r.id),
+    name:               v(r.name),
+    playerKey:          v(r.playerKey),
+    baseAvatarKey:      v(r.baseAvatarKey),
+    displayAvatarKey:   v(r.displayAvatarKey),
+    avatarKey:          v(r.avatarKey),
+    score:              v(r.score),
+    difficulty:         v(r.difficulty),
+    grade:              v(r.grade),
+    songId:             v(r.songId),
+    songTitle:          v(r.songTitle),
+    accuracy:           v(r.accuracy),
+    maxCombo:           v(r.maxCombo),
+    perfect:            v(r.perfect),
+    good:               v(r.good),
+    miss:               v(r.miss),
+    level:              v(r.level),
+    lines:              v(r.lines),
+    combo:              v(r.combo),
+    peakCombo:          v(r.peakCombo),
+    progressLabel:      v(r.progressLabel),
+    reachedStageId:     v(r.reachedStageId),
+    recipesFound:       v(r.recipesFound),
+    recipesTotal:       v(r.recipesTotal),
+    treasuresFound:     v(r.treasuresFound),
+    treasuresTotal:     v(r.treasuresTotal),
+    retryCount:         v(r.retryCount),
+    damageTaken:        v(r.damageTaken),
+    coins:              v(r.coins),
+    challengeCompleted: v(r.challengeCompleted),
+    abandoned:          v(r.abandoned),
+    sourcePath:         v(r._sourcePath),
+  };
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob(['\uFEFF' + content], { type: mime });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function buildTSVText() {
+  const rows = [CSV_COLS.join('\t')];
+  filteredRec.forEach(r => {
+    const flat = recordToFlat(r);
+    rows.push(CSV_COLS.map(col => {
+      return String(flat[col] || '')
+        .replace(/\t/g, ' ')
+        .replace(/\r?\n/g, ' ');
+    }).join('\t'));
+  });
+  return rows.join('\n');
+}
+
+function copyCSV() {
+  const text = buildTSVText();
+  navigator.clipboard.writeText(text).then(() => {
+    showToast();
+  }).catch(() => {
+    // fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast();
+  });
+}
+
+let toastTimer = null;
+function showToast() {
+  const t = document.getElementById('toast');
+  if (toastTimer) { clearTimeout(toastTimer); t.className = ''; }
+  t.className = 'show';
+  toastTimer = setTimeout(() => {
+    t.className = 'hide';
+    setTimeout(() => { t.className = ''; }, 350);
+    toastTimer = null;
+  }, 2200);
+}
+
+function exportJSON() {
+  const data = filteredRec.map(recordToFlat);
+  downloadFile(JSON.stringify(data, null, 2), `vparty_gamelogs_${dateSuffix()}.json`, 'application/json');
+}
+
+function exportCSV() {
+  const rows = [CSV_COLS.join(',')];
+  filteredRec.forEach(r => {
+    const flat = recordToFlat(r);
+    rows.push(CSV_COLS.map(col => {
+      const val = String(flat[col] || '').replace(/"/g, '""');
+      return val.includes(',') || val.includes('"') || val.includes('\n')
+        ? `"${val}"` : val;
+    }).join(','));
+  });
+  downloadFile(rows.join('\n'), `vparty_gamelogs_${dateSuffix()}.csv`, 'text/csv');
+}
+
+function dateSuffix() {
+  return new Date().toISOString().slice(0,10).replace(/-/g,'');
+}
+
+// ── CLEANUP TOOL ──────────────────────────────────────────────────────────────
+
+const CLEANUP_SEARCH_PATHS = [
+  { path: 'gameLogs/rhythm',           type: 'rhythm gameLog',         cat: 'gameLog',     isProd: true  },
+  { path: 'gameLogs/tetris',           type: 'tetris gameLog',         cat: 'gameLog',     isProd: true  },
+  { path: 'leaderboards/rhythm',       type: 'rhythm leaderboard',     cat: 'leaderboard', isProd: true, recursive: true },
+  { path: 'leaderboards/tetris',       type: 'tetris leaderboard',     cat: 'leaderboard', isProd: true, recursive: true },
+  { path: 'scores',                    type: 'old scores',             cat: 'old',         isProd: true  },
+  { path: 'tetris-balloon/leaderboard',type: 'old tetris-balloon',     cat: 'old',         isProd: true  },
+  { path: 'dev/gameLogs/rhythm',       type: 'dev rhythm gameLog',     cat: 'gameLog',     isProd: false },
+  { path: 'dev/gameLogs/tetris',       type: 'dev tetris gameLog',     cat: 'gameLog',     isProd: false },
+  { path: 'dev/leaderboards/rhythm',   type: 'dev rhythm leaderboard', cat: 'leaderboard', isProd: false, recursive: true },
+  { path: 'dev/leaderboards/tetris',   type: 'dev tetris leaderboard', cat: 'leaderboard', isProd: false, recursive: true },
+  { path: 'dev/scores',                type: 'dev scores',             cat: 'old',         isProd: false },
+];
+
+// cuHits: array of { path, type, cat, isProd, nodeKey, record }
+let cuHits = [];
+
+// ── search helpers ────────────────────────────────────────────────────────────
+function cuNormalize(s) {
+  return String(s || '').toLowerCase();
+}
+
+function cuEncodeForSearch(kw) {
+  try {
+    return encodeURIComponent(kw)
+      .replace(/\./g, '%2E').replace(/#/g, '%23')
+      .replace(/\$/g, '%24').replace(/\[/g, '%5B').replace(/\]/g, '%5D');
+  } catch { return kw; }
+}
+
+function cuRecordMatches(record, nodeKey, fullPath, kw) {
+  if (!kw) return false;
+  const kwLow  = cuNormalize(kw);
+  const kwEnc  = cuNormalize(cuEncodeForSearch(kw));
+
+  // Stringify everything
+  const blob = cuNormalize(JSON.stringify(record) + ' ' + nodeKey + ' ' + fullPath);
+
+  if (blob.includes(kwLow))  return true;
+  if (kwEnc !== kwLow && blob.includes(kwEnc)) return true;
+
+  // Also try decoded version in case the blob has encoded chars
+  try {
+    const kwDec = cuNormalize(decodeURIComponent(kw));
+    if (kwDec !== kwLow && blob.includes(kwDec)) return true;
+  } catch {}
+
+  return false;
+}
+
+// ── recursive collect leaves from a snapshot ─────────────────────────────────
+function cuCollectLeaves(snap, basePath, type, cat, isProd, kw, out) {
+  if (!snap.exists()) return;
+  const val = snap.val();
+  if (typeof val !== 'object' || val === null) return;
+
+  snap.forEach(child => {
+    const childPath = `${basePath}/${child.key}`;
+    const childVal  = child.val();
+    if (typeof childVal === 'object' && childVal !== null) {
+      // Check if leaf-like: has score / playerKey / bestScore etc.
+      const isLeaf = childVal.playerKey !== undefined || childVal.score !== undefined
+                  || childVal.bestScore !== undefined || childVal.name !== undefined
+                  || childVal.id !== undefined;
+      if (isLeaf) {
+        if (cuRecordMatches(childVal, child.key, childPath, kw)) {
+          out.push({ path: childPath, type, cat, isProd, nodeKey: child.key, record: childVal });
+        }
+      } else {
+        // recurse deeper
+        cuCollectLeaves(child, childPath, type, cat, isProd, kw, out);
+      }
+    } else {
+      // primitive leaf — check key/path
+      if (cuRecordMatches({}, child.key, childPath, kw)) {
+        out.push({ path: childPath, type, cat, isProd, nodeKey: child.key, record: { _value: childVal } });
+      }
+    }
+  });
+}
+
+// ── main search ───────────────────────────────────────────────────────────────
+async function cuSearch() {
+  const kw = (document.getElementById('cu-keyword').value || '').trim();
+  if (!kw) { alert('請輸入搜尋關鍵字'); return; }
+
+  const btn = document.querySelector('.btn-search-cleanup');
+  btn.textContent = '搜尋中…'; btn.disabled = true;
+
+  try {
+    await ensureFirebaseReady();
+    cuHits = [];
+
+    await Promise.all(CLEANUP_SEARCH_PATHS.map(async ({ path, type, cat, isProd, recursive }) => {
+      try {
+        const snap = await db.ref(path).once('value');
+        if (!snap.exists()) return;
+        const val = snap.val();
+        if (typeof val !== 'object' || val === null) return;
+
+        if (recursive) {
+          cuCollectLeaves(snap, path, type, cat, isProd, kw, cuHits);
+        } else {
+          snap.forEach(child => {
+            const childPath = `${path}/${child.key}`;
+            const childVal  = child.val();
+            if (cuRecordMatches(childVal, child.key, childPath, kw)) {
+              cuHits.push({ path: childPath, type, cat, isProd, nodeKey: child.key, record: childVal });
+            }
+          });
+        }
+      } catch(e) { /* path may not exist — silent */ }
+    }));
+
+    cuRenderResults();
+  } catch(err) {
+    alert('搜尋失敗：' + err.message);
+  } finally {
+    btn.textContent = '🔍 搜尋測試資料'; btn.disabled = false;
+  }
+}
+
+// ── render results ────────────────────────────────────────────────────────────
+function cuRenderResults() {
+  const wrap = document.getElementById('cu-results-wrap');
+  const tbody = document.getElementById('cu-tbody');
+  const hitCount = document.getElementById('cu-hit-count');
+  const confirmArea = document.getElementById('cu-confirm-area');
+
+  wrap.style.display = 'block';
+  confirmArea.style.display = 'none';
+  document.getElementById('cu-log').className = 'cleanup-result-log';
+
+  hitCount.textContent = cuHits.length + ' 筆';
+
+  if (!cuHits.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:30px;">找不到符合的資料</td></tr>`;
+    return;
+  }
+
+  const fmt = r => {
+    const ts = r.ts || r.timestamp || r.createdAt || r.updatedAt || r.date || '';
+    return ts ? new Date(ts).toLocaleString('zh-TW',{hour12:false}) : '';
+  };
+  const v = x => String(x || '');
+
+  tbody.innerHTML = cuHits.map((hit, i) => {
+    const r = hit.record || {};
+    const isPlayer = false; // players not in cuHits
+    const typeChipCls = hit.cat === 'gameLog' ? 'gameLog'
+                      : hit.cat === 'leaderboard' ? 'leaderboard'
+                      : hit.isProd ? 'old' : 'dev';
+    return `<tr data-i="${i}" data-cat="${hit.cat}" data-is-prod="${hit.isProd}">
+      <td><input type="checkbox" class="cu-chk" data-i="${i}" onchange="cuCheckChange()"></td>
+      <td style="font-size:0.68rem;color:var(--text3);font-family:'Space Mono',monospace;">${v(hit.type)}</td>
+      <td><span class="type-chip ${typeChipCls}">${hit.isProd ? '正式' : 'dev'}</span></td>
+      <td>${v(r.name || r.id)}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:0.68rem;">${v(r.playerKey)}</td>
+      <td style="font-size:0.68rem;">${v(r.baseAvatarKey)}</td>
+      <td style="font-size:0.68rem;">${v(r.displayAvatarKey)}</td>
+      <td style="color:#fbbf24;font-family:'Space Mono',monospace;">${v(r.score || r.bestScore)}</td>
+      <td style="font-size:0.68rem;">${fmt(r)}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--text2);" title="${hit.path}">${hit.path}</td>
+    </tr>`;
+  }).join('');
+
+  cuCheckChange();
+}
+
+// ── select helpers ────────────────────────────────────────────────────────────
+function cuSelectAll(checked) {
+  document.querySelectorAll('.cu-chk').forEach(cb => cb.checked = checked);
+  cuCheckChange();
+}
+
+function cuSelectByFilter(filter) {
+  document.querySelectorAll('tr[data-i]').forEach(tr => {
+    const cb = tr.querySelector('.cu-chk');
+    if (!cb) return;
+    const cat    = tr.dataset.cat;
+    const isProd = tr.dataset.isProd === 'true';
+    if (filter === 'prod')        cb.checked = isProd;
+    else if (filter === 'dev')    cb.checked = !isProd;
+    else if (filter === 'gameLog')    cb.checked = cat === 'gameLog';
+    else if (filter === 'leaderboard') cb.checked = cat === 'leaderboard';
+  });
+  cuCheckChange();
+}
+
+function cuCheckChange() {
+  const checked = [...document.querySelectorAll('.cu-chk:checked')];
+  const confirmArea = document.getElementById('cu-confirm-area');
+
+  if (!checked.length) { confirmArea.style.display = 'none'; return; }
+
+  confirmArea.style.display = 'block';
+
+  // Build summary
+  const byType = {};
+  checked.forEach(cb => {
+    const hit = cuHits[+cb.dataset.i];
+    byType[hit.type] = (byType[hit.type] || 0) + 1;
+  });
+
+  const lines = Object.entries(byType).map(([t, n]) => `• ${t}：${n} 筆`).join('\n');
+  const total = checked.length;
+
+  document.getElementById('cu-summary').innerHTML =
+    `<strong>即將刪除 ${total} 筆：</strong><br>` +
+    Object.entries(byType).map(([t,n]) =>
+      `&nbsp;&nbsp;• <strong>${t}</strong>：${n} 筆`
+    ).join('<br>') +
+    `<br><br><span class="safe">不會刪除：players · avatarCatalog</span><br>` +
+    `<br>請在下方輸入 <strong style="letter-spacing:2px;">DELETE TEST DATA</strong> 確認刪除：`;
+
+  document.getElementById('cu-confirm-input').value = '';
+  document.getElementById('cu-delete-btn').disabled = true;
+}
+
+function cuConfirmChange() {
+  const val = document.getElementById('cu-confirm-input').value;
+  document.getElementById('cu-delete-btn').disabled = (val !== 'DELETE TEST DATA');
+}
+
+// ── execute delete ────────────────────────────────────────────────────────────
+async function cuExecuteDelete() {
+  const checked = [...document.querySelectorAll('.cu-chk:checked')];
+  if (!checked.length) return;
+  if (document.getElementById('cu-confirm-input').value !== 'DELETE TEST DATA') return;
+
+  const btn = document.getElementById('cu-delete-btn');
+  btn.disabled = true;
+  btn.textContent = '刪除中…';
+
+  const log = document.getElementById('cu-log');
+  log.className = 'cleanup-result-log show';
+  log.innerHTML = '';
+
+  let ok = 0, fail = 0;
+
+  for (const cb of checked) {
+    const hit = cuHits[+cb.dataset.i];
+    const path = hit.path;
+
+    // Safety guards — never delete players or avatarCatalog regardless of anything
+    if (path.startsWith('players') || path.startsWith('avatarCatalog')) {
+      log.innerHTML += `<div class="log-err">⛔ 跳過（受保護路徑）：${path}</div>`;
+      fail++;
+      continue;
+    }
+
+    try {
+      await db.ref(path).remove();
+      log.innerHTML += `<div class="log-ok">✓ 已刪除：${path}</div>`;
+      ok++;
+    } catch(err) {
+      log.innerHTML += `<div class="log-err">✗ 失敗：${path} — ${err.message}</div>`;
+      fail++;
+    }
+    // Scroll log to bottom
+    log.scrollTop = log.scrollHeight;
+  }
+
+  log.innerHTML += `<div style="margin-top:8px;color:var(--text);">刪除完成：<span class="log-ok">成功 ${ok} 筆</span>　<span class="log-err">失敗 ${fail} 筆</span></div>`;
+  btn.textContent = '🗑 刪除勾選資料';
+
+  // Remove deleted rows from hits and re-render
+  const deletedIndices = new Set(checked.map(cb => +cb.dataset.i));
+  cuHits = cuHits.filter((_, i) => !deletedIndices.has(i));
+  cuRenderResults();
+  // Re-show log since re-render hides confirm area
+  document.getElementById('cu-confirm-area').style.display = 'block';
+  log.className = 'cleanup-result-log show';
+  log.scrollTop = log.scrollHeight;
+}
+
+// ── UNLOCK MANAGEMENT ────────────────────────────────────────────────────────
+
+const ADMIN_UNLOCKABLE_AVATARS = [
+  { key: 'xiaov_base',        name: '小V',         type: 'team'    },
+  { key: 'dance_sister_01',   name: '唱跳姐姐',    type: 'team'    },
+  { key: 'balloon_sister_01', name: '氣球姐姐 1',  type: 'team'    },
+  { key: 'balloon_sister_02', name: '氣球姐姐 2',  type: 'team'    },
+  { key: 'balloon_brother_01',name: '氣球哥哥 1',  type: 'team'    },
+  { key: 'balloon_brother_02',name: '氣球哥哥 2',  type: 'team'    },
+  { key: 'balloon_brother_03',name: '氣球哥哥 3',  type: 'team'    },
+  { key: 'bubble_brother_01', name: '泡泡哥哥',    type: 'rare'    },
+  { key: 'xiaov_special',     name: '小V 特別版',  type: 'special' },
+  // 未來新增 student_xxx 於此
+];
+
+const UL_TYPE_LABEL = { team:'team', rare:'✨ rare', special:'🌟 special', student:'🎓 student' };
+
+function ulGetPlayerKey() {
+  const id   = (document.getElementById('ul-id')?.value || '').trim() || '玩家';
+  const base = document.getElementById('ul-base')?.value || 'boy1';
+  return encodeURIComponent(id) + '__' + base;
+}
+
+function ulUpdateKey() {
+  const pk = ulGetPlayerKey();
+  const el = document.getElementById('ul-playerkey-preview');
+  if (el) el.textContent = pk;
+}
+
+function ulBuildAvatarSelect() {
+  const sel = document.getElementById('ul-avatar-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  ADMIN_UNLOCKABLE_AVATARS.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.key;
+    opt.textContent = `${a.name}（${a.key}）`;
+    sel.appendChild(opt);
+  });
+}
+
+function ulBuildAvatarListDisplay() {
+  const el = document.getElementById('ul-avatar-list-display');
+  if (!el) return;
+  el.innerHTML = ADMIN_UNLOCKABLE_AVATARS.map(a =>
+    `<span class="unlock-chip" title="${a.key}">${UL_TYPE_LABEL[a.type] || a.type} ${a.name}</span>`
+  ).join('');
+}
+
+function ulSetStatus(type, msg) {
+  const el = document.getElementById('ul-status');
+  if (!el) return;
+  el.className = 'unlock-status ' + type;
+  el.textContent = msg;
+}
+
+function ulClearStatus() {
+  const el = document.getElementById('ul-status');
+  if (el) { el.className = 'unlock-status'; el.textContent = ''; }
+}
+
+async function ulQueryPlayer() {
+  ulClearStatus();
+  const id   = (document.getElementById('ul-id')?.value || '').trim();
+  const base = document.getElementById('ul-base')?.value || 'boy1';
+  if (!id) { ulSetStatus('err', '請先輸入玩家 ID'); return; }
+
+  const pk = ulGetPlayerKey();
+  document.getElementById('ul-playerkey-preview').textContent = pk;
+
+  const profileBox   = document.getElementById('ul-profile-box');
+  const unlockedBox  = document.getElementById('ul-unlocked-box');
+  const createWrap   = document.getElementById('ul-create-profile-wrap');
+
+  profileBox.textContent   = '查詢中…';
+  unlockedBox.textContent  = '查詢中…';
+  createWrap.style.display = 'none';
+
+  try {
+    await ensureFirebaseReady();
+    const [profileSnap, unlockedSnap] = await Promise.all([
+      db.ref(`players/${pk}/profile`).once('value'),
+      db.ref(`players/${pk}/unlockedAvatars`).once('value'),
+    ]);
+
+    // profile
+    if (profileSnap.exists()) {
+      const p = profileSnap.val();
+      profileBox.innerHTML = [
+        ['id',               p.id],
+        ['playerKey',        p.playerKey],
+        ['baseAvatarKey',    p.baseAvatarKey],
+        ['displayAvatarKey', p.displayAvatarKey],
+        ['avatarKey',        p.avatarKey],
+        ['createdAt',        p.createdAt ? new Date(p.createdAt).toLocaleString('zh-TW',{hour12:false}) : ''],
+        ['updatedAt',        p.updatedAt ? new Date(p.updatedAt).toLocaleString('zh-TW',{hour12:false}) : ''],
+      ].map(([k, val]) =>
+        `<div class="kv"><span class="k">${k}</span><span class="val-hl">${val || ''}</span></div>`
+      ).join('');
+    } else {
+      profileBox.innerHTML = `<span style="color:var(--accent2);">⚠ 尚未找到此玩家 profile。可以仍然授予解鎖，但建議確認玩家 ID 與身份頭像是否正確。</span>`;
+      createWrap.style.display = 'block';
+    }
+
+    // unlockedAvatars
+    ulRenderUnlocked(unlockedSnap);
+
+  } catch(err) {
+    profileBox.textContent  = '❌ 查詢失敗：' + err.message;
+    unlockedBox.textContent = '';
+  }
+}
+
+function ulRenderUnlocked(snap) {
+  const box = document.getElementById('ul-unlocked-box');
+  if (!snap || !snap.exists()) {
+    box.textContent = '目前沒有解鎖頭像。';
+    return;
+  }
+  const data = snap.val();
+  const keys = Object.keys(data);
+  box.innerHTML = keys.map(ak => {
+    const entry = data[ak];
+    const avatarDef = ADMIN_UNLOCKABLE_AVATARS.find(a => a.key === ak);
+    const name = avatarDef ? avatarDef.name : ak;
+    const ts   = entry.unlockedAt ? new Date(entry.unlockedAt).toLocaleString('zh-TW',{hour12:false}) : '';
+    return `<div class="kv" style="margin-bottom:6px;">
+      <span class="unlock-chip already">✓ ${name}</span>
+      <span style="font-size:0.68rem;color:var(--text3);margin-left:4px;">${ak} · ${entry.source || ''} · ${ts}</span>
+    </div>`;
+  }).join('');
+}
+
+async function ulRefreshUnlocked() {
+  const pk = ulGetPlayerKey();
+  try {
+    const snap = await db.ref(`players/${pk}/unlockedAvatars`).once('value');
+    ulRenderUnlocked(snap);
+  } catch(e) { /* silent */ }
+}
+
+async function ulGrantAvatar() {
+  ulClearStatus();
+  const id      = (document.getElementById('ul-id')?.value || '').trim();
+  const base    = document.getElementById('ul-base')?.value || 'boy1';
+  const avatarKey = document.getElementById('ul-avatar-select')?.value;
+  const source  = document.getElementById('ul-source')?.value || 'admin_grant';
+
+  if (!id)        { ulSetStatus('err', '請先輸入玩家 ID'); return; }
+  if (!avatarKey) { ulSetStatus('err', '請選擇要授予的頭像'); return; }
+
+  const pk         = ulGetPlayerKey();
+  const avatarDef  = ADMIN_UNLOCKABLE_AVATARS.find(a => a.key === avatarKey);
+  const avatarName = avatarDef ? avatarDef.name : avatarKey;
+
+  const confirmed = window.confirm(
+    `即將授予解鎖\n\n` +
+    `玩家：${id}\n` +
+    `身份頭像：${base}\n` +
+    `playerKey：${pk}\n` +
+    `解鎖頭像：${avatarName}（${avatarKey}）\n` +
+    `來源：${source}\n\n` +
+    `是否確認？`
+  );
+  if (!confirmed) return;
+
+  try {
+    await ensureFirebaseReady();
+    // Check if already unlocked
+    const existing = await db.ref(`players/${pk}/unlockedAvatars/${avatarKey}`).once('value');
+    if (existing.exists() && existing.val().unlocked === true) {
+      ulSetStatus('warn', `⚠ 此玩家已擁有「${avatarName}」，未覆蓋原始資料。`);
+      return;
+    }
+
+    // Write — only to players/{playerKey}/unlockedAvatars/{avatarKey}
+    // Never touching scores, gameLogs, leaderboards, displayAvatarKey, or profile.avatarKey
+    await db.ref(`players/${pk}/unlockedAvatars/${avatarKey}`).set({
+      unlocked:    true,
+      source:      source,
+      unlockedAt:  Date.now(),
+      grantedBy:   'admin_panel',
+    });
+
+    ulSetStatus('ok', `✅ 已成功授予「${avatarName}」給 ${id}`);
+    await ulRefreshUnlocked();
+
+  } catch(err) {
+    ulSetStatus('err', '❌ 寫入失敗：' + err.message);
+  }
+}
+
+async function ulCreateProfile() {
+  const id   = (document.getElementById('ul-id')?.value || '').trim();
+  const base = document.getElementById('ul-base')?.value || 'boy1';
+  if (!id) { ulSetStatus('err', '請先輸入玩家 ID'); return; }
+
+  const pk = ulGetPlayerKey();
+  const confirmed = window.confirm(
+    `即將建立基本 Profile\n\nplayerKey：${pk}\nid：${id}\nbaseAvatarKey：${base}\n\n是否確認？`
+  );
+  if (!confirmed) return;
+
+  try {
+    await ensureFirebaseReady();
+    const existing = await db.ref(`players/${pk}/profile`).once('value');
+    if (existing.exists()) {
+      ulSetStatus('warn', '⚠ 此玩家 profile 已存在，未覆蓋。');
+      return;
+    }
+    // Write only players/{playerKey}/profile
+    await db.ref(`players/${pk}/profile`).set({
+      id:               id,
+      name:             id,
+      playerKey:        pk,
+      baseAvatarKey:    base,
+      displayAvatarKey: base,
+      avatarKey:        base,
+      createdAt:        Date.now(),
+      updatedAt:        Date.now(),
+    });
+    ulSetStatus('ok', `✅ 已建立 Profile（playerKey：${pk}）`);
+    // Re-query to show the new profile
+    await ulQueryPlayer();
+  } catch(err) {
+    ulSetStatus('err', '❌ 建立失敗：' + err.message);
+  }
+}
+</script>
+</body>
+</html>
