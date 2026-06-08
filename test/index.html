@@ -1633,8 +1633,9 @@ function savePlayerProfile() {
   PLAYER.avatarSrc = getAvatarByKey(newBase).src;
   _saveLocalProfile();
 
-  return ensurePlayerProfile()
+  return loadAvatarCatalog()
     .then(function() { return loadUnlockedAvatars(); })
+    .then(function() { return ensurePlayerProfile(); })
     .then(function() {
       validateDisplayAvatarForCurrentIdentity();
       _saveLocalProfile();
@@ -3253,11 +3254,9 @@ function renderLB() {
   }
 
   // 如果 SONGS 還沒載入，先確保載入再渲染
-  if (SONGS && SONGS.length) {
-    _doRender();
-  } else {
-    ensureSongsLoaded().then(function() { _doRender(); });
-  }
+  // 同時確保 avatarCatalog 已讀取（支援排行榜顯示 catalog 頭像）
+  var songsReady = (SONGS && SONGS.length) ? Promise.resolve() : ensureSongsLoaded();
+  Promise.all([songsReady, loadAvatarCatalog()]).then(function() { _doRender(); });
 }
 
 function renderLBFromFirebase() {
