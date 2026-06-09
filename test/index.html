@@ -1024,6 +1024,18 @@ function makePlayerKey(id, baseAvatarKey) {
   return encodeFirebaseKeyPart(id) + '__' + (baseAvatarKey || 'boy1');
 }
 
+// resolveAvatarSrc：修正 test 版路徑（assets/avatars/ → ../assets/avatars/）
+function resolveAvatarSrc(src) {
+  if (!src) return "";
+  if (/^https?:\/\//.test(src)) return src; // 絕對 URL 不動
+  if (src.indexOf("../") === 0) return src;    // 已有 ../ 不動
+  if (src.indexOf("./") === 0) return src;     // 已有 ./ 不動
+  if (src.indexOf("assets/avatars/") === 0) {
+    return "../" + src; // test 版在子資料夾，補 ../
+  }
+  return src;
+}
+
 function getAvatarByKey(key) {
   if (!key) return { key: AVATARS[0].key, url: AVATARS[0].url, src: AVATARS[0].url, name: AVATARS[0].label };
   // 1. 內建頭像
@@ -1038,13 +1050,13 @@ function getAvatarByKey(key) {
   // 3. avatarCatalog（學生/特殊頭像）
   if (AVATAR_CATALOG[key]) {
     var cat = AVATAR_CATALOG[key];
-    var cSrc = cat.src || cat.file || cat.url || '';
+    var cSrc = resolveAvatarSrc(cat.src || cat.file || cat.url || '');
     return { key: key, url: cSrc, src: cSrc, name: cat.name || key };
   }
   // 4. unlockedAvatars metadata fallback（已解鎖但 catalog 尚未載入）
   if (unlockedAvatars[key]) {
     var meta = unlockedAvatars[key];
-    var mSrc = meta.src || meta.file || meta.url || '';
+    var mSrc = resolveAvatarSrc(meta.src || meta.file || meta.url || '');
     if (mSrc) {
       return { key: key, url: mSrc, src: mSrc, name: meta.name || key };
     }
@@ -1283,7 +1295,7 @@ function buildAvGrid(mode){
       if(cat.hiddenUntilUnlocked || cat.tier === 'student'){
         if(!(unlockedAvatars[key] && unlockedAvatars[key].unlocked)) return;
       }
-      var catSrc = cat.src || cat.file || cat.url || '';
+      var catSrc = resolveAvatarSrc(cat.src || cat.file || cat.url || '');
       var isUnlockedCat = unlockedAvatars[key] && unlockedAvatars[key].unlocked;
       // 對方塊遊戲：catalog 頭像只顯示在顯示頭像模式
       var imgCat = document.createElement("img");
@@ -1333,7 +1345,7 @@ function buildAvGrid(mode){
         // 必須有 src / file / url / name 才算有效 metadata
         var uMeta = uData.src || uData.file || uData.url;
         if(!uMeta && !uData.name) return;
-        var uSrc = uData.src || uData.file || uData.url || '';
+        var uSrc = resolveAvatarSrc(uData.src || uData.file || uData.url || '');
         var uName = uData.name || key;
         var imgU = document.createElement("img");
         imgU.src = uSrc; imgU.alt = uName;
@@ -2346,7 +2358,7 @@ async function saveLB(){
     baseAvatarKey:PLAYER.baseAvatarKey,
     displayAvatarKey:PLAYER.displayAvatarKey,
     avatarKey:PLAYER.avatarKey,
-    avatarSrc:PLAYER.avatarSrc||getAvatarUrl(PLAYER.displayAvatarKey),
+    avatarSrc:resolveAvatarSrc(PLAYER.avatarSrc||getAvatarUrl(PLAYER.displayAvatarKey)),
     peakCombo:peakCombo||0
   };
   try{
