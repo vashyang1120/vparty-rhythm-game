@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>氣球小V品牌遊戲統一後台 v0.1.7</title>
+<title>氣球小V品牌遊戲統一後台 v0.1.8</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap');
 
@@ -369,6 +369,45 @@
   #quizUnlockStatus.ok { color: var(--accent3); }
   #quizUnlockStatus.err { color: var(--danger); }
 
+
+  /* ── DANGER DELETE PANEL ── */
+  .danger-card {
+    background: linear-gradient(135deg, rgba(248,113,113,0.12), rgba(127,29,29,0.08));
+    border: 1px solid rgba(248,113,113,0.35);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 20px;
+  }
+  .danger-card h2 { font-size: 1rem; color: var(--danger); margin-bottom: 6px; }
+  .danger-card p { color: var(--text2); font-size: 0.8rem; margin-bottom: 12px; }
+  .danger-controls { display: grid; grid-template-columns: minmax(260px, 1fr) auto auto; gap: 10px; align-items: end; margin-bottom: 12px; }
+  .danger-controls label { display: block; font-size: 0.7rem; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+  .danger-controls input[type="text"] {
+    width: 100%; background: var(--input-bg); border: 1px solid rgba(248,113,113,0.35);
+    border-radius: 7px; color: var(--text); font-size: 0.85rem; padding: 8px 12px;
+    outline: none; font-family: 'Space Mono', monospace;
+  }
+  .danger-controls input[type="text"]:focus { border-color: var(--danger); }
+  .btn-danger { background: var(--danger); color: #1f0b0b; }
+  .delete-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin: 12px 0; }
+  .delete-item {
+    background: rgba(13,13,20,0.45); border: 1px solid rgba(248,113,113,0.18);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .delete-item.disabled { opacity: 0.45; }
+  .delete-item label { display: flex; gap: 8px; align-items: center; font-weight: 800; font-size: 0.82rem; }
+  .delete-item input { accent-color: var(--danger); }
+  .delete-item .delete-meta { color: var(--text2); font-size: 0.72rem; margin-top: 4px; font-family: 'Space Mono', monospace; }
+  .delete-item .delete-desc { color: var(--text3); font-size: 0.72rem; margin-top: 3px; }
+  #deleteStatus {
+    display: none; color: var(--text2); font-size: 0.78rem; font-family: 'Space Mono', monospace;
+    border-top: 1px solid rgba(248,113,113,0.18); padding-top: 10px; white-space: pre-wrap;
+  }
+  #deleteStatus.show { display: block; }
+  #deleteStatus.ok { color: var(--accent3); }
+  #deleteStatus.err { color: var(--danger); }
+  @media (max-width: 760px) { .danger-controls { grid-template-columns: 1fr; } }
+
   /* ── LOADING SPINNER ── */
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner {
@@ -388,14 +427,14 @@
 <!-- ── LOGIN ── -->
 <div id="loginScreen">
   <div class="logo">🎈 氣球小V</div>
-  <div class="sub">Brand Games · Admin Panel · v0.1.7</div>
+  <div class="sub">Brand Games · Admin Panel · v0.1.8</div>
   <div id="loginBox">
     <label for="pwInput">後台密碼</label>
     <input type="password" id="pwInput" placeholder="••••" maxlength="20" autocomplete="current-password" autofocus>
     <div class="err" id="loginErr"></div>
     <button class="btn" id="loginBtn" style="background:linear-gradient(135deg,#c084fc,#a855f7);color:#fff;padding:14px;">進入後台</button>
   </div>
-  <div style="font-size:0.72rem;color:var(--text3);font-family:'Space Mono',monospace;">gameLogs 唯讀 · xiaov_base 解鎖可寫入 · 不刪除</div>
+  <div style="font-size:0.72rem;color:var(--text3);font-family:'Space Mono',monospace;">gameLogs 讀取 · xiaov_base 解鎖 · 指定 playerKey 刪除</div>
 </div>
 
 <!-- ── MAIN APP ── -->
@@ -403,7 +442,7 @@
   <header>
     <div class="title">
       🎈 氣球小V品牌遊戲統一後台
-      <span class="badge">v0.1.7</span>
+      <span class="badge">v0.1.8</span>
     </div>
     <div class="right">
       <div id="statusDot"></div>
@@ -513,6 +552,29 @@
         <button class="btn btn-quiz" onclick="unlockXiaovBaseForAnyGamePlayers()">解鎖 xiaov_base</button>
       </div>
       <div id="quizUnlockStatus"></div>
+    </div>
+
+    <!-- Danger delete player data -->
+    <div class="danger-card">
+      <h2>⚠️ 危險操作：指定 playerKey 刪除資料</h2>
+      <p>只用完整 <span class="mono">playerKey</span> 刪除，不用玩家名字刪除。請先預覽，再勾選要刪除的資料類型。預設全部不勾選。</p>
+      <div class="danger-controls">
+        <div>
+          <label for="deletePlayerKeyInput">playerKey</label>
+          <input type="text" id="deletePlayerKeyInput" name="vparty_delete_player_key" placeholder="例如 %E5%8A%89%E4%BB%B2%E7%BF%94__dog1" autocomplete="off">
+        </div>
+        <button class="btn btn-reload" onclick="previewDeletePlayerData()">預覽將刪除資料</button>
+        <button class="btn btn-danger" onclick="deleteSelectedPlayerData()">確認刪除勾選項目</button>
+      </div>
+      <div id="deletePreviewGrid" class="delete-grid"></div>
+      <div class="danger-controls" style="grid-template-columns:minmax(260px, 1fr) auto; margin-top:10px;">
+        <div>
+          <label for="deleteConfirmInput">確認文字</label>
+          <input type="text" id="deleteConfirmInput" name="vparty_delete_confirm" placeholder="輸入 DELETE 才能刪除" autocomplete="off">
+        </div>
+        <button class="btn btn-reload" onclick="clearDeletePreview()">清除預覽</button>
+      </div>
+      <div id="deleteStatus"></div>
     </div>
 
     <!-- Table -->
@@ -1079,6 +1141,210 @@ async function unlockXiaovBaseForAnyGamePlayers() {
   } catch (err) {
     console.error(err);
     setQuizUnlockStatus('err', `解鎖失敗：${err.message}`);
+  }
+}
+
+
+// ── DANGER DELETE：指定 playerKey 刪除 ───────────────────────────────────────
+const DELETE_CATEGORIES = [
+  { key: 'playerProfile', label: '玩家身份資料', desc: 'players/{playerKey}，包含 profile / unlockedAvatars / quizProgress 等玩家個人資料。' },
+  { key: 'quizLogs', label: '問答遊戲紀錄', desc: 'gameLogs/quiz 中 playerKey 相同的所有 push 紀錄。' },
+  { key: 'quizLeaderboards', label: '問答排行榜', desc: 'leaderboards/quiz/main 與 byGrade 中該 playerKey 的排名資料。' },
+  { key: 'rhythmLogs', label: '節奏遊戲紀錄', desc: 'gameLogs/rhythm、dev/gameLogs/rhythm、scores 中 playerKey 相同的紀錄。' },
+  { key: 'rhythmLeaderboards', label: '節奏排行榜', desc: 'leaderboards/rhythm/{songId}/{diff}/{playerKey}。' },
+  { key: 'tetrisLogs', label: '方塊遊戲紀錄', desc: 'gameLogs/tetris 中 playerKey 相同的紀錄。' },
+  { key: 'tetrisLeaderboards', label: '方塊排行榜', desc: 'leaderboards/tetris 內 playerKey 相同或節點名稱等於 playerKey 的排名資料。' },
+  { key: 'adventureLogs', label: '冒險遊戲紀錄', desc: 'gameLogs/adventure 中 playerKey 相同的紀錄。' },
+  { key: 'adventureLeaderboards', label: '冒險排行榜', desc: 'leaderboards/adventure 內 playerKey 相同或節點名稱等於 playerKey 的排名資料。' },
+];
+
+let deletePreview = null;
+
+function setDeleteStatus(type, msg) {
+  const el = document.getElementById('deleteStatus');
+  if (!el) return;
+  el.className = 'show' + (type ? ' ' + type : '');
+  el.textContent = msg;
+}
+
+function clearDeletePreview() {
+  deletePreview = null;
+  document.getElementById('deletePreviewGrid').innerHTML = '';
+  document.getElementById('deleteConfirmInput').value = '';
+  setDeleteStatus('', '已清除刪除預覽。');
+}
+
+function getDeletePlayerKeyInput() {
+  return String(document.getElementById('deletePlayerKeyInput').value || '').trim();
+}
+
+function addPathUnique(list, path) {
+  if (!path) return;
+  if (!list.includes(path)) list.push(path);
+}
+
+function collectPathsByPlayerKey(data, basePath, playerKey) {
+  const found = [];
+  function walk(node, path) {
+    if (!node || typeof node !== 'object') return;
+
+    const lastKey = path.split('/').pop();
+    if (lastKey === playerKey) {
+      addPathUnique(found, path);
+      return;
+    }
+
+    if (node.playerKey === playerKey) {
+      addPathUnique(found, path);
+      return;
+    }
+
+    Object.entries(node).forEach(([k, v]) => {
+      if (!v || typeof v !== 'object') return;
+      walk(v, `${path}/${k}`);
+    });
+  }
+  walk(data, basePath);
+  return found;
+}
+
+async function scanPathForPlayerKey(path, playerKey) {
+  const snap = await db.ref(path).once('value');
+  if (!snap.exists()) return [];
+  return collectPathsByPlayerKey(snap.val(), path, playerKey);
+}
+
+async function scanDirectPath(path) {
+  const snap = await db.ref(path).once('value');
+  return snap.exists() ? [path] : [];
+}
+
+async function buildDeletePreview(playerKey) {
+  const result = Object.fromEntries(DELETE_CATEGORIES.map(c => [c.key, []]));
+
+  result.playerProfile = await scanDirectPath(`players/${playerKey}`);
+
+  result.quizLogs = await scanPathForPlayerKey('gameLogs/quiz', playerKey);
+  result.quizLeaderboards = [
+    ...(await scanDirectPath(`leaderboards/quiz/main/${playerKey}`)),
+    ...(await scanDirectPath(`leaderboards/quiz/byGrade/low/${playerKey}`)),
+    ...(await scanDirectPath(`leaderboards/quiz/byGrade/middle/${playerKey}`)),
+    ...(await scanDirectPath(`leaderboards/quiz/byGrade/high/${playerKey}`)),
+  ];
+  // 防呆：如果未來 quiz 排行榜增加巢狀路徑，也能掃到。
+  (await scanPathForPlayerKey('leaderboards/quiz', playerKey)).forEach(p => addPathUnique(result.quizLeaderboards, p));
+
+  result.rhythmLogs = [
+    ...(await scanPathForPlayerKey('gameLogs/rhythm', playerKey)),
+    ...(await scanPathForPlayerKey('dev/gameLogs/rhythm', playerKey)),
+    ...(await scanPathForPlayerKey('scores', playerKey)),
+  ];
+  result.rhythmLeaderboards = await scanPathForPlayerKey('leaderboards/rhythm', playerKey);
+
+  result.tetrisLogs = await scanPathForPlayerKey('gameLogs/tetris', playerKey);
+  result.tetrisLeaderboards = await scanPathForPlayerKey('leaderboards/tetris', playerKey);
+
+  result.adventureLogs = await scanPathForPlayerKey('gameLogs/adventure', playerKey);
+  result.adventureLeaderboards = await scanPathForPlayerKey('leaderboards/adventure', playerKey);
+
+  return result;
+}
+
+function renderDeletePreview(playerKey, preview) {
+  const grid = document.getElementById('deletePreviewGrid');
+  const total = Object.values(preview).reduce((sum, arr) => sum + arr.length, 0);
+  grid.innerHTML = DELETE_CATEGORIES.map(cat => {
+    const paths = preview[cat.key] || [];
+    const disabled = paths.length ? '' : ' disabled';
+    const checkedDisabled = paths.length ? '' : ' disabled';
+    const sample = paths.slice(0, 2).join('｜') + (paths.length > 2 ? `｜…另 ${paths.length - 2} 筆` : '');
+    return `
+      <div class="delete-item${disabled}">
+        <label>
+          <input type="checkbox" class="delete-check" data-delete-key="${cat.key}"${checkedDisabled}>
+          ${cat.label}
+        </label>
+        <div class="delete-meta">找到 ${paths.length} 筆</div>
+        <div class="delete-desc">${escapeHtml(cat.desc)}</div>
+        ${paths.length ? `<div class="delete-meta" title="${escapeHtml(paths.join('\n'))}">${escapeHtml(sample)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+  const msg = total
+    ? `預覽完成：playerKey=${playerKey}\n共找到 ${total} 個可刪除節點。請勾選要刪除的類型，並輸入 DELETE 後再確認。`
+    : `預覽完成：playerKey=${playerKey}\n沒有找到任何資料。請確認 playerKey 是否完全正確。`;
+  setDeleteStatus(total ? '' : 'err', msg);
+}
+
+async function previewDeletePlayerData() {
+  const playerKey = getDeletePlayerKeyInput();
+  if (!playerKey) {
+    setDeleteStatus('err', '請先輸入完整 playerKey。');
+    return;
+  }
+  try {
+    await ensureFirebaseReady();
+    setDeleteStatus('', `正在預覽 ${playerKey} 的可刪除資料…`);
+    const preview = await buildDeletePreview(playerKey);
+    deletePreview = { playerKey, preview };
+    document.getElementById('deleteConfirmInput').value = '';
+    renderDeletePreview(playerKey, preview);
+  } catch (err) {
+    console.error(err);
+    setDeleteStatus('err', `預覽失敗：${err.message}`);
+  }
+}
+
+function getSelectedDeleteKeys() {
+  return Array.from(document.querySelectorAll('.delete-check:checked')).map(el => el.dataset.deleteKey);
+}
+
+async function deleteSelectedPlayerData() {
+  const playerKey = getDeletePlayerKeyInput();
+  const confirmText = String(document.getElementById('deleteConfirmInput').value || '').trim();
+  if (!deletePreview || deletePreview.playerKey !== playerKey) {
+    setDeleteStatus('err', '請先按「預覽將刪除資料」，並確認預覽的 playerKey 與目前輸入相同。');
+    return;
+  }
+  if (confirmText !== 'DELETE') {
+    setDeleteStatus('err', '請在確認文字欄位輸入 DELETE。');
+    return;
+  }
+  const selected = getSelectedDeleteKeys();
+  if (!selected.length) {
+    setDeleteStatus('err', '請至少勾選一個要刪除的資料類型。');
+    return;
+  }
+
+  const paths = [];
+  selected.forEach(key => (deletePreview.preview[key] || []).forEach(p => addPathUnique(paths, p)));
+  if (!paths.length) {
+    setDeleteStatus('err', '勾選項目中沒有可刪除路徑。');
+    return;
+  }
+
+  const ok = window.confirm(
+    `即將刪除 playerKey：\n${playerKey}\n\n` +
+    `勾選類型：${selected.map(k => DELETE_CATEGORIES.find(c => c.key === k)?.label || k).join('、')}\n` +
+    `節點數：${paths.length}\n\n` +
+    `這個動作無法復原。確定刪除？`
+  );
+  if (!ok) return;
+
+  try {
+    await ensureFirebaseReady();
+    setDeleteStatus('', `刪除中…0/${paths.length}`);
+    const updates = {};
+    paths.forEach(path => { updates[path] = null; });
+    await db.ref().update(updates);
+    setDeleteStatus('ok', `刪除完成：已刪除 ${paths.length} 個節點。\n${paths.join('\n')}`);
+    deletePreview = null;
+    document.getElementById('deletePreviewGrid').innerHTML = '';
+    document.getElementById('deleteConfirmInput').value = '';
+    await loadAllData();
+  } catch (err) {
+    console.error(err);
+    setDeleteStatus('err', `刪除失敗：${err.message}`);
   }
 }
 
