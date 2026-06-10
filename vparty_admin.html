@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>氣球小V品牌遊戲統一後台 v0.1.6</title>
+<title>氣球小V品牌遊戲統一後台 v0.1.7</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap');
 
@@ -290,6 +290,54 @@
   td.dim { color: var(--text3); }
 
 
+  /* ── SONG POPULARITY PANEL ── */
+  .song-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 20px;
+  }
+  .song-card h2 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .song-card p {
+    color: var(--text2);
+    font-size: 0.78rem;
+    margin-bottom: 12px;
+  }
+  .song-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .song-summary-item {
+    background: rgba(244,114,182,0.08);
+    border: 1px solid rgba(244,114,182,0.18);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .song-summary-item .song-name {
+    font-weight: 800;
+    color: var(--accent-rhythm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+  .song-summary-item .song-meta {
+    font-size: 0.72rem;
+    color: var(--text2);
+    font-family: 'Space Mono', monospace;
+  }
+  .song-summary-empty {
+    color: var(--text3);
+    font-size: 0.8rem;
+  }
+
+
   /* ── ADMIN ACTION PANEL ── */
   .action-card {
     background: linear-gradient(135deg, rgba(250,204,21,0.08), rgba(192,132,252,0.06));
@@ -340,10 +388,10 @@
 <!-- ── LOGIN ── -->
 <div id="loginScreen">
   <div class="logo">🎈 氣球小V</div>
-  <div class="sub">Brand Games · Admin Panel · v0.1.6</div>
+  <div class="sub">Brand Games · Admin Panel · v0.1.7</div>
   <div id="loginBox">
     <label for="pwInput">後台密碼</label>
-    <input type="password" id="pwInput" placeholder="••••" maxlength="20" autofocus>
+    <input type="password" id="pwInput" placeholder="••••" maxlength="20" autocomplete="current-password" autofocus>
     <div class="err" id="loginErr"></div>
     <button class="btn" id="loginBtn" style="background:linear-gradient(135deg,#c084fc,#a855f7);color:#fff;padding:14px;">進入後台</button>
   </div>
@@ -355,7 +403,7 @@
   <header>
     <div class="title">
       🎈 氣球小V品牌遊戲統一後台
-      <span class="badge">v0.1.6</span>
+      <span class="badge">v0.1.7</span>
     </div>
     <div class="right">
       <div id="statusDot"></div>
@@ -375,6 +423,10 @@
       <div class="stat-card rhythm">
         <div class="val" id="s-rhythm">—</div>
         <div class="label">節奏遊戲紀錄</div>
+      </div>
+      <div class="stat-card rhythm">
+        <div class="val" id="s-top-song">—</div>
+        <div class="label">最熱門歌曲</div>
       </div>
       <div class="stat-card tetris">
         <div class="val" id="s-tetris">—</div>
@@ -412,11 +464,11 @@
       </div>
       <div class="filter-group">
         <label>玩家 ID / Name</label>
-        <input type="text" id="f-player" placeholder="搜尋…">
+        <input type="text" id="f-player" name="vparty_filter_player" placeholder="搜尋…" autocomplete="off">
       </div>
       <div class="filter-group">
         <label>頭像 Key 搜尋</label>
-        <input type="text" id="f-avatar" placeholder="baseAvatarKey / avatarKey…">
+        <input type="text" id="f-avatar" name="vparty_filter_avatar" placeholder="baseAvatarKey / avatarKey…" autocomplete="off">
       </div>
       <div class="filter-group">
         <label>日期排序</label>
@@ -440,15 +492,25 @@
     </div>
 
 
-    <!-- Quiz reward unlock -->
+    <!-- Rhythm song popularity -->
+    <div class="song-card">
+      <h2>🎵 節奏歌曲人氣摘要</h2>
+      <p>依照目前載入的 rhythm 紀錄統計每首歌遊玩次數、不重複玩家、最高分與平均準確率，方便判斷哪首歌最受歡迎。</p>
+      <div id="songSummary" class="song-summary-grid">
+        <div class="song-summary-empty">載入後會顯示熱門歌曲排行。</div>
+      </div>
+    </div>
+
+
+    <!-- Any game reward unlock -->
     <div class="action-card">
       <div>
-        <h2>🧠 問答遊戲獎勵解鎖</h2>
-        <p>讀取 <span class="mono">gameLogs/quiz</span>，把所有曾玩過問答遊戲的 playerKey 解鎖 <span class="mono">xiaov_base</span>。不會改身份頭像、不會改顯示頭像、不會改排行榜歷史紀錄。</p>
+        <h2>🎁 任一遊戲獎勵解鎖</h2>
+        <p>讀取目前後台載入的所有遊戲紀錄，將曾完成任一遊戲的 playerKey 解鎖 <span class="mono">xiaov_base</span>。不會改身份頭像、不會改顯示頭像、不會改排行榜歷史紀錄。</p>
       </div>
       <div class="action-buttons">
-        <button class="btn btn-reload" onclick="previewQuizRewardUnlock()">預覽人數</button>
-        <button class="btn btn-quiz" onclick="unlockXiaovBaseForQuizPlayers()">解鎖 xiaov_base</button>
+        <button class="btn btn-reload" onclick="previewAnyGameRewardUnlock()">預覽人數</button>
+        <button class="btn btn-quiz" onclick="unlockXiaovBaseForAnyGamePlayers()">解鎖 xiaov_base</button>
       </div>
       <div id="quizUnlockStatus"></div>
     </div>
@@ -470,7 +532,15 @@
               <th>displayAvatarKey</th>
               <th>avatarKey</th>
               <th>分數</th>
+              <!-- rhythm -->
+              <th>歌曲</th>
+              <th>songId</th>
               <th>難度</th>
+              <th>準確率</th>
+              <th>Max Combo</th>
+              <th>Perfect</th>
+              <th>Good</th>
+              <th>Miss</th>
               <th>等級</th>
               <!-- quiz -->
               <th>年級</th>
@@ -478,14 +548,6 @@
               <th>答對</th>
               <th>題數</th>
               <th>用時</th>
-              <!-- rhythm -->
-              <th>songId</th>
-              <th>songTitle</th>
-              <th>accuracy</th>
-              <th>maxCombo</th>
-              <th>perfect</th>
-              <th>good</th>
-              <th>miss</th>
               <!-- tetris -->
               <th>level</th>
               <th>lines</th>
@@ -605,6 +667,43 @@ function setStatus(state, msg) {
   text.textContent = msg;
 }
 
+
+function firstNonEmpty(...vals) {
+  for (const val of vals) {
+    if (val !== undefined && val !== null && val !== '') return val;
+  }
+  return '';
+}
+
+function normalizeRecord(entry, type, path) {
+  const r = { ...entry };
+  const normalized = {
+    ...r,
+    gameType: type,
+    _sourcePath: path,
+
+    // 共用欄位相容
+    id: firstNonEmpty(r.id, r.playerId, r.name),
+    name: firstNonEmpty(r.name, r.id, r.playerName),
+    score: firstNonEmpty(r.score, r.bestScore, r.totalScore, r.gradeTotalScore),
+    difficulty: firstNonEmpty(r.difficulty, r.diff, r.difficultyName),
+
+    // 節奏遊戲欄位相容：舊資料常用 song / diff / acc
+    songId: firstNonEmpty(r.songId, r.songKey, r.musicId),
+    songTitle: firstNonEmpty(r.songTitle, r.songName, r.song, r.title),
+    accuracy: firstNonEmpty(r.accuracy, r.acc),
+    maxCombo: firstNonEmpty(r.maxCombo, r.comboMax),
+
+    // 問答遊戲欄位相容
+    gradeBandName: firstNonEmpty(r.gradeBandName, r.gradeName),
+    subjectName: firstNonEmpty(r.subjectName, r.subjectLabel),
+    correctCount: firstNonEmpty(r.correctCount, r.correct, r.correctAnswers),
+    totalQuestions: firstNonEmpty(r.totalQuestions, r.questionsTotal, r.questionCount),
+    timeUsedTotal: firstNonEmpty(r.timeUsedTotal, r.timeUsed, r.duration),
+  };
+  return normalized;
+}
+
 // ── LOAD DATA ────────────────────────────────────────────────────────────────
 async function loadAllData() {
   setStatus('', '連線中…');
@@ -626,11 +725,7 @@ async function loadAllData() {
       const data = snap.val();
       Object.values(data).forEach(entry => {
         if (!entry || typeof entry !== 'object') return;
-        allRecords.push({
-          ...entry,
-          gameType:    type,
-          _sourcePath: path,
-        });
+        allRecords.push(normalizeRecord(entry, type, path));
       });
     });
 
@@ -662,6 +757,9 @@ function updateStats() {
   const scores = r.map(x => Number(x.score) || 0).filter(Boolean);
   const top = scores.length ? Math.max(...scores) : 0;
 
+  const songStats = getRhythmSongStats(r);
+  const topSong = songStats[0];
+
   set('s-total',     r.length);
   set('s-rhythm',    byType('rhythm'));
   set('s-tetris',    byType('tetris'));
@@ -669,6 +767,64 @@ function updateStats() {
   set('s-quiz',      byType('quiz'));
   set('s-players',   keys.size);
   set('s-topscore',  top ? top.toLocaleString() : '—');
+  set('s-top-song',  topSong ? `${topSong.title}×${topSong.count}` : '—');
+  renderSongSummary(songStats);
+}
+
+function getRhythmSongStats(records) {
+  const map = new Map();
+  records
+    .filter(r => r.gameType === 'rhythm')
+    .forEach(r => {
+      const title = v(r.songTitle || r.song || r.songId || '未命名歌曲');
+      const id = v(r.songId || title);
+      const key = id || title;
+      if (!map.has(key)) {
+        map.set(key, { songId: id, title, count: 0, players: new Set(), topScore: 0, accSum: 0, accCount: 0 });
+      }
+      const item = map.get(key);
+      item.count += 1;
+      if (r.playerKey) item.players.add(String(r.playerKey));
+      const score = Number(r.score) || 0;
+      if (score > item.topScore) item.topScore = score;
+      const acc = Number(r.accuracy);
+      if (!Number.isNaN(acc) && acc > 0) {
+        item.accSum += acc;
+        item.accCount += 1;
+      }
+    });
+
+  return Array.from(map.values())
+    .map(item => ({
+      ...item,
+      uniquePlayers: item.players.size,
+      avgAcc: item.accCount ? Math.round((item.accSum / item.accCount) * 10) / 10 : '',
+    }))
+    .sort((a, b) => b.count - a.count || b.uniquePlayers - a.uniquePlayers || b.topScore - a.topScore);
+}
+
+function renderSongSummary(songStats) {
+  const el = document.getElementById('songSummary');
+  if (!el) return;
+  if (!songStats.length) {
+    el.innerHTML = '<div class="song-summary-empty">目前沒有 rhythm 歌曲紀錄。</div>';
+    return;
+  }
+  el.innerHTML = songStats.slice(0, 6).map((s, i) => `
+    <div class="song-summary-item" title="${escapeHtml(s.title)}">
+      <div class="song-name">${i + 1}. ${escapeHtml(s.title)}</div>
+      <div class="song-meta">次數 ${s.count}｜玩家 ${s.uniquePlayers}｜最高 ${Number(s.topScore).toLocaleString()}｜均準 ${s.avgAcc === '' ? '—' : s.avgAcc + '%'}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function set(id, val) {
@@ -770,20 +926,20 @@ function renderTable(rows) {
       <td class="mono dim">${v(r.displayAvatarKey)}</td>
       <td class="mono dim">${v(r.avatarKey)}</td>
       <td class="score-val">${v(r.score)}</td>
+      <td>${v(r.songTitle)}</td>
+      <td class="mono dim">${v(r.songId)}</td>
       <td>${v(r.difficulty)}</td>
+      <td>${v(r.accuracy)}</td>
+      <td>${v(r.maxCombo)}</td>
+      <td>${v(r.perfect)}</td>
+      <td>${v(r.good)}</td>
+      <td>${v(r.miss)}</td>
       <td class="grade-val">${v(r.grade)}</td>
       <td>${v(r.gradeBandName || r.gradeBand)}</td>
       <td>${v(r.subjectName || r.subject)}</td>
       <td>${v(r.correctCount)}</td>
       <td>${v(r.totalQuestions)}</td>
       <td>${v(r.timeUsedTotal)}</td>
-      <td class="mono dim">${v(r.songId)}</td>
-      <td>${v(r.songTitle)}</td>
-      <td>${v(r.accuracy)}</td>
-      <td>${v(r.maxCombo)}</td>
-      <td>${v(r.perfect)}</td>
-      <td>${v(r.good)}</td>
-      <td>${v(r.miss)}</td>
       <td>${v(r.level)}</td>
       <td>${v(r.lines)}</td>
       <td>${v(r.combo)}</td>
@@ -808,9 +964,9 @@ const QUIZ_REWARD_AVATAR = {
   key: 'xiaov_base',
   name: '小V',
   file: 'assets/avatars/xiaov_base.png',
-  type: 'team',
+  type: 'special',
   visibility: 'hiddenUntilUnlocked',
-  unlockText: '完成問答遊戲解鎖',
+  unlockText: '完成任一遊戲解鎖',
 };
 
 function setQuizUnlockStatus(type, msg) {
@@ -820,10 +976,10 @@ function setQuizUnlockStatus(type, msg) {
   el.textContent = msg;
 }
 
-function getQuizRewardPlayers() {
+function getAnyGameRewardPlayers() {
   const map = new Map();
   allRecords
-    .filter(r => r.gameType === 'quiz' && r.playerKey)
+    .filter(r => r.playerKey)
     .forEach(r => {
       const pk = String(r.playerKey);
       const prev = map.get(pk);
@@ -834,18 +990,18 @@ function getQuizRewardPlayers() {
   return Array.from(map.values());
 }
 
-function previewQuizRewardUnlock() {
-  const players = getQuizRewardPlayers();
+function previewAnyGameRewardUnlock() {
+  const players = getAnyGameRewardPlayers();
   if (!players.length) {
-    setQuizUnlockStatus('err', '目前沒有讀到 gameLogs/quiz 的玩家紀錄。請先按重新整理，或確認問答遊戲有寫入 gameLogs/quiz。');
+    setQuizUnlockStatus('err', '目前沒有讀到任何含 playerKey 的遊戲紀錄。請先按重新整理，或確認各遊戲有寫入 gameLogs。');
     return;
   }
   const sample = players.slice(0, 6).map(r => `${r.name || r.id || '玩家'}(${r.playerKey})`).join('、');
   const more = players.length > 6 ? `…等 ${players.length} 位` : '';
-  setQuizUnlockStatus('', `預計解鎖 ${players.length} 位問答玩家：${sample}${more}`);
+  setQuizUnlockStatus('', `預計解鎖 ${players.length} 位曾玩過遊戲的玩家：${sample}${more}`);
 }
 
-async function ensureQuizRewardAvatarCatalog() {
+async function ensureAnyGameRewardAvatarCatalog() {
   const now = Date.now();
   const ref = db.ref(`avatarCatalog/${QUIZ_REWARD_AVATAR.key}`);
   const snap = await ref.once('value');
@@ -858,26 +1014,26 @@ async function ensureQuizRewardAvatarCatalog() {
     manualUnlock: true,
     fileName: 'xiaov_base.png',
     updatedAt: now,
-    updatedBy: 'vparty_admin_quiz_reward',
+    updatedBy: 'vparty_admin_any_game_reward',
     createdAt: current.createdAt || now,
-    createdBy: current.createdBy || 'vparty_admin_quiz_reward',
+    createdBy: current.createdBy || 'vparty_admin_any_game_reward',
   });
 }
 
-async function unlockXiaovBaseForQuizPlayers() {
+async function unlockXiaovBaseForAnyGamePlayers() {
   try {
     await ensureFirebaseReady();
-    const players = getQuizRewardPlayers();
+    const players = getAnyGameRewardPlayers();
     if (!players.length) {
-      setQuizUnlockStatus('err', '沒有可解鎖的問答玩家。請先重新整理並確認 gameLogs/quiz 有資料。');
+      setQuizUnlockStatus('err', '沒有可解鎖的玩家。請先重新整理並確認 gameLogs 有資料。');
       return;
     }
 
-    const ok = window.confirm(`確定要幫 ${players.length} 位曾玩過問答遊戲的玩家解鎖 xiaov_base 嗎？\n\n這只會寫入 players/{playerKey}/unlockedAvatars/xiaov_base，不會改排行榜、不會改顯示頭像。`);
+    const ok = window.confirm(`確定要幫 ${players.length} 位曾玩過任一遊戲的玩家解鎖 xiaov_base 嗎？\n\n這只會寫入 players/{playerKey}/unlockedAvatars/xiaov_base，不會改排行榜、不會改顯示頭像。`);
     if (!ok) return;
 
     setQuizUnlockStatus('', `解鎖中…0/${players.length}`);
-    await ensureQuizRewardAvatarCatalog();
+    await ensureAnyGameRewardAvatarCatalog();
 
     let added = 0;
     let skipped = 0;
@@ -902,8 +1058,8 @@ async function unlockXiaovBaseForQuizPlayers() {
             type: QUIZ_REWARD_AVATAR.type,
             visibility: QUIZ_REWARD_AVATAR.visibility,
             unlockText: QUIZ_REWARD_AVATAR.unlockText,
-            source: 'quiz-play-reward',
-            rewardGame: 'quiz',
+            source: 'any-game-complete-reward',
+            rewardGame: 'any',
             unlockedBy: 'vparty_admin',
             unlockedAt: now,
           });
@@ -930,9 +1086,8 @@ async function unlockXiaovBaseForQuizPlayers() {
 const CSV_COLS = [
   'datetime','gameType','id','name','playerKey',
   'baseAvatarKey','displayAvatarKey','avatarKey',
-  'score','difficulty','grade',
+  'score','songTitle','songId','difficulty','accuracy','maxCombo','perfect','good','miss','grade',
   'gradeBand','gradeBandName','subject','subjectName','correctCount','totalQuestions','timeUsedTotal',
-  'songId','songTitle','accuracy','maxCombo','perfect','good','miss',
   'level','lines','combo','peakCombo',
   'progressLabel','reachedStageId',
   'recipesFound','recipesTotal','treasuresFound','treasuresTotal',
