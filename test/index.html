@@ -864,7 +864,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.5.1-test-1</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.5.1-test-2</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1164,9 +1164,38 @@ function resolveAssetPath(url) {
   return BASE_PATH + url;
 }
 
+// 頭像專用：固定解析到 GitHub Pages repo root，避免 /test/ 版本抓成 /test/assets/...
+var PUBLIC_ASSET_BASE = 'https://vashyang1120.github.io/vparty-rhythm-game/';
+
+function resolveAvatarSrc(url) {
+  if (!url) return '';
+  url = String(url);
+  if (/^https?:\/\//i.test(url)) return url;
+
+  // 修正舊資料可能存成 ../assets/avatars/xxx.png
+  url = url.replace(/^\.\.\//, '');
+
+  // 已經是 repo path
+  if (url.indexOf('/vparty-rhythm-game/') === 0) {
+    return 'https://vashyang1120.github.io' + url;
+  }
+
+  // /assets/...
+  if (url.indexOf('/assets/') === 0) {
+    return PUBLIC_ASSET_BASE + url.replace(/^\//, '');
+  }
+
+  // assets/...
+  if (url.indexOf('assets/') === 0) {
+    return PUBLIC_ASSET_BASE + url;
+  }
+
+  return url;
+}
+
 var AVATAR_KEYS = ['boy1', 'girl1', 'boy2', 'girl2', 'cat1', 'cat2', 'fat1', 'girl3', 'curl1', 'boy3', 'girl4', 'girl5', 'curl2', 'dog1', 'dog2', 'dog3', 'dog4'];
 var AVATARS = AVATAR_KEYS.map(function(key) {
-  return { key: key, src: resolveAssetPath('assets/avatars/' + key + '.png') };
+  return { key: key, src: resolveAvatarSrc('assets/avatars/' + key + '.png') };
 });
 var SONGS = [];
 var lbSongId = "song001";
@@ -1371,13 +1400,13 @@ function getAvatarByKey(key) {
   if (builtin) return builtin;
   // 2. 固定解鎖頭像
   var ua = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
-  if (ua) return { key: ua.key, src: resolveAssetPath(ua.file) };
+  if (ua) return { key: ua.key, src: resolveAvatarSrc(ua.file) };
   // 3. avatarCatalog
   var cat = AVATAR_CATALOG[key];
-  if (cat && cat.file) return { key: key, src: resolveAssetPath(cat.file) };
+  if (cat && cat.file) return { key: key, src: resolveAvatarSrc(cat.file) };
   // 4. unlockedAvatars metadata（fallback：即使 catalog 已刪，玩家資料仍有 file）
   var unlocked = unlockedAvatars[key];
-  if (unlocked && unlocked.file) return { key: key, src: resolveAssetPath(unlocked.file) };
+  if (unlocked && unlocked.file) return { key: key, src: resolveAvatarSrc(unlocked.file) };
   return AVATARS[0];
 }
 
@@ -1877,7 +1906,7 @@ function _renderAvatarGrid() {
     // 顯示解鎖頭像（已解鎖可選，未解鎖灰階）
     UNLOCKABLE_AVATARS.forEach(function(av) {
       var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
-      var src = resolveAssetPath(av.file);
+      var src = resolveAvatarSrc(av.file);
       var wrap = document.createElement('div');
       wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;' + (isUnlocked ? 'cursor:pointer;' : 'cursor:default;');
 
@@ -1918,7 +1947,7 @@ function _renderAvatarGrid() {
       var isHidden = cat.hiddenUntilUnlocked || cat.visibility === 'hiddenUntilUnlocked';
       var isUnlocked = !!(unlockedAvatars[avKey] && unlockedAvatars[avKey].unlocked);
       if (isHidden && !isUnlocked) return; // 未解鎖完全不顯示
-      var src = resolveAssetPath(cat.file || 'assets/avatars/' + avKey + '.png');
+      var src = resolveAvatarSrc(cat.file || 'assets/avatars/' + avKey + '.png');
       var wrap = document.createElement('div');
       wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;' + (isUnlocked ? 'cursor:pointer;' : 'cursor:default;');
       var img = document.createElement('img');
@@ -1956,7 +1985,7 @@ function _renderAvatarGrid() {
       if (!uEntry || !uEntry.unlocked || !uEntry.file) return;
       if (UNLOCKABLE_AVATARS.find(function(a){ return a.key === avKey; })) return;
       if (AVATAR_CATALOG[avKey]) return;
-      var src = resolveAssetPath(uEntry.file);
+      var src = resolveAvatarSrc(uEntry.file);
       var wrap = document.createElement('div');
       wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;cursor:pointer;';
       var img = document.createElement('img');
@@ -3027,7 +3056,7 @@ function renderUnlockPanel() {
   // 1. 固定解鎖頭像 UNLOCKABLE_AVATARS
   UNLOCKABLE_AVATARS.forEach(function(av) {
     var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
-    var src = resolveAssetPath(av.file);
+    var src = resolveAvatarSrc(av.file);
     grid.appendChild(_makeAvatarCard(av.key, av.name, src, isUnlocked, av.unlockText));
   });
 
@@ -3038,7 +3067,7 @@ function renderUnlockPanel() {
     var isHidden = cat.hiddenUntilUnlocked || cat.visibility === 'hiddenUntilUnlocked';
     var isUnlocked = !!(unlockedAvatars[avKey] && unlockedAvatars[avKey].unlocked);
     if (isHidden && !isUnlocked) return; // 未解鎖隱藏頭像完全不顯示
-    var src = resolveAssetPath(cat.file || 'assets/avatars/' + avKey + '.png');
+    var src = resolveAvatarSrc(cat.file || 'assets/avatars/' + avKey + '.png');
     var unlockTextStr = (!isHidden && !isUnlocked) ? (cat.unlockText || cat.hint || '') : '';
     grid.appendChild(_makeAvatarCard(avKey, cat.name || avKey, src, isUnlocked, unlockTextStr));
   });
@@ -3049,7 +3078,7 @@ function renderUnlockPanel() {
     if (!uEntry || !uEntry.unlocked || !uEntry.file) return;
     if (UNLOCKABLE_AVATARS.find(function(a){ return a.key === avKey; })) return;
     if (AVATAR_CATALOG[avKey]) return;
-    var src = resolveAssetPath(uEntry.file);
+    var src = resolveAvatarSrc(uEntry.file);
     grid.appendChild(_makeAvatarCard(avKey, uEntry.name || avKey, src, true, null));
   });
 }
@@ -3517,7 +3546,7 @@ function renderLBRows(el, scores) {
     // 顯示頭像：優先 displayAvatarKey，再 avatarKey，再 baseAvatarKey，最後 avatarSrc
     var dispKey = s.displayAvatarKey || s.avatarKey || s.baseAvatarKey;
     var avObj = dispKey ? getAvatarByKey(dispKey) : null;
-    var avSrc = (avObj && avObj.src) || s.avatarSrc || '';
+    var avSrc = resolveAvatarSrc((avObj && avObj.src) || s.avatarSrc || '');
     var displayScore = (s.bestScore || s.score || 0);
     return '<div class="lbr">' +
       '<div class="lbr-rank ' + (rc[i]||'') + '">' + (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)) + '</div>' +
@@ -4065,7 +4094,7 @@ window.addEventListener('orientationchange', function() {
 //  未來新增歌曲：只需更新 songs.json + 上傳新資料夾
 // ═══════════════════════════════════════════════════
 
-// 頭像路徑由最頂部的 resolveAssetPath 統一管理，此處已移除重複定義
+// 頭像路徑由最頂部的 resolveAvatarSrc 統一管理，此處已移除重複定義
 
 // 音訊/影片：由 songs.json 指定路徑（相對路徑）
 // songs.json 範例：
