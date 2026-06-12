@@ -875,7 +875,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.0-test-1</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.0-test-2</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1203,6 +1203,24 @@ function resolveAvatarSrc(url) {
   }
 
   return url;
+}
+
+function resolvePublicAssetSrc(url) {
+  if (!url) return '';
+  url = String(url);
+  if (/^https?:\/\//i.test(url)) return url;
+
+  url = url.replace(/^\.\.\//, '');
+
+  if (url.indexOf('/vparty-rhythm-game/') === 0) {
+    return 'https://vashyang1120.github.io' + url;
+  }
+
+  if (url.indexOf('/') === 0) {
+    return PUBLIC_ASSET_BASE + url.replace(/^\//, '');
+  }
+
+  return PUBLIC_ASSET_BASE + url;
 }
 
 var AVATAR_KEYS = ['boy1', 'girl1', 'boy2', 'girl2', 'cat1', 'cat2', 'fat1', 'girl3', 'curl1', 'boy3', 'girl4', 'girl5', 'curl2', 'dog1', 'dog2', 'dog3', 'dog4'];
@@ -2154,7 +2172,7 @@ var SONGS = [], selectedSong = null;
 function normalizeSongPaths(song) {
   var s = Object.assign({}, song);
   ['audioUrl','videoUrl','beatmapUrl','srtUrl','cover'].forEach(function(k) {
-    if (s[k]) s[k] = resolveAssetPath(s[k]);
+    if (s[k]) s[k] = resolvePublicAssetSrc(s[k]);
   });
   return s;
 }
