@@ -612,6 +612,20 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 #s-lb h2 { font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive; color:var(--pink2);
   font-size:18px; letter-spacing:.08em; }
 #lb-list { width:min(560px,94vw); }
+#lb-diff-tabs {
+  display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:0 0 8px;
+}
+.lb-diff-tab {
+  padding:7px 18px; border-radius:var(--r-xl); border:2px solid var(--pink-lt);
+  background:#fff; color:var(--pink2); font-size:12px; font-weight:900;
+  font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive;
+  cursor:pointer; letter-spacing:.06em; box-shadow:var(--shadow-sm); transition:all .15s;
+}
+.lb-diff-tab:hover { border-color:var(--pink); transform:translateY(-1px); }
+.lb-diff-tab.on {
+  background:linear-gradient(135deg,var(--pink),var(--pink2)); color:#fff;
+  border-color:var(--pink); box-shadow:0 4px 14px rgba(232,111,154,.4);
+}
 .lbr { display:flex; align-items:center; gap:10px; padding:9px 12px;
   border-bottom:1.5px solid rgba(255,213,226,.35); }
 .lbr:last-child { border-bottom:none; }
@@ -850,7 +864,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.5.0</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.5.1</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1064,6 +1078,7 @@ body.portrait-game #s-admin {
   <div id="lb-inner">
     <h2 id="lb-title">🏆 排行榜</h2>
     <div id="lb-song-tabs" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:4px 0 8px;"></div>
+    <div id="lb-diff-tabs" aria-label="排行榜難度切換"></div>
     <div id="lb-list"></div>
     <div style="height:60px;"></div><!-- spacer for fixed button -->
   </div>
@@ -1149,12 +1164,59 @@ function resolveAssetPath(url) {
   return BASE_PATH + url;
 }
 
+// 頭像專用：固定解析到 GitHub Pages repo root，避免 /test/ 版本抓成 /test/assets/...
+var PUBLIC_ASSET_BASE = 'https://vashyang1120.github.io/vparty-rhythm-game/';
+
+function resolveAvatarSrc(url) {
+  if (!url) return '';
+  url = String(url);
+  if (/^https?:\/\//i.test(url)) return url;
+
+  // 修正舊資料可能存成 ../assets/avatars/xxx.png
+  url = url.replace(/^\.\.\//, '');
+
+  // 已經是 repo path
+  if (url.indexOf('/vparty-rhythm-game/') === 0) {
+    return 'https://vashyang1120.github.io' + url;
+  }
+
+  // /assets/...
+  if (url.indexOf('/assets/') === 0) {
+    return PUBLIC_ASSET_BASE + url.replace(/^\//, '');
+  }
+
+  // assets/...
+  if (url.indexOf('assets/') === 0) {
+    return PUBLIC_ASSET_BASE + url;
+  }
+
+  return url;
+}
+
 var AVATAR_KEYS = ['boy1', 'girl1', 'boy2', 'girl2', 'cat1', 'cat2', 'fat1', 'girl3', 'curl1', 'boy3', 'girl4', 'girl5', 'curl2', 'dog1', 'dog2', 'dog3', 'dog4'];
 var AVATARS = AVATAR_KEYS.map(function(key) {
-  return { key: key, src: resolveAssetPath('assets/avatars/' + key + '.png') };
+  return { key: key, src: resolveAvatarSrc('assets/avatars/' + key + '.png') };
 });
 var SONGS = [];
 var lbSongId = "song001";
+var lbDiff = 'all';
+
+function normalizeDiff(value) {
+  value = String(value || 'normal').toLowerCase();
+  if (value === 'easy' || value === 'normal' || value === 'hard') return value;
+  return 'normal';
+}
+
+function normalizeLBDiff(value) {
+  value = String(value || 'all').toLowerCase();
+  if (value === 'all' || value === 'easy' || value === 'normal' || value === 'hard') return value;
+  return 'all';
+}
+
+function getSelectedGameDiff() {
+  var btn = document.querySelector('#diff-wrap .db.on');
+  return normalizeDiff(btn && btn.dataset ? btn.dataset.d : 'normal');
+}
 
 
 // ═══════════════════════════════════════════════════════
@@ -1344,13 +1406,13 @@ function getAvatarByKey(key) {
   if (builtin) return builtin;
   // 2. 固定解鎖頭像
   var ua = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
-  if (ua) return { key: ua.key, src: resolveAssetPath(ua.file) };
+  if (ua) return { key: ua.key, src: resolveAvatarSrc(ua.file) };
   // 3. avatarCatalog
   var cat = AVATAR_CATALOG[key];
-  if (cat && cat.file) return { key: key, src: resolveAssetPath(cat.file) };
+  if (cat && cat.file) return { key: key, src: resolveAvatarSrc(cat.file) };
   // 4. unlockedAvatars metadata（fallback：即使 catalog 已刪，玩家資料仍有 file）
   var unlocked = unlockedAvatars[key];
-  if (unlocked && unlocked.file) return { key: key, src: resolveAssetPath(unlocked.file) };
+  if (unlocked && unlocked.file) return { key: key, src: resolveAvatarSrc(unlocked.file) };
   return AVATARS[0];
 }
 
@@ -1850,7 +1912,7 @@ function _renderAvatarGrid() {
     // 顯示解鎖頭像（已解鎖可選，未解鎖灰階）
     UNLOCKABLE_AVATARS.forEach(function(av) {
       var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
-      var src = resolveAssetPath(av.file);
+      var src = resolveAvatarSrc(av.file);
       var wrap = document.createElement('div');
       wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;' + (isUnlocked ? 'cursor:pointer;' : 'cursor:default;');
 
@@ -1891,7 +1953,7 @@ function _renderAvatarGrid() {
       var isHidden = cat.hiddenUntilUnlocked || cat.visibility === 'hiddenUntilUnlocked';
       var isUnlocked = !!(unlockedAvatars[avKey] && unlockedAvatars[avKey].unlocked);
       if (isHidden && !isUnlocked) return; // 未解鎖完全不顯示
-      var src = resolveAssetPath(cat.file || 'assets/avatars/' + avKey + '.png');
+      var src = resolveAvatarSrc(cat.file || 'assets/avatars/' + avKey + '.png');
       var wrap = document.createElement('div');
       wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;' + (isUnlocked ? 'cursor:pointer;' : 'cursor:default;');
       var img = document.createElement('img');
@@ -1929,7 +1991,7 @@ function _renderAvatarGrid() {
       if (!uEntry || !uEntry.unlocked || !uEntry.file) return;
       if (UNLOCKABLE_AVATARS.find(function(a){ return a.key === avKey; })) return;
       if (AVATAR_CATALOG[avKey]) return;
-      var src = resolveAssetPath(uEntry.file);
+      var src = resolveAvatarSrc(uEntry.file);
       var wrap = document.createElement('div');
       wrap.style.cssText = 'display:inline-block;position:relative;margin:3px;cursor:pointer;';
       var img = document.createElement('img');
@@ -2035,6 +2097,7 @@ function go(id) {
 document.getElementById('btn-play').onclick        = function(){ initProfile(); go('s-profile'); };
 document.getElementById('btn-lb-go').onclick = function(){
   lbSongId = (selectedSong && selectedSong.id) || 'song001';
+  lbDiff = 'all';
   ensureSongsLoaded().then(function() { renderLB(); go('s-lb'); });
 };
 document.getElementById('btn-profile-back').onclick = function(){ go('s-title'); };
@@ -2052,6 +2115,7 @@ document.getElementById('btn-quit').onclick         = quitGame;
 document.getElementById('btn-retry').onclick        = initGame;
 document.getElementById('btn-r-lb').onclick = function(){
   lbSongId = (G.song && G.song.id) || 'song001';
+  lbDiff = normalizeDiff(G.diff || 'normal');
   ensureSongsLoaded().then(function() { renderLB(); go('s-lb'); });
 };
 document.getElementById('btn-r-home').onclick       = function(){ go('s-title'); };
@@ -2998,7 +3062,7 @@ function renderUnlockPanel() {
   // 1. 固定解鎖頭像 UNLOCKABLE_AVATARS
   UNLOCKABLE_AVATARS.forEach(function(av) {
     var isUnlocked = !!(unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked);
-    var src = resolveAssetPath(av.file);
+    var src = resolveAvatarSrc(av.file);
     grid.appendChild(_makeAvatarCard(av.key, av.name, src, isUnlocked, av.unlockText));
   });
 
@@ -3009,7 +3073,7 @@ function renderUnlockPanel() {
     var isHidden = cat.hiddenUntilUnlocked || cat.visibility === 'hiddenUntilUnlocked';
     var isUnlocked = !!(unlockedAvatars[avKey] && unlockedAvatars[avKey].unlocked);
     if (isHidden && !isUnlocked) return; // 未解鎖隱藏頭像完全不顯示
-    var src = resolveAssetPath(cat.file || 'assets/avatars/' + avKey + '.png');
+    var src = resolveAvatarSrc(cat.file || 'assets/avatars/' + avKey + '.png');
     var unlockTextStr = (!isHidden && !isUnlocked) ? (cat.unlockText || cat.hint || '') : '';
     grid.appendChild(_makeAvatarCard(avKey, cat.name || avKey, src, isUnlocked, unlockTextStr));
   });
@@ -3020,7 +3084,7 @@ function renderUnlockPanel() {
     if (!uEntry || !uEntry.unlocked || !uEntry.file) return;
     if (UNLOCKABLE_AVATARS.find(function(a){ return a.key === avKey; })) return;
     if (AVATAR_CATALOG[avKey]) return;
-    var src = resolveAssetPath(uEntry.file);
+    var src = resolveAvatarSrc(uEntry.file);
     grid.appendChild(_makeAvatarCard(avKey, uEntry.name || avKey, src, true, null));
   });
 }
@@ -3218,14 +3282,16 @@ function saveScore(grade, acc) {
 function renderLB() {
   var lt = document.getElementById('lb-title');
   var tabs = document.getElementById('lb-song-tabs');
+  var diffTabs = document.getElementById('lb-diff-tabs');
+  lbDiff = normalizeLBDiff(lbDiff);
 
   function _doRender() {
-    // 更新標題
+    // 更新標題：歌曲｜排行榜模式（ALL 或實際難度）
     if (lt && SONGS && SONGS.length) {
       var cs = SONGS.find(function(x){ return x.id === lbSongId; });
-      lt.textContent = '🏆 ' + (cs ? cs.title : '排行榜');
+      lt.textContent = '🏆 ' + (cs ? cs.title : '排行榜') + '｜' + lbDiff.toUpperCase();
     }
-    // 渲染歌曲選擇 tabs
+    // 渲染歌曲選擇 tabs：切歌時保留目前排行榜模式
     if (tabs && SONGS && SONGS.length) {
       tabs.innerHTML = '';
       SONGS.forEach(function(s) {
@@ -3237,6 +3303,18 @@ function renderLB() {
           (isActive ? 'background:var(--pink);color:#fff;font-weight:800;' : 'background:transparent;color:var(--pink);');
         b.onclick = function(){ lbSongId = s.id; renderLB(); };
         tabs.appendChild(b);
+      });
+    }
+    // 渲染排行榜專用難度 tabs：ALL 為單曲總榜，不影響選歌畫面的遊戲難度按鈕
+    if (diffTabs) {
+      diffTabs.innerHTML = '';
+      ['all', 'easy', 'normal', 'hard'].forEach(function(d) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'lb-diff-tab' + (d === lbDiff ? ' on' : '');
+        b.textContent = d.toUpperCase();
+        b.onclick = function(){ lbDiff = d; renderLB(); };
+        diffTabs.appendChild(b);
       });
     }
     // 讀取排行榜資料
@@ -3263,22 +3341,27 @@ function renderLBFromFirebase() {
   var el = document.getElementById('lb-list');
   el.innerHTML = '<div class="lb-loading">載入中... 🌸</div>';
   var songId = lbSongId || 'song001';
+  var lbMode = normalizeLBDiff(lbDiff);
+  lbDiff = lbMode;
+  var isAll = lbMode === 'all';
 
-  function normalizeEntry(v, source) {
+  function normalizeEntry(v, source, forcedDiff) {
+    var actualDiff = normalizeDiff(forcedDiff || v.diff || v.difficulty || 'normal');
     var pk = v.playerKey || makePlayerKey(v.name, v.avatarKey);
     return {
       playerKey:        pk,
-      name:             v.name || '',
+      name:             v.name || v.id || '',
       baseAvatarKey:    v.baseAvatarKey || v.avatarKey || 'boy1',
       displayAvatarKey: v.displayAvatarKey || v.avatarKey || 'boy1',
       avatarKey:        v.avatarKey || 'boy1',
       avatarSrc:        v.avatarSrc || '',
       bestScore:        v.bestScore || v.score || 0,
       score:            v.score || v.bestScore || 0,
-      songId:           v.songId || 'song001',
-      diff:             v.diff || 'normal',
+      songId:           v.songId || songId,
+      song:             v.song || v.songTitle || '',
+      diff:             actualDiff,
       grade:            v.grade || '',
-      acc:              v.acc || 0,
+      acc:              v.acc || v.accuracy || 0,
       maxCombo:         v.maxCombo || 0,
       ts:               v.ts || v.updatedAt || 0,
       updatedAt:        v.updatedAt || v.ts || 0,
@@ -3286,46 +3369,63 @@ function renderLBFromFirebase() {
     };
   }
 
-  // p1：同時讀 leaderboards 的 easy / normal / hard 三個節點
-  var diffs = ['easy', 'normal', 'hard'];
-  var lbPromises = diffs.map(function(d) {
-    return firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + d)
+  // p1：ALL 讀目前歌曲的 easy / normal / hard 三個節點；分榜只讀單一難度節點
+  var p1;
+  if (isAll) {
+    p1 = Promise.all(['easy', 'normal', 'hard'].map(function(d) {
+      return firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + d)
+        .once('value').then(function(snap) {
+          var arr = [];
+          snap.forEach(function(child) {
+            var v = child.val();
+            if (v && (v.name || v.id)) arr.push(normalizeEntry(v, 'leaderboards', d));
+          });
+          return arr;
+        }).catch(function() { return []; });
+    })).then(function(groups) {
+      return [].concat(groups[0], groups[1], groups[2]);
+    });
+  } else {
+    p1 = firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + lbMode)
       .once('value').then(function(snap) {
         var arr = [];
         snap.forEach(function(child) {
           var v = child.val();
-          if (v && v.name) arr.push(normalizeEntry(v, 'leaderboards'));
+          if (v && (v.name || v.id)) arr.push(normalizeEntry(v, 'leaderboards', lbMode));
         });
         return arr;
       }).catch(function() { return []; });
-  });
-  var p1 = Promise.all(lbPromises).then(function(arrays) {
-    return [].concat.apply([], arrays);
-  });
+  }
 
-  // p2：舊 scores，只依 songId 篩選，不篩 diff
+  // p2：舊 scores 相容；ALL 只依 songId 篩選，分榜依 songId + diff 篩選
   var p2 = firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300)
     .once('value').then(function(snap) {
       var arr = [];
       snap.forEach(function(child) {
         var v = child.val();
-        if (v && v.name && (v.songId || 'song001') === songId) {
-          arr.push(normalizeEntry(v, 'legacyScores'));
-        }
+        if (!v || !(v.name || v.id)) return;
+        var vSongId = v.songId || 'song001';
+        var vDiff = normalizeDiff(v.diff || v.difficulty || 'normal');
+        if (vSongId !== songId) return;
+        if (!isAll && vDiff !== lbMode) return;
+        arr.push(normalizeEntry(v, 'legacyScores', vDiff));
       });
       return arr;
     }).catch(function() { return []; });
 
-  // p3：dev scores（TEST_MODE 時才有，正式版 writeScores === legacyScoresReadOnly 所以跳過）
+  // p3：dev scores（TEST_MODE 時才有，正式版 writeScores === legacyScoresReadOnly 所以跳過）；ALL 只依 songId 篩選，分榜依 songId + diff 篩選
   var p3 = (DB_PATHS.writeScores !== DB_PATHS.legacyScoresReadOnly)
     ? firebaseDb.ref(DB_PATHS.writeScores).limitToLast(300)
         .once('value').then(function(snap) {
           var arr = [];
           snap.forEach(function(child) {
             var v = child.val();
-            if (v && v.name && (v.songId || 'song001') === songId) {
-              arr.push(normalizeEntry(v, 'devScores'));
-            }
+            if (!v || !(v.name || v.id)) return;
+            var vSongId = v.songId || 'song001';
+            var vDiff = normalizeDiff(v.diff || v.difficulty || 'normal');
+            if (vSongId !== songId) return;
+            if (!isAll && vDiff !== lbMode) return;
+            arr.push(normalizeEntry(v, 'devScores', vDiff));
           });
           return arr;
         }).catch(function() { return []; })
@@ -3333,20 +3433,13 @@ function renderLBFromFirebase() {
 
   Promise.all([p1, p2, p3]).then(function(results) {
     var all = [].concat(results[0], results[1], results[2]);
-    // 同一 playerKey 只保留最高分，分數相同保留較新的
-    var best = {};
-    all.forEach(function(e) {
-      var k = e.playerKey;
-      if (!k) return;
-      if (!best[k]) {
-        best[k] = e;
-      } else if (e.bestScore > best[k].bestScore ||
-                (e.bestScore === best[k].bestScore && (e.ts || 0) > (best[k].ts || 0))) {
-        best[k] = e;
-      }
+    // ALL：同一 songId 內跨難度取每位玩家最高分；分榜：同一 songId + diff 內取每位玩家最高分
+    var filtered = all.filter(function(e) {
+      if ((e.songId || 'song001') !== songId) return false;
+      if (!isAll && normalizeDiff(e.diff) !== lbMode) return false;
+      return true;
     });
-    var merged = Object.values(best);
-    merged.sort(function(a, b) { return b.bestScore - a.bestScore; });
+    var merged = dedupeByPlayerKeyOrName(filtered);
     _renderLBResult(el, merged);
   }).catch(function(e) {
     console.warn('[Firebase] LB merge failed:', e.message);
@@ -3390,18 +3483,65 @@ function showPlayerRankBanner(rank, score, total) {
 
 function renderLBFromLocal() {
   var el = document.getElementById('lb-list');
-  var allScores = JSON.parse(localStorage.getItem('vPartyScores') || '[]');
-  var top15 = dedupeByName(allScores).slice(0, 15);
+  var songId = lbSongId || 'song001';
+  var lbMode = normalizeLBDiff(lbDiff);
+  lbDiff = lbMode;
+  var isAll = lbMode === 'all';
+  var allScores = [];
+
+  // v2.5.0 寫入格式：vPartyScores_{songId}
+  try {
+    allScores = allScores.concat(JSON.parse(localStorage.getItem('vPartyScores_' + songId) || '[]'));
+  } catch(e) {}
+  // 舊 fallback 格式：vPartyScores
+  try {
+    allScores = allScores.concat(JSON.parse(localStorage.getItem('vPartyScores') || '[]'));
+  } catch(e2) {}
+
+  var filtered = allScores.filter(function(s) {
+    if ((s.songId || 'song001') !== songId) return false;
+    if (!isAll && normalizeDiff(s.diff || s.difficulty || 'normal') !== lbMode) return false;
+    return true;
+  }).map(function(s) {
+    s.bestScore = s.bestScore || s.score || 0;
+    s.diff = normalizeDiff(s.diff || s.difficulty || 'normal');
+    return s;
+  });
+  filtered.sort(function(a,b) {
+    var sa = a.bestScore || a.score || 0;
+    var sb = b.bestScore || b.score || 0;
+    if (sb !== sa) return sb - sa;
+    return (b.ts || b.updatedAt || 0) - (a.ts || a.updatedAt || 0);
+  });
+  var top15 = dedupeByPlayerKeyOrName(filtered).slice(0, 15);
   renderLBRows(el, top15);
+
   // Show player rank if outside top 15
-  var myName = PLAYER.id;
-  if (myName && myName !== '玩家') {
-    var myIdx = allScores.findIndex(function(s){ return s.name === myName; });
-    if (myIdx >= 15) {
-      showPlayerRankBanner(myIdx + 1, allScores[myIdx].score, allScores.length);
-    }
+  var myKey = PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+  var deduped = dedupeByPlayerKeyOrName(filtered);
+  var myIdx = deduped.findIndex(function(s){ return (s.playerKey && s.playerKey === myKey) || s.name === PLAYER.id; });
+  if (myIdx >= 15) {
+    showPlayerRankBanner(myIdx + 1, deduped[myIdx].bestScore || deduped[myIdx].score || 0, deduped.length);
   }
 }
+
+function dedupeByPlayerKeyOrName(scores) {
+  var best = {};
+  scores.forEach(function(s) {
+    var key = s.playerKey || (s.name || '').trim();
+    if (!key) return;
+    var score = s.bestScore || s.score || 0;
+    var old = best[key];
+    if (!old || score > (old.bestScore || old.score || 0) ||
+        (score === (old.bestScore || old.score || 0) && (s.ts || s.updatedAt || 0) > (old.ts || old.updatedAt || 0))) {
+      best[key] = s;
+    }
+  });
+  return Object.values(best).sort(function(a,b){
+    return (b.bestScore || b.score || 0) - (a.bestScore || a.score || 0);
+  });
+}
+
 
 
 // ── 排行榜去重：每個 ID 只保留最高分（防洗榜）──
@@ -3431,14 +3571,14 @@ function renderLBRows(el, scores) {
     // 顯示頭像：優先 displayAvatarKey，再 avatarKey，再 baseAvatarKey，最後 avatarSrc
     var dispKey = s.displayAvatarKey || s.avatarKey || s.baseAvatarKey;
     var avObj = dispKey ? getAvatarByKey(dispKey) : null;
-    var avSrc = (avObj && avObj.src) || s.avatarSrc || '';
+    var avSrc = resolveAvatarSrc((avObj && avObj.src) || s.avatarSrc || '');
     var displayScore = (s.bestScore || s.score || 0);
     return '<div class="lbr">' +
       '<div class="lbr-rank ' + (rc[i]||'') + '">' + (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)) + '</div>' +
       '<img class="lbr-av" src="' + avSrc + '" alt="' + s.name + '" onerror="this.style.display=\'none\'">' +
       '<div class="lbr-info">' +
         '<div class="lbr-name">' + s.name + '</div>' +
-        '<div class="lbr-meta">' + (s.song||'') + ' · ' + (s.date||s.updatedAt&&new Date(s.updatedAt).toLocaleDateString('zh-TW')||'') + ' · ACC ' + (s.acc||0) + '%</div>' +
+        '<div class="lbr-meta">' + (s.song||s.songTitle||'') + ' · ' + (s.date||s.updatedAt&&new Date(s.updatedAt).toLocaleDateString('zh-TW')||'') + ' · ACC ' + (s.acc||0) + '%</div>' +
       '</div>' +
       '<div class="lbr-diff">' + (s.diff||'').toUpperCase() + '</div>' +
       '<div style="font-family:\'Fredoka One\',cursive;font-size:13px;color:var(--purple2);margin:0 6px;flex-shrink:0">' + (s.grade||'') + '</div>' +
@@ -3979,7 +4119,7 @@ window.addEventListener('orientationchange', function() {
 //  未來新增歌曲：只需更新 songs.json + 上傳新資料夾
 // ═══════════════════════════════════════════════════
 
-// 頭像路徑由最頂部的 resolveAssetPath 統一管理，此處已移除重複定義
+// 頭像路徑由最頂部的 resolveAvatarSrc 統一管理，此處已移除重複定義
 
 // 音訊/影片：由 songs.json 指定路徑（相對路徑）
 // songs.json 範例：
