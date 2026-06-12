@@ -864,7 +864,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.5.1-test-2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.5.1-test-3</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1199,12 +1199,18 @@ var AVATARS = AVATAR_KEYS.map(function(key) {
 });
 var SONGS = [];
 var lbSongId = "song001";
-var lbDiff = 'normal';
+var lbDiff = 'all';
 
 function normalizeDiff(value) {
   value = String(value || 'normal').toLowerCase();
   if (value === 'easy' || value === 'normal' || value === 'hard') return value;
   return 'normal';
+}
+
+function normalizeLBDiff(value) {
+  value = String(value || 'all').toLowerCase();
+  if (value === 'all' || value === 'easy' || value === 'normal' || value === 'hard') return value;
+  return 'all';
 }
 
 function getSelectedGameDiff() {
@@ -2091,7 +2097,7 @@ function go(id) {
 document.getElementById('btn-play').onclick        = function(){ initProfile(); go('s-profile'); };
 document.getElementById('btn-lb-go').onclick = function(){
   lbSongId = (selectedSong && selectedSong.id) || 'song001';
-  lbDiff = getSelectedGameDiff();
+  lbDiff = 'all';
   ensureSongsLoaded().then(function() { renderLB(); go('s-lb'); });
 };
 document.getElementById('btn-profile-back').onclick = function(){ go('s-title'); };
@@ -3277,15 +3283,15 @@ function renderLB() {
   var lt = document.getElementById('lb-title');
   var tabs = document.getElementById('lb-song-tabs');
   var diffTabs = document.getElementById('lb-diff-tabs');
-  lbDiff = normalizeDiff(lbDiff);
+  lbDiff = normalizeLBDiff(lbDiff);
 
   function _doRender() {
-    // 更新標題：歌曲｜難度
+    // 更新標題：歌曲｜排行榜模式（ALL 或實際難度）
     if (lt && SONGS && SONGS.length) {
       var cs = SONGS.find(function(x){ return x.id === lbSongId; });
       lt.textContent = '🏆 ' + (cs ? cs.title : '排行榜') + '｜' + lbDiff.toUpperCase();
     }
-    // 渲染歌曲選擇 tabs：切歌時保留目前排行榜難度
+    // 渲染歌曲選擇 tabs：切歌時保留目前排行榜模式
     if (tabs && SONGS && SONGS.length) {
       tabs.innerHTML = '';
       SONGS.forEach(function(s) {
@@ -3299,10 +3305,10 @@ function renderLB() {
         tabs.appendChild(b);
       });
     }
-    // 渲染排行榜專用難度 tabs：不影響選歌畫面的遊戲難度按鈕
+    // 渲染排行榜專用難度 tabs：ALL 為單曲總榜，不影響選歌畫面的遊戲難度按鈕
     if (diffTabs) {
       diffTabs.innerHTML = '';
-      ['easy', 'normal', 'hard'].forEach(function(d) {
+      ['all', 'easy', 'normal', 'hard'].forEach(function(d) {
         var b = document.createElement('button');
         b.type = 'button';
         b.className = 'lb-diff-tab' + (d === lbDiff ? ' on' : '');
@@ -3335,10 +3341,12 @@ function renderLBFromFirebase() {
   var el = document.getElementById('lb-list');
   el.innerHTML = '<div class="lb-loading">載入中... 🌸</div>';
   var songId = lbSongId || 'song001';
-  var diff = normalizeDiff(lbDiff);
-  lbDiff = diff;
+  var lbMode = normalizeLBDiff(lbDiff);
+  lbDiff = lbMode;
+  var isAll = lbMode === 'all';
 
-  function normalizeEntry(v, source) {
+  function normalizeEntry(v, source, forcedDiff) {
+    var actualDiff = normalizeDiff(forcedDiff || v.diff || v.difficulty || 'normal');
     var pk = v.playerKey || makePlayerKey(v.name, v.avatarKey);
     return {
       playerKey:        pk,
@@ -3349,9 +3357,9 @@ function renderLBFromFirebase() {
       avatarSrc:        v.avatarSrc || '',
       bestScore:        v.bestScore || v.score || 0,
       score:            v.score || v.bestScore || 0,
-      songId:           v.songId || 'song001',
+      songId:           v.songId || songId,
       song:             v.song || v.songTitle || '',
-      diff:             normalizeDiff(v.diff || v.difficulty || 'normal'),
+      diff:             actualDiff,
       grade:            v.grade || '',
       acc:              v.acc || v.accuracy || 0,
       maxCombo:         v.maxCombo || 0,
@@ -3361,32 +3369,51 @@ function renderLBFromFirebase() {
     };
   }
 
-  // p1：只讀目前歌曲 + 目前難度的 leaderboard 節點
-  var p1 = firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + diff)
-    .once('value').then(function(snap) {
-      var arr = [];
-      snap.forEach(function(child) {
-        var v = child.val();
-        if (v && (v.name || v.id)) arr.push(normalizeEntry(v, 'leaderboards'));
-      });
-      return arr;
-    }).catch(function() { return []; });
+  // p1：ALL 讀目前歌曲的 easy / normal / hard 三個節點；分榜只讀單一難度節點
+  var p1;
+  if (isAll) {
+    p1 = Promise.all(['easy', 'normal', 'hard'].map(function(d) {
+      return firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + d)
+        .once('value').then(function(snap) {
+          var arr = [];
+          snap.forEach(function(child) {
+            var v = child.val();
+            if (v && (v.name || v.id)) arr.push(normalizeEntry(v, 'leaderboards', d));
+          });
+          return arr;
+        }).catch(function() { return []; });
+    })).then(function(groups) {
+      return [].concat(groups[0], groups[1], groups[2]);
+    });
+  } else {
+    p1 = firebaseDb.ref(DB_PATHS.leaderboardsBase + '/' + songId + '/' + lbMode)
+      .once('value').then(function(snap) {
+        var arr = [];
+        snap.forEach(function(child) {
+          var v = child.val();
+          if (v && (v.name || v.id)) arr.push(normalizeEntry(v, 'leaderboards', lbMode));
+        });
+        return arr;
+      }).catch(function() { return []; });
+  }
 
-  // p2：舊 scores 相容；同時依 songId + diff 篩選
+  // p2：舊 scores 相容；ALL 只依 songId 篩選，分榜依 songId + diff 篩選
   var p2 = firebaseDb.ref(DB_PATHS.legacyScoresReadOnly).limitToLast(300)
     .once('value').then(function(snap) {
       var arr = [];
       snap.forEach(function(child) {
         var v = child.val();
         if (!v || !(v.name || v.id)) return;
-        if ((v.songId || 'song001') === songId && normalizeDiff(v.diff || v.difficulty || 'normal') === diff) {
-          arr.push(normalizeEntry(v, 'legacyScores'));
-        }
+        var vSongId = v.songId || 'song001';
+        var vDiff = normalizeDiff(v.diff || v.difficulty || 'normal');
+        if (vSongId !== songId) return;
+        if (!isAll && vDiff !== lbMode) return;
+        arr.push(normalizeEntry(v, 'legacyScores', vDiff));
       });
       return arr;
     }).catch(function() { return []; });
 
-  // p3：dev scores（TEST_MODE 時才有，正式版 writeScores === legacyScoresReadOnly 所以跳過）；同時依 songId + diff 篩選
+  // p3：dev scores（TEST_MODE 時才有，正式版 writeScores === legacyScoresReadOnly 所以跳過）；ALL 只依 songId 篩選，分榜依 songId + diff 篩選
   var p3 = (DB_PATHS.writeScores !== DB_PATHS.legacyScoresReadOnly)
     ? firebaseDb.ref(DB_PATHS.writeScores).limitToLast(300)
         .once('value').then(function(snap) {
@@ -3394,9 +3421,11 @@ function renderLBFromFirebase() {
           snap.forEach(function(child) {
             var v = child.val();
             if (!v || !(v.name || v.id)) return;
-            if ((v.songId || 'song001') === songId && normalizeDiff(v.diff || v.difficulty || 'normal') === diff) {
-              arr.push(normalizeEntry(v, 'devScores'));
-            }
+            var vSongId = v.songId || 'song001';
+            var vDiff = normalizeDiff(v.diff || v.difficulty || 'normal');
+            if (vSongId !== songId) return;
+            if (!isAll && vDiff !== lbMode) return;
+            arr.push(normalizeEntry(v, 'devScores', vDiff));
           });
           return arr;
         }).catch(function() { return []; })
@@ -3404,21 +3433,13 @@ function renderLBFromFirebase() {
 
   Promise.all([p1, p2, p3]).then(function(results) {
     var all = [].concat(results[0], results[1], results[2]);
-    // 同一 songId + diff 內，同一 playerKey 只保留最高分；分數相同保留較新的
-    var best = {};
-    all.forEach(function(e) {
-      if ((e.songId || 'song001') !== songId || normalizeDiff(e.diff) !== diff) return;
-      var k = e.playerKey;
-      if (!k) return;
-      if (!best[k]) {
-        best[k] = e;
-      } else if (e.bestScore > best[k].bestScore ||
-                (e.bestScore === best[k].bestScore && (e.ts || 0) > (best[k].ts || 0))) {
-        best[k] = e;
-      }
+    // ALL：同一 songId 內跨難度取每位玩家最高分；分榜：同一 songId + diff 內取每位玩家最高分
+    var filtered = all.filter(function(e) {
+      if ((e.songId || 'song001') !== songId) return false;
+      if (!isAll && normalizeDiff(e.diff) !== lbMode) return false;
+      return true;
     });
-    var merged = Object.values(best);
-    merged.sort(function(a, b) { return (b.bestScore || b.score || 0) - (a.bestScore || a.score || 0); });
+    var merged = dedupeByPlayerKeyOrName(filtered);
     _renderLBResult(el, merged);
   }).catch(function(e) {
     console.warn('[Firebase] LB merge failed:', e.message);
@@ -3463,8 +3484,9 @@ function showPlayerRankBanner(rank, score, total) {
 function renderLBFromLocal() {
   var el = document.getElementById('lb-list');
   var songId = lbSongId || 'song001';
-  var diff = normalizeDiff(lbDiff);
-  lbDiff = diff;
+  var lbMode = normalizeLBDiff(lbDiff);
+  lbDiff = lbMode;
+  var isAll = lbMode === 'all';
   var allScores = [];
 
   // v2.5.0 寫入格式：vPartyScores_{songId}
@@ -3477,7 +3499,9 @@ function renderLBFromLocal() {
   } catch(e2) {}
 
   var filtered = allScores.filter(function(s) {
-    return (s.songId || 'song001') === songId && normalizeDiff(s.diff || s.difficulty || 'normal') === diff;
+    if ((s.songId || 'song001') !== songId) return false;
+    if (!isAll && normalizeDiff(s.diff || s.difficulty || 'normal') !== lbMode) return false;
+    return true;
   }).map(function(s) {
     s.bestScore = s.bestScore || s.score || 0;
     s.diff = normalizeDiff(s.diff || s.difficulty || 'normal');
@@ -3494,9 +3518,10 @@ function renderLBFromLocal() {
 
   // Show player rank if outside top 15
   var myKey = PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
-  var myIdx = filtered.findIndex(function(s){ return (s.playerKey && s.playerKey === myKey) || s.name === PLAYER.id; });
+  var deduped = dedupeByPlayerKeyOrName(filtered);
+  var myIdx = deduped.findIndex(function(s){ return (s.playerKey && s.playerKey === myKey) || s.name === PLAYER.id; });
   if (myIdx >= 15) {
-    showPlayerRankBanner(myIdx + 1, filtered[myIdx].bestScore || filtered[myIdx].score || 0, filtered.length);
+    showPlayerRankBanner(myIdx + 1, deduped[myIdx].bestScore || deduped[myIdx].score || 0, deduped.length);
   }
 }
 
