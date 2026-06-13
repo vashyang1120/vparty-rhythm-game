@@ -1301,7 +1301,7 @@ body.portrait-game #s-admin {
 
 
 
-/* v2.6.2-rhythm-vcoin-wallet-ui-sync-test-2: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
+/* v2.6.1-test-4: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
 :root{
   --ui-font:'Noto Sans TC','Microsoft JhengHei','微軟正黑體','PingFang TC','Nunito',sans-serif;
   --display-font:'Fredoka One','Nunito',cursive;
@@ -1664,7 +1664,7 @@ button,input,select,textarea{
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.2-rhythm-vcoin-wallet-ui-sync-test-2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.3-rhythm-daily-challenge-test-1</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1797,10 +1797,10 @@ button,input,select,textarea{
         <span>任一遊戲完成一次：+30 V幣<br>每日限領一次<br>跨遊戲共用，不是每款遊戲各 +30</span>
         <em id="vcoin-common-daily-status">狀態：讀取中...</em>
       </div>
-      <div class="vcoin-task-card coming">
+      <div class="vcoin-task-card" id="vcoin-rhythm-daily-card">
         <strong>🎵 節奏今日挑戰</strong>
-        <span>即將開放：完成每日指定歌曲或難度任務可獲得 +10 V幣<br>每日限領一次</span>
-        <em>即將開放</em>
+        <span>完成任一首歌：+10 V幣<br>每日限領一次</span>
+        <em id="vcoin-rhythm-daily-status">狀態：讀取中...</em>
       </div>
       <div class="vcoin-task-card">
         <strong>🧱 方塊今日挑戰</strong>
@@ -3084,7 +3084,7 @@ function go(id) {
 
 
 // ═══════════════════════════════════════════════════════
-//  VCOIN WALLET UI FOUNDATION（不讀 vCoinLogs 明細，不做節奏今日挑戰發幣）
+//  VCOIN WALLET UI FOUNDATION（顯示餘額與每日狀態，不讀 vCoinLogs 明細）
 // ═══════════════════════════════════════════════════════
 var LAST_KNOWN_VCOIN_BALANCE = null;
 function setLastKnownVcoinBalance(v) {
@@ -3171,11 +3171,18 @@ function readVcoinWalletStatus() {
     }).catch(function() {
       return { status: 'unknown', ok: false };
     });
-    return Promise.all([balancePromise, dailyPromise]).then(function(vals) {
+    var rhythmDailyPromise = firebaseDb.ref(basePath + '/dailyChallenges/rhythm/' + dateKey).once('value').then(function(snap) {
+      var v = snap.val();
+      return { status: (v && v.claimed === true) ? 'claimed' : 'not_claimed', ok: true };
+    }).catch(function() {
+      return { status: 'unknown', ok: false };
+    });
+    return Promise.all([balancePromise, dailyPromise, rhythmDailyPromise]).then(function(vals) {
       return {
         balance: vals[0].value,
         balanceOk: vals[0].ok,
         dailyStatus: vals[1].status,
+        rhythmDailyStatus: vals[2].status,
         dateKey: dateKey
       };
     });
@@ -3188,6 +3195,8 @@ function renderVcoinWalletPanel(status) {
   var summary = document.getElementById('vcoin-wallet-summary');
   var statusEl = document.getElementById('vcoin-common-daily-status');
   var dailyCard = document.getElementById('vcoin-common-daily-card');
+  var rhythmStatusEl = document.getElementById('vcoin-rhythm-daily-status');
+  var rhythmCard = document.getElementById('vcoin-rhythm-daily-card');
   if (summary) {
     summary.textContent = status.balanceOk ? formatWalletBalanceText(status.balance) : '目前餘額：—';
   }
@@ -3196,6 +3205,12 @@ function renderVcoinWalletPanel(status) {
     if (status.dailyStatus === 'claimed') statusEl.textContent = '狀態：✅ 今日已領取';
     else if (status.dailyStatus === 'not_claimed') statusEl.textContent = '狀態：尚未領取';
     else statusEl.textContent = '狀態：狀態暫時無法確認';
+  }
+  if (rhythmCard) rhythmCard.classList.toggle('done', status.rhythmDailyStatus === 'claimed');
+  if (rhythmStatusEl) {
+    if (status.rhythmDailyStatus === 'claimed') rhythmStatusEl.textContent = '狀態：✅ 今日已領取';
+    else if (status.rhythmDailyStatus === 'not_claimed') rhythmStatusEl.textContent = '狀態：尚未領取';
+    else rhythmStatusEl.textContent = '狀態：狀態暫時無法確認';
   }
 }
 function openVcoinWalletPanel() {
@@ -4212,11 +4227,14 @@ function endGame() {
   var isNew = saveScore(g, acc);
   document.getElementById('r-rec').classList.toggle('hidden', !isNew);
   setResultVCoinMessage('V幣同步中...', 'loading');
-  claimDailyVCoinsForRhythm().then(function(result) {
-    if (result.claimed) {
-      setResultVCoinMessage('今日完成獎勵 +' + result.amount + ' V幣！目前餘額：' + result.balance + ' V幣', 'ok');
-    } else {
-      setResultVCoinMessage('今日 V幣已領取，目前餘額：' + result.balance + ' V幣', 'claimed');
+  claimRhythmVCoinRewardsAfterSong().then(function(result) {
+    setResultVCoinMessage(buildRhythmVCoinResultMessage(result), result && result.totalClaimed > 0 ? 'ok' : 'claimed');
+    if (result && typeof result.balance !== 'undefined' && result.balance !== null && isFinite(Number(result.balance))) {
+      setLastKnownVcoinBalance(Number(result.balance));
+      var balanceEl = document.getElementById('profile-vcoin-balance');
+      if (balanceEl) balanceEl.textContent = Number(result.balance) + ' V幣';
+      updateGamePlayerCard();
+      if (isVcoinWalletVisible()) readVcoinWalletStatus().then(renderVcoinWalletPanel);
     }
   }).catch(function() {
     setResultVCoinMessage('V幣同步暫時失敗，請稍後再試', 'error');
@@ -4559,6 +4577,132 @@ function claimDailyVCoinsForRhythm() {
       };
     });
   });
+}
+
+function claimRhythmDailyChallengeVCoins() {
+  var amount = 10;
+  var dateKey = getTaiwanDateKey();
+  var now = Date.now();
+  var pKey = PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+  if (!pKey) return Promise.reject(new Error('Missing playerKey'));
+
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) throw new Error('Firebase not ready');
+
+    var playerRef = firebaseDb.ref(DB_PATHS.players + '/' + pKey);
+    var logKey = firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/vCoinLogs').push().key;
+    var didClaim = false;
+    var songId = (G.song && G.song.id) || (selectedSong && selectedSong.id) || '';
+    var diff = normalizeDiff((G && G.diff) || 'normal');
+
+    return playerRef.transaction(function(player) {
+      didClaim = false;
+      player = player || {};
+      player.wallet = player.wallet || {};
+      player.dailyChallenges = player.dailyChallenges || {};
+      player.dailyChallenges.rhythm = player.dailyChallenges.rhythm || {};
+      player.vCoinLogs = player.vCoinLogs || {};
+
+      var daily = player.dailyChallenges.rhythm[dateKey];
+      if (daily && daily.claimed === true) {
+        return player;
+      }
+
+      var currentBalance = Number(player.wallet.balance || 0);
+      if (!isFinite(currentBalance)) currentBalance = 0;
+      var newBalance = currentBalance + amount;
+      player.wallet = {
+        balance: newBalance,
+        updatedAt: now
+      };
+      player.dailyChallenges.rhythm[dateKey] = {
+        claimed: true,
+        amount: amount,
+        gameId: 'rhythm',
+        challengeKey: 'rhythm_daily_complete_song',
+        reason: '節奏今日挑戰',
+        songId: songId,
+        diff: diff,
+        dateKey: dateKey,
+        claimedAt: now,
+        ts: now
+      };
+      player.vCoinLogs[logKey] = {
+        type: 'earn',
+        gameId: 'rhythm',
+        source: 'rhythm_daily_challenge',
+        reason: '節奏今日挑戰',
+        challengeKey: 'rhythm_daily_complete_song',
+        amount: amount,
+        dateKey: dateKey,
+        songId: songId,
+        diff: diff,
+        createdAt: now,
+        ts: now
+      };
+      didClaim = true;
+      return player;
+    }).then(function(result) {
+      if (!result.committed) throw new Error('Rhythm daily challenge transaction not committed');
+      var player = result.snapshot && result.snapshot.val() || {};
+      var wallet = player.wallet || {};
+      var balance = Number(wallet.balance || 0);
+      return {
+        claimed: didClaim,
+        amount: didClaim ? amount : 0,
+        balance: balance,
+        dateKey: dateKey,
+        challengeKey: 'rhythm_daily_complete_song'
+      };
+    });
+  });
+}
+
+function claimRhythmVCoinRewardsAfterSong() {
+  var dailyResult = null;
+  var dailyError = false;
+  return claimDailyVCoinsForRhythm().then(function(result) {
+    dailyResult = result;
+    return claimRhythmDailyChallengeVCoins();
+  }).catch(function() {
+    dailyError = true;
+    dailyResult = { claimed: false, amount: 0, balance: getLastKnownVcoinBalance(), error: true };
+    return claimRhythmDailyChallengeVCoins();
+  }).then(function(challengeResult) {
+    var balance = (challengeResult && typeof challengeResult.balance !== 'undefined') ? challengeResult.balance : (dailyResult && dailyResult.balance);
+    var total = Number((dailyResult && dailyResult.amount) || 0) + Number((challengeResult && challengeResult.amount) || 0);
+    return { daily: dailyResult, challenge: challengeResult, balance: balance, totalClaimed: total, dailyError: dailyError, challengeError: false };
+  }).catch(function() {
+    var balance = dailyResult && typeof dailyResult.balance !== 'undefined' ? dailyResult.balance : getLastKnownVcoinBalance();
+    return { daily: dailyResult, challenge: { claimed: false, amount: 0, balance: balance, error: true }, balance: balance, totalClaimed: Number((dailyResult && dailyResult.amount) || 0), dailyError: dailyError, challengeError: true };
+  });
+}
+
+function buildRhythmVCoinResultMessage(result) {
+  result = result || {};
+  var daily = result.daily || {};
+  var challenge = result.challenge || {};
+  var balanceText = (result.balance !== null && typeof result.balance !== 'undefined' && isFinite(Number(result.balance))) ? '目前餘額：' + Number(result.balance) + ' V幣' : '';
+  var lines = [];
+  if (daily.error || result.dailyError) {
+    lines.push('每日遊玩獎勵狀態暫時無法確認');
+  } else if (daily.claimed) {
+    lines.push('每日遊玩獎勵 +' + Number(daily.amount || 30) + ' V幣');
+  } else {
+    lines.push('每日遊玩獎勵今日已領取');
+  }
+  if (challenge.error || result.challengeError) {
+    lines.push('節奏今日挑戰狀態暫時無法確認');
+  } else if (challenge.claimed) {
+    lines.push('節奏今日挑戰 +' + Number(challenge.amount || 10) + ' V幣');
+  } else {
+    lines.push('節奏今日挑戰今日已領取');
+  }
+  if (result.totalClaimed > 0) {
+    lines.push('合計 +' + result.totalClaimed + ' V幣');
+  }
+  if (balanceText) lines.push(balanceText);
+  return lines.join('｜') || '今日 V幣獎勵已領取';
 }
 
 // Save score to Firebase gameLogs + leaderboards + localStorage fallback
