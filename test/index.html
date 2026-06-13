@@ -223,56 +223,66 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 }
 
 
+
 .profile-note {
   width:min(620px,92vw);
   color:var(--text2);
-  font-size:11px;
+  font-size:12px;
   font-weight:700;
-  line-height:1.55;
-  text-align:center;
-  background:rgba(255,255,255,.78);
-  border:1.5px solid var(--pink-lt);
-  border-radius:var(--r-md);
-  padding:10px 12px;
+  line-height:1.65;
+  text-align:left;
+  background:#fff;
+  border:1.5px solid rgba(255,182,215,.45);
+  border-radius:20px;
+  padding:12px 14px;
   box-shadow:var(--shadow-sm);
-  margin:0 auto 12px;
+  margin:0 auto 14px;
 }
 .profile-id-box {
-  width:min(360px,90vw);
-  margin:0 auto 12px;
-  text-align:center;
+  width:min(480px,94vw);
+  margin:0 auto 14px;
 }
-.profile-avatar-cards {
-  display:flex;
+.profile-id-box label {
+  display:block;
+  font-size:12px;
+  color:var(--text2);
+  font-weight:900;
+  letter-spacing:.06em;
+  margin-bottom:6px;
+}
+.profile-avatar-cards,
+.profile-preview-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:12px;
-  justify-content:center;
-  align-items:stretch;
-  flex-wrap:wrap;
-  width:min(620px,94vw);
-  margin:0 auto 12px;
+  width:min(480px,94vw);
+  margin:0 auto 14px;
 }
-.profile-avatar-card {
-  width:min(260px,44vw);
-  min-width:170px;
+.profile-avatar-card,
+.avatar-box {
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:6px;
+  gap:7px;
+  min-width:0;
   background:#fff;
   border:1.5px solid var(--pink-lt);
-  border-radius:var(--r-lg);
+  border-radius:20px;
   box-shadow:var(--shadow-sm);
-  padding:12px 10px;
+  padding:14px 12px;
+  text-align:center;
 }
-.profile-avatar-card-title {
-  font-size:12px;
+.profile-avatar-card-title,
+.avatar-box h3 {
+  margin:0;
+  font-size:13px;
   font-weight:900;
   color:var(--pink2);
-  letter-spacing:.05em;
+  letter-spacing:.04em;
 }
 .profile-avatar-preview-wrap {
-  width:66px;
-  height:66px;
+  width:70px;
+  height:70px;
   padding:0;
 }
 .profile-avatar-preview-img {
@@ -280,36 +290,48 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   height:100%;
   object-fit:cover;
   border-radius:50%;
-  border:3px solid #fff;
-  box-shadow:0 0 0 2px var(--pink), 0 4px 12px rgba(232,111,154,.25);
+  border:4px solid #fff;
+  background:var(--pink-bg);
+  box-shadow:0 0 0 3px var(--pink), 0 6px 18px rgba(232,111,154,.25);
 }
 .profile-avatar-label {
-  font-size:10px;
+  min-height:18px;
+  font-size:11px;
   color:var(--text);
-  font-weight:800;
+  font-weight:900;
   text-align:center;
-  word-break:break-all;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:100%;
 }
 .profile-avatar-desc {
-  min-height:34px;
-  font-size:9px;
+  min-height:38px;
+  font-size:10px;
   color:var(--text2);
   text-align:center;
   line-height:1.45;
+  font-weight:700;
 }
 .profile-mini-btn {
-  font-size:10px;
-  padding:5px 12px;
+  font-size:11px;
+  padding:7px 13px;
+}
+.btn-profile-entry {
+  background:linear-gradient(135deg,#C86BFF 0%,#FF7FB5 100%);
+  color:#fff;
+  border:none;
+  box-shadow:0 10px 24px rgba(200,107,255,.22),0 4px 14px rgba(255,127,181,.22);
+}
+.btn-profile-entry:hover {
+  transform:translateY(-1px);
+  box-shadow:0 12px 28px rgba(200,107,255,.30),0 5px 16px rgba(255,127,181,.28);
 }
 .profile-data-card {
-  width:min(620px,94vw);
-  margin:0 auto 12px;
-  background:linear-gradient(135deg,var(--purple-bg),#fff);
-  border:1.5px solid var(--purple-lt);
-  border-radius:var(--r-lg);
-  box-shadow:0 6px 18px rgba(155,93,229,.14), var(--shadow-sm);
-  overflow:hidden;
-  min-height:58px;
+  width:min(480px,94vw);
+  margin:0 auto 14px;
+  overflow:visible;
+  flex:0 0 auto;
 }
 .profile-data-toggle {
   width:100%;
@@ -318,123 +340,190 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  padding:12px 16px;
-  background:linear-gradient(135deg,var(--purple-bg),#fff);
-  border:none;
-  color:var(--purple);
+  padding:13px 16px;
+  background:#fff;
+  border:1.8px solid var(--pink-lt);
+  border-radius:22px;
+  color:var(--text);
   font-family:'Nunito','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,sans-serif;
-  font-size:14px;
   font-weight:900;
   cursor:pointer;
   text-align:left;
-  line-height:1.35;
+  box-shadow:0 6px 18px rgba(232,111,154,.13),var(--shadow-sm);
+}
+.profile-data-toggle-main {
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-width:0;
+}
+.profile-data-toggle-title {
+  font-size:14px;
+  color:var(--text);
+  line-height:1.2;
+}
+.profile-data-toggle-hint {
+  font-size:10px;
+  color:var(--text2);
+  line-height:1.2;
 }
 .profile-data-toggle-icon {
   flex-shrink:0;
-  font-size:16px;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--pink-bg);
   color:var(--pink2);
+  font-size:16px;
+  font-weight:900;
 }
 .profile-data-content {
+  margin-top:8px;
   max-height:min(300px,42vh);
   overflow-y:auto;
-  padding:10px 14px 12px;
-  transition:max-height .2s ease, padding .2s ease;
-}
-.profile-data-card.collapsed {
-  background:linear-gradient(135deg,#f8f0ff 0%,#fff5fb 100%);
-  border-color:rgba(155,93,229,.35);
-  box-shadow:0 8px 22px rgba(155,93,229,.16);
-}
-.profile-data-card.collapsed .profile-data-toggle {
-  min-height:58px;
-  background:linear-gradient(135deg,#f8f0ff 0%,#fff5fb 100%);
+  -webkit-overflow-scrolling:touch;
+  padding:12px;
+  background:#fff;
+  border:1.5px solid rgba(255,182,215,.45);
+  border-radius:20px;
+  box-shadow:var(--shadow-sm);
 }
 .profile-data-card.collapsed .profile-data-content {
-  max-height:0;
-  padding-top:0;
-  padding-bottom:0;
-  border-top:none;
-  overflow:hidden;
+  display:none;
 }
-.profile-data-row {
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
-  padding:8px 0;
-  border-bottom:1px solid rgba(232,111,154,.14);
+.profile-status-grid {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.profile-data-row,
+.identity-box,
+.profile-wallet-box,
+.profile-title-panel {
+  display:block;
+  background:linear-gradient(135deg,#fff,var(--pink-bg));
+  border:1.5px solid rgba(255,182,215,.55);
+  border-radius:16px;
+  padding:10px 12px;
   font-size:12px;
   color:var(--text2);
-  font-weight:800;
-}
-.profile-data-row:last-child { border-bottom:none; }
-.profile-data-row strong {
-  color:var(--text);
   font-weight:900;
-  text-align:right;
+}
+.profile-data-row span,
+.identity-box > div,
+.profile-wallet-box span,
+.profile-title-current span {
+  display:block;
+  font-size:11px;
+  color:var(--text2);
+  font-weight:900;
+  letter-spacing:.06em;
+  margin-bottom:4px;
+}
+.profile-data-row strong,
+.identity-box strong,
+.profile-wallet-box strong,
+.profile-title-current strong {
+  display:block;
+  color:var(--pink2);
+  font-size:15px;
+  font-weight:900;
+  text-align:left;
   overflow-wrap:anywhere;
 }
-.profile-key-row strong {
-  font-size:10px;
-  line-height:1.35;
-  max-width:70%;
+.profile-wallet-box strong,
+.profile-data-vcoin strong {
+  font-family:'Fredoka One','M PLUS Rounded 1c',cursive;
+  color:#d59a00;
+  font-size:20px;
+}
+.profile-title-current strong,
+.profile-data-title strong {
+  color:var(--purple);
+}
+.profile-player-key-debug {
+  display:none;
+  margin-top:6px;
+  font-size:9px;
+  color:var(--text2);
+  word-break:break-all;
+  background:var(--pink-bg);
+  border-radius:10px;
+  padding:6px 8px;
 }
 .profile-unlock-hint {
-  font-size:9px;
+  font-size:10px;
   color:var(--text2);
   text-align:center;
   margin:6px auto 0;
-  width:min(620px,94vw);
+  width:min(480px,94vw);
+  font-weight:800;
 }
 #avatar-edit-section {
-  width:min(620px,94vw);
-  margin:0 auto 12px;
-  background:rgba(255,255,255,.78);
-  border:1.5px solid var(--pink-lt);
-  border-radius:var(--r-lg);
+  width:min(480px,94vw);
+  margin:0 auto 14px;
+  background:#fff;
+  border:1.5px solid rgba(255,182,215,.45);
+  border-radius:20px;
   box-shadow:var(--shadow-sm);
-  padding:12px;
+  padding:14px;
+}
+#avatar-grid-label {
+  color:var(--pink2)!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+#avatar-grid-hint {
+  background:var(--pink-bg);
+  border-radius:14px;
+  padding:8px 10px;
+  color:var(--text2)!important;
+  font-size:10px!important;
+  font-weight:800;
+  line-height:1.55;
 }
 #profile-action-bar {
   position:fixed;
   left:50%;
   bottom:14px;
   transform:translateX(-50%);
-  width:min(620px,94vw);
+  width:min(540px,calc(100vw - 24px));
   display:flex;
   justify-content:center;
+  align-items:center;
   gap:8px;
   flex-wrap:wrap;
-  padding:10px;
-  background:rgba(255,255,255,.9);
-  border:1.5px solid var(--pink-lt);
-  border-radius:var(--r-lg);
-  box-shadow:0 8px 24px rgba(232,111,154,.22);
-  backdrop-filter:blur(10px);
+  padding:10px 12px;
+  background:rgba(255,255,255,.94);
+  border:1.5px solid rgba(255,182,215,.62);
+  border-radius:22px;
+  box-shadow:0 10px 30px rgba(155,93,229,.18);
+  backdrop-filter:blur(12px);
   z-index:50;
 }
 #profile-action-bar .btn {
   font-size:12px;
   padding:9px 14px;
 }
-.btn-profile-go-brand {
-  background:linear-gradient(135deg,#C86BFF 0%,#FF7FB5 100%) !important;
-  color:#fff !important;
-  border:none !important;
-  box-shadow:0 10px 24px rgba(200,107,255,.22) !important;
-}
-.btn-profile-go-brand:hover {
-  box-shadow:0 12px 28px rgba(255,127,181,.32) !important;
-  transform:translateY(-1px);
+#profile-action-bar .btn-p {
+  min-width:126px;
 }
 @media (max-width:520px) {
   #s-profile { padding:12px 10px 150px 10px; }
-  .profile-avatar-cards { gap:8px; }
-  .profile-avatar-card {
-    width:calc(50% - 6px);
-    min-width:145px;
-    padding:10px 8px;
+  .profile-avatar-cards,
+  .profile-preview-grid { gap:8px; }
+  .profile-avatar-card,
+  .avatar-box {
+    padding:11px 8px;
   }
+  .profile-avatar-card-title,
+  .avatar-box h3 { font-size:12px; }
+  .profile-avatar-preview-wrap { width:62px; height:62px; }
+  .profile-avatar-desc { font-size:9px; min-height:42px; }
+  .profile-data-toggle{min-height:58px;padding:12px 14px;}
   .profile-data-content { max-height:38vh; }
   #profile-action-bar {
     bottom:10px;
@@ -449,6 +538,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
     padding:8px 8px;
   }
 }
+
 
 /* ════════════════════════════════════
    SONG LIST
@@ -1103,13 +1193,13 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1-rhythm-profile-ui-sync-test-2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1-rhythm-profile-ui-sync-test-3</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
   </div>
   <div class="btn-row" style="margin-top:8px;">
-    <button class="btn btn-b btn-profile-go-brand" id="btn-profile-go">👤 角色設定</button>
+    <button class="btn btn-profile-entry" id="btn-profile-go">👤 角色設定</button>
     <button class="btn btn-b" onclick="window.open('https://youtube.com/playlist?list=PLCxWyaG1VhB7wvvXJtJ3T8qfxNM6wOUQx&si=EosteOeSS8U4zSjG','_blank')">🎬 觀看MV</button>
     <button class="btn btn-y" style="color:#7a5500;" onclick="history.back()">← 回到遊戲選單</button>
   </div>
@@ -1123,80 +1213,73 @@ body.portrait-game #s-admin {
 <div id="s-profile" class="screen off">
   <h2>👤 角色設定</h2>
   <div class="profile-note">
-    ID + 身份頭像是遊戲身分證，會影響成績、排行榜與解鎖歸屬。<br>
-    顯示頭像只影響外觀，不改變玩家身份。
+    ID + 身份頭像就像遊戲身分證，會決定成績、解鎖和排行榜歸在哪一個玩家身上；只要更換 ID 或身份頭像，就會變成另一個玩家身份。顯示頭像只是外觀造型，不會影響成績。
   </div>
 
-  <!-- ID 輸入：永遠顯示，不放入玩家資料收合卡 -->
   <div class="id-box profile-id-box">
     <label>玩家 ID（最多 12 字）</label>
     <input type="text" id="player-id-input" placeholder="輸入你的名字" maxlength="12">
-    <div id="profile-identity-dirty-hint" style="display:none;font-size:9px;color:var(--pink2);margin-top:4px;text-align:center;">
+    <div id="profile-identity-dirty-hint" style="display:none;font-size:10px;color:var(--pink2);margin-top:6px;text-align:center;font-weight:800;">
       ⚠️ 你正在變更玩家身份，請按「確認身份」完成切換。
     </div>
   </div>
 
-  <!-- 雙頭像區塊：永遠顯示，不放入玩家資料收合卡 -->
-  <div class="profile-avatar-cards">
-    <!-- 身份頭像 -->
-    <div class="profile-avatar-card">
-      <div class="profile-avatar-card-title">身份頭像</div>
+  <div class="profile-avatar-cards profile-preview-grid">
+    <div class="profile-avatar-card avatar-box">
+      <h3>🔑 身份頭像</h3>
       <div class="avatar-preview-wrap profile-avatar-preview-wrap">
-        <img id="base-avatar-preview" src="" alt="" class="profile-avatar-preview-img">
+        <img id="base-avatar-preview" src="" alt="身份頭像" class="profile-avatar-preview-img">
       </div>
-      <div class="profile-avatar-label" id="profile-base-label">boy1</div>
-      <div class="profile-avatar-desc">
-        ID + 身份頭像決定玩家身份、成績與解鎖歸屬。
-      </div>
-      <button class="btn btn-s profile-mini-btn" onclick="startEditBaseAvatar()">變更身份頭像</button>
+      <div class="profile-avatar-label" id="profile-base-label">—</div>
+      <div class="profile-avatar-desc">遊戲身分證：ID + 身份頭像決定成績與解鎖歸屬</div>
+      <button class="btn btn-outline profile-mini-btn" onclick="startEditBaseAvatar()">選身份頭像</button>
     </div>
-    <!-- 顯示頭像 -->
-    <div class="profile-avatar-card">
-      <div class="profile-avatar-card-title">顯示頭像</div>
+    <div class="profile-avatar-card avatar-box">
+      <h3>🎨 顯示頭像</h3>
       <div class="avatar-preview-wrap profile-avatar-preview-wrap">
-        <img id="display-avatar-preview" src="" alt="" class="profile-avatar-preview-img">
+        <img id="display-avatar-preview" src="" alt="顯示頭像" class="profile-avatar-preview-img">
       </div>
-      <div class="profile-avatar-label" id="profile-display-label">boy1</div>
-      <div class="profile-avatar-desc">
-        只影響外觀與排行榜顯示，不改變玩家身份。
-      </div>
-      <button class="btn btn-b profile-mini-btn" onclick="startEditDisplayAvatar()">變更顯示頭像</button>
+      <div class="profile-avatar-label" id="profile-display-label">—</div>
+      <div class="profile-avatar-desc">外觀造型：只改畫面顯示，不改變玩家身份</div>
+      <button class="btn btn-outline profile-mini-btn" onclick="startEditDisplayAvatar()">選顯示頭像</button>
     </div>
   </div>
 
-  <!-- 玩家資料收合卡：只收合目前身份 / V幣 / 稱號 -->
   <div class="profile-data-card" id="profile-data-card">
-    <button type="button" class="profile-data-toggle" id="profile-data-toggle" onclick="toggleProfileDataCard()">
-      <span id="profile-data-toggle-text">👤 玩家資料　點擊可收合</span>
+    <button type="button" class="profile-data-toggle" id="profile-data-toggle" onclick="toggleProfileDataCard()" aria-expanded="true">
+      <span class="profile-data-toggle-main">
+        <span class="profile-data-toggle-title">👤 玩家資料</span>
+        <span class="profile-data-toggle-hint" id="profile-data-toggle-text">點擊可收合</span>
+      </span>
       <span class="profile-data-toggle-icon" id="profile-data-toggle-icon">⌃</span>
     </button>
     <div class="profile-data-content" id="profile-data-content">
-      <div class="profile-data-row">
-        <span>目前遊戲身份</span>
-        <strong id="profile-current-identity">—</strong>
-      </div>
-      <div class="profile-data-row profile-key-row">
-        <span>playerKey</span>
-        <strong id="profile-player-key">—</strong>
-      </div>
-      <div class="profile-data-row">
-        <span>目前 V幣</span>
-        <strong id="profile-vcoin-balance">—</strong>
-      </div>
-      <div class="profile-data-row">
-        <span>目前稱號</span>
-        <strong id="profile-equipped-title">未裝備</strong>
+      <div class="profile-status-grid">
+        <div class="identity-box profile-data-row">
+          <span>目前遊戲身份</span>
+          <strong id="profile-current-identity">身份：—</strong>
+          <code id="profile-player-key" class="profile-player-key-debug">—</code>
+        </div>
+        <div class="profile-wallet-box profile-data-row profile-data-vcoin">
+          <span>🪙 目前 V幣</span>
+          <strong id="profile-vcoin-balance">—</strong>
+        </div>
+        <div class="profile-title-panel profile-data-row profile-data-title">
+          <div class="profile-title-current">
+            <span>🎖 目前稱號</span>
+            <strong id="profile-equipped-title">未裝備</strong>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 頭像選擇格（模式切換） -->
   <div id="avatar-edit-section" style="display:none;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;justify-content:center;">
-      <label id="avatar-grid-label" style="font-weight:700;color:var(--text);font-size:13px;">選擇身份頭像</label>
-      <button class="btn btn-d" style="font-size:10px;padding:3px 10px;" onclick="closeAvatarEdit()">✕ 收起</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;justify-content:space-between;">
+      <label id="avatar-grid-label">選擇身份頭像</label>
+      <button class="btn btn-d" style="font-size:10px;padding:4px 10px;" onclick="closeAvatarEdit()">✕ 收起</button>
     </div>
-    <div id="avatar-grid-hint" style="font-size:9px;color:var(--pink2);margin-bottom:6px;text-align:center;"></div>
+    <div id="avatar-grid-hint"></div>
     <div id="avatar-grid"></div>
   </div>
 
@@ -1206,8 +1289,8 @@ body.portrait-game #s-admin {
 
   <div id="profile-action-bar">
     <button class="btn btn-p" id="btn-profile-ok">🎀 確認身份</button>
-    <button class="btn btn-b" id="btn-open-unlock" onclick="openUnlockPanel()">🏆 頭像收藏</button>
-    <button class="btn btn-d" id="btn-profile-back">← 返回</button>
+    <button class="btn btn-outline" id="btn-open-unlock" onclick="openUnlockPanel()">🏆 頭像收藏</button>
+    <button class="btn btn-outline" id="btn-profile-back">← 返回</button>
   </div>
 </div>
 
@@ -2080,11 +2163,16 @@ function validateDisplayAvatarForCurrentIdentity() {
   return true;
 }
 
+
+function getAvatarDisplayName(key) {
+  var av = getAvatarByKey(key || 'boy1');
+  return (av && (av.name || av.label || av.key)) || key || '—';
+}
 function _updateProfileUI() {
   var baseLabel = document.getElementById('profile-base-label');
   var dispLabel = document.getElementById('profile-display-label');
-  if (baseLabel) baseLabel.textContent = PLAYER.baseAvatarKey;
-  if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
+  if (baseLabel) baseLabel.textContent = getAvatarDisplayName(PLAYER.baseAvatarKey);
+  if (dispLabel) dispLabel.textContent = getAvatarDisplayName(PLAYER.displayAvatarKey);
   var basePrev = document.getElementById('base-avatar-preview');
   var dispPrev = document.getElementById('display-avatar-preview');
   if (basePrev) basePrev.src = getAvatarByKey(PLAYER.baseAvatarKey).src;
@@ -2096,7 +2184,9 @@ function updateProfileDataStatic() {
   var pKey = PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
   var identityEl = document.getElementById('profile-current-identity');
   var keyEl = document.getElementById('profile-player-key');
-  if (identityEl) identityEl.textContent = normalizePlayerId(PLAYER.id) + ' + ' + (PLAYER.baseAvatarKey || 'boy1');
+  var id = normalizePlayerId(PLAYER.id);
+  var baseName = getAvatarDisplayName(PLAYER.baseAvatarKey || 'boy1');
+  if (identityEl) identityEl.textContent = '身份：' + id + ' + ' + baseName;
   if (keyEl) keyEl.textContent = pKey || '—';
 }
 
@@ -2104,21 +2194,23 @@ function setProfileDataCollapsed(collapsed) {
   var card = document.getElementById('profile-data-card');
   var text = document.getElementById('profile-data-toggle-text');
   var icon = document.getElementById('profile-data-toggle-icon');
+  var toggle = document.getElementById('profile-data-toggle');
   if (!card) return;
-  var isCollapsed = !!collapsed;
-  card.classList.toggle('collapsed', isCollapsed);
-  if (text) text.textContent = isCollapsed ? '👤 玩家資料　已收合，點擊展開' : '👤 玩家資料　點擊可收合';
-  if (icon) icon.textContent = isCollapsed ? '⌄' : '⌃';
+  card.classList.toggle('collapsed', !!collapsed);
+  if (toggle) toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  if (text) text.textContent = collapsed ? '已收合，點擊展開' : '點擊可收合';
+  if (icon) icon.textContent = collapsed ? '⌄' : '⌃';
 }
 function collapseProfileData() { setProfileDataCollapsed(true); }
 function expandProfileData() { setProfileDataCollapsed(false); }
 function toggleProfileDataCard(forceOpen) {
+  var card = document.getElementById('profile-data-card');
+  if (!card) return;
   if (typeof forceOpen === 'boolean') {
     setProfileDataCollapsed(!forceOpen);
-    return;
+  } else {
+    setProfileDataCollapsed(!card.classList.contains('collapsed'));
   }
-  var card = document.getElementById('profile-data-card');
-  setProfileDataCollapsed(!(card && card.classList.contains('collapsed')));
 }
 
 function refreshProfileMetaInfo() {
@@ -2159,9 +2251,9 @@ function refreshProfileMetaInfo() {
 }
 
 function startEditBaseAvatar() {
-  collapseProfileData();
   // dirty 時仍允許變更身份頭像（可同次一起確認）
   profileAvatarEditMode = 'base';
+  collapseProfileData();
   document.getElementById('avatar-edit-section').style.display = 'block';
   document.getElementById('avatar-grid-label').textContent = '選擇身份頭像';
   document.getElementById('avatar-grid-hint').textContent = '更換身份頭像＝切換玩家身份，解鎖頭像會依新身份重新讀取。';
@@ -2174,8 +2266,8 @@ function startEditDisplayAvatar() {
     alert('你已變更玩家身份。\n請先按「確認」完成身份切換，再更換顯示頭像。');
     return;
   }
-  collapseProfileData();
   profileAvatarEditMode = 'display';
+  collapseProfileData();
   document.getElementById('avatar-edit-section').style.display = 'block';
   document.getElementById('avatar-grid-label').textContent = '選擇顯示頭像';
   document.getElementById('avatar-grid-hint').textContent = '更換顯示頭像只改變外觀，不會改變玩家身份。';
@@ -2215,7 +2307,7 @@ function _renderAvatarGrid() {
           var basePrev = document.getElementById('base-avatar-preview');
           if (basePrev) basePrev.src = av.src;
           var baseLabel = document.getElementById('profile-base-label');
-          if (baseLabel) baseLabel.textContent = av.key;
+          if (baseLabel) baseLabel.textContent = getAvatarDisplayName(av.key);
           // 更新 dirty hint
           var dirtyHint = document.getElementById('profile-identity-dirty-hint');
           if (dirtyHint) dirtyHint.style.display = isProfileIdentityDirty() ? 'block' : 'none';
@@ -2410,7 +2502,7 @@ function initProfile() {
     refreshProfileMetaInfo();
   });
   updateProfileDataStatic();
-  toggleProfileDataCard(true);
+  setProfileDataCollapsed(false);
 
   document.getElementById('player-id-input').value = PLAYER.id;
 
@@ -3349,11 +3441,11 @@ function endGame() {
 var _unlockPinTarget = null;
 
 function openUnlockPanel() {
+  collapseProfileData();
   if (isProfileIdentityDirty()) {
     alert('你已變更玩家身份。\n請先按「確認」完成身份切換，再查看頭像收藏。');
     return;
   }
-  collapseProfileData();
   loadAvatarCatalog().then(function() {
     return loadUnlockedAvatars();
   }).then(function() {
