@@ -1301,7 +1301,7 @@ body.portrait-game #s-admin {
 
 
 
-/* v2.6.1-rhythm-player-card-foundation-test-2: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
+/* v2.6.2-rhythm-vcoin-wallet-ui-sync-test-1: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
 :root{
   --ui-font:'Noto Sans TC','Microsoft JhengHei','微軟正黑體','PingFang TC','Nunito',sans-serif;
   --display-font:'Fredoka One','Nunito',cursive;
@@ -1489,6 +1489,100 @@ button,input,select,textarea{
   .profile-data-toggle em,
   #profile-data-toggle-hint{font-size:10px;}
 }
+
+
+/* v2.6.2-test-1: V幣錢包 UI（只顯示餘額與任務狀態，不讀 vCoinLogs 明細） */
+.vcoin-wallet-panel{
+  width:min(480px,94vw);
+  margin:12px auto 124px;
+  background:#fff;
+  border:1.5px solid rgba(255,190,11,.35);
+  border-radius:22px;
+  box-shadow:0 8px 24px rgba(255,190,11,.13),var(--shadow-sm);
+  padding:14px;
+  color:var(--text);
+  font-family:var(--ui-font)!important;
+}
+.vcoin-wallet-title{
+  font-size:15px;
+  font-weight:900;
+  color:#d59a00;
+  margin-bottom:10px;
+  letter-spacing:.01em;
+}
+.vcoin-wallet-summary{
+  background:#fff8e8;
+  border:1.5px solid rgba(255,190,11,.35);
+  border-radius:17px;
+  padding:10px 12px;
+  color:#d59a00;
+  font-weight:900;
+  font-size:13px;
+  line-height:1.45;
+  margin-bottom:12px;
+}
+.vcoin-wallet-section-title{
+  font-size:12px;
+  font-weight:900;
+  color:#d59a00;
+  margin:2px 0 8px;
+}
+.vcoin-wallet-tasks{display:flex;flex-direction:column;gap:8px;}
+.vcoin-task-card{
+  background:#fff;
+  border:1.5px solid rgba(255,190,11,.28);
+  border-radius:16px;
+  padding:10px 12px;
+  line-height:1.55;
+}
+.vcoin-task-card.done{
+  background:#fffaf0;
+  border-color:rgba(255,190,11,.5);
+}
+.vcoin-task-card.coming{
+  background:linear-gradient(135deg,#fff,var(--purple-bg));
+  border-color:var(--purple-lt);
+}
+.vcoin-task-card strong{
+  display:block;
+  font-size:12px;
+  color:var(--text);
+  font-weight:900;
+  margin-bottom:4px;
+}
+.vcoin-task-card span{
+  display:block;
+  font-size:11px;
+  color:var(--text2);
+  font-weight:800;
+  line-height:1.55;
+}
+.vcoin-task-card em{
+  display:inline-block;
+  margin-top:7px;
+  font-style:normal;
+  font-size:11px;
+  font-weight:900;
+  color:var(--purple);
+}
+.vcoin-task-card.done em{color:#2a9d8f;}
+.vcoin-wallet-coming{
+  margin-top:10px;
+  color:var(--text2);
+  font-size:12px;
+  font-weight:900;
+  text-align:center;
+  line-height:1.6;
+  padding:12px 10px;
+  background:var(--pink-bg);
+  border-radius:16px;
+}
+@media(max-width:520px){
+  .vcoin-wallet-panel{margin-bottom:154px;padding:12px;}
+  .vcoin-task-card{padding:9px 10px;}
+  .vcoin-wallet-summary{font-size:12px;}
+}
+
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1502,7 +1596,7 @@ button,input,select,textarea{
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1-rhythm-player-card-foundation-test-2</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.2-rhythm-vcoin-wallet-ui-sync-test-1</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1600,10 +1694,38 @@ button,input,select,textarea{
     💡 想查看已解鎖與未解鎖頭像，請到「頭像收藏」
   </div>
 
+  <div id="vcoin-wallet-panel" class="vcoin-wallet-panel" style="display:none;">
+    <div class="vcoin-wallet-title">🪙 V幣錢包</div>
+    <div id="vcoin-wallet-summary" class="vcoin-wallet-summary">目前餘額：—</div>
+    <div class="vcoin-wallet-section-title">今日可賺 V幣：</div>
+    <div id="vcoin-wallet-tasks" class="vcoin-wallet-tasks">
+      <div class="vcoin-task-card" id="vcoin-common-daily-card">
+        <strong>🎮 每日遊玩獎勵</strong>
+        <span>任一遊戲完成一次：+30 V幣<br>每日限領一次<br>跨遊戲共用，不是每款遊戲各 +30</span>
+        <em id="vcoin-common-daily-status">狀態：讀取中...</em>
+      </div>
+      <div class="vcoin-task-card coming">
+        <strong>🎵 節奏今日挑戰</strong>
+        <span>即將開放：完成每日指定歌曲或難度任務可獲得 +10 V幣<br>每日限領一次</span>
+        <em>即將開放</em>
+      </div>
+      <div class="vcoin-task-card">
+        <strong>🧱 方塊今日挑戰</strong>
+        <span>完成每日指定方塊任務：+10 V幣<br>每日限領一次</span>
+      </div>
+      <div class="vcoin-task-card">
+        <strong>📚 問答今日挑戰</strong>
+        <span>完成指定年級與科目：+10 V幣<br>每日限領一次</span>
+      </div>
+    </div>
+    <div class="vcoin-wallet-coming">V幣明細未來開放，敬請期待。</div>
+  </div>
+
   <div id="profile-action-bar">
     <button class="btn btn-p hidden" id="btn-resume-game-from-profile">▶ 繼續遊戲</button>
     <button class="btn btn-p" id="btn-profile-ok">🎀 確認身份</button>
     <button class="btn btn-outline" id="btn-open-unlock" onclick="openUnlockPanel()">🏆 頭像收藏</button>
+    <button class="btn btn-outline" id="btn-open-vcoin-wallet" type="button">🪙 V幣錢包</button>
     <button class="btn btn-outline" id="btn-profile-back">← 返回</button>
   </div>
 </div>
@@ -2550,6 +2672,8 @@ function refreshProfileMetaInfo() {
     firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/wallet/balance').once('value').then(function(snap) {
       var v = snap.val();
       if (balanceEl) balanceEl.textContent = (v === null || typeof v === 'undefined') ? '0 V幣' : (Number(v || 0) + ' V幣');
+      setLastKnownVcoinBalance(Number(v || 0));
+      if (isVcoinWalletVisible()) readVcoinWalletStatus().then(renderVcoinWalletPanel);
       updateGamePlayerCard();
     }).catch(function() {
       if (balanceEl) balanceEl.textContent = '暫時無法取得';
@@ -2573,6 +2697,7 @@ function refreshProfileMetaInfo() {
 }
 
 function startEditBaseAvatar() {
+  closeVcoinWalletPanel();
   if (profileOpenedFromGame) {
     alert('遊戲進行中不可變更玩家身份，避免成績歸屬錯誤。請結束本局或回首頁後再變更玩家 ID / 身份頭像。');
     return;
@@ -2588,6 +2713,7 @@ function startEditBaseAvatar() {
 }
 
 function startEditDisplayAvatar() {
+  closeVcoinWalletPanel();
   if (isProfileIdentityDirty()) {
     alert('你已變更玩家身份。\n請先按「確認」完成身份切換，再更換顯示頭像。');
     return;
@@ -2813,6 +2939,7 @@ function _applyDisplayAvatar(key, src) {
 }
 
 function initProfile() {
+  closeVcoinWalletPanel();
   loadPlayerProfile();
   profileOriginalId = PLAYER.id;
   profileOriginalBaseAvatarKey = PLAYER.baseAvatarKey;
@@ -2874,6 +3001,125 @@ function go(id) {
   }
 }
 
+
+// ═══════════════════════════════════════════════════════
+//  VCOIN WALLET UI FOUNDATION（不讀 vCoinLogs 明細，不做節奏今日挑戰發幣）
+// ═══════════════════════════════════════════════════════
+var LAST_KNOWN_VCOIN_BALANCE = null;
+function setLastKnownVcoinBalance(v) {
+  var n = Number(v);
+  if (!isFinite(n)) return;
+  LAST_KNOWN_VCOIN_BALANCE = n;
+}
+function getLastKnownVcoinBalance() {
+  if (LAST_KNOWN_VCOIN_BALANCE === null || typeof LAST_KNOWN_VCOIN_BALANCE === 'undefined') return null;
+  var n = Number(LAST_KNOWN_VCOIN_BALANCE);
+  return isFinite(n) ? n : null;
+}
+function getDisplayedProfileVcoinBalanceFallback() {
+  var raw = getProfileText('profile-vcoin-balance', '');
+  var m = String(raw || '').match(/-?\d+/);
+  if (!m) return getLastKnownVcoinBalance();
+  var n = Number(m[0]);
+  return isFinite(n) ? n : getLastKnownVcoinBalance();
+}
+function formatWalletBalanceText(v) {
+  var n = Number(v);
+  if (!isFinite(n)) return '目前餘額：—';
+  return '目前餘額：' + n + ' V幣';
+}
+function isVcoinWalletVisible() {
+  var panel = document.getElementById('vcoin-wallet-panel');
+  return !!(panel && panel.style.display !== 'none' && panel.style.display !== '');
+}
+function closeVcoinWalletPanel() {
+  var panel = document.getElementById('vcoin-wallet-panel');
+  if (panel) panel.style.display = 'none';
+}
+function closeAvatarEditForWallet() {
+  try { closeAvatarEdit(); } catch(e) {
+    var el = document.getElementById('avatar-edit-section');
+    if (el) el.style.display = 'none';
+  }
+}
+function readVcoinWalletStatus() {
+  var pKey = PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+  var dateKey = getTaiwanDateKey();
+  var fallback = getDisplayedProfileVcoinBalanceFallback();
+  if (!pKey) {
+    return Promise.resolve({ balance: fallback, balanceOk: fallback !== null, dailyStatus: 'unknown', dateKey: dateKey });
+  }
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) {
+      return { balance: fallback, balanceOk: fallback !== null, dailyStatus: 'unknown', dateKey: dateKey };
+    }
+    var basePath = DB_PATHS.players + '/' + pKey;
+    var balancePromise = firebaseDb.ref(basePath + '/wallet/balance').once('value').then(function(snap) {
+      var n = Number(snap.val());
+      if (isFinite(n)) {
+        setLastKnownVcoinBalance(n);
+        return { value: n, ok: true };
+      }
+      return { value: fallback, ok: fallback !== null };
+    }).catch(function() {
+      var fb = getDisplayedProfileVcoinBalanceFallback();
+      return { value: fb, ok: fb !== null };
+    });
+    var dailyPromise = firebaseDb.ref(basePath + '/dailyRewards/' + dateKey).once('value').then(function(snap) {
+      var v = snap.val();
+      return { status: (v && v.claimed === true) ? 'claimed' : 'not_claimed', ok: true };
+    }).catch(function() {
+      return { status: 'unknown', ok: false };
+    });
+    return Promise.all([balancePromise, dailyPromise]).then(function(vals) {
+      return {
+        balance: vals[0].value,
+        balanceOk: vals[0].ok,
+        dailyStatus: vals[1].status,
+        dateKey: dateKey
+      };
+    });
+  }).catch(function() {
+    return { balance: fallback, balanceOk: fallback !== null, dailyStatus: 'unknown', dateKey: dateKey };
+  });
+}
+function renderVcoinWalletPanel(status) {
+  status = status || {};
+  var summary = document.getElementById('vcoin-wallet-summary');
+  var statusEl = document.getElementById('vcoin-common-daily-status');
+  var dailyCard = document.getElementById('vcoin-common-daily-card');
+  if (summary) {
+    summary.textContent = status.balanceOk ? formatWalletBalanceText(status.balance) : '目前餘額：—';
+  }
+  if (dailyCard) dailyCard.classList.toggle('done', status.dailyStatus === 'claimed');
+  if (statusEl) {
+    if (status.dailyStatus === 'claimed') statusEl.textContent = '狀態：✅ 今日已領取';
+    else if (status.dailyStatus === 'not_claimed') statusEl.textContent = '狀態：尚未領取';
+    else statusEl.textContent = '狀態：狀態暫時無法確認';
+  }
+}
+function openVcoinWalletPanel() {
+  closeAvatarEditForWallet();
+  collapseProfileData();
+  var panel = document.getElementById('vcoin-wallet-panel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  renderVcoinWalletPanel({ balance: getDisplayedProfileVcoinBalanceFallback(), balanceOk: getDisplayedProfileVcoinBalanceFallback() !== null, dailyStatus: 'unknown' });
+  setTimeout(function(){ try { panel.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e) {} }, 40);
+  readVcoinWalletStatus().then(function(status) {
+    renderVcoinWalletPanel(status);
+    if (status && status.balanceOk) {
+      var el = document.getElementById('profile-vcoin-balance');
+      if (el) el.textContent = Number(status.balance || 0) + ' V幣';
+      updateGamePlayerCard();
+    }
+  });
+}
+function toggleVcoinWalletPanel() {
+  if (isVcoinWalletVisible()) closeVcoinWalletPanel();
+  else openVcoinWalletPanel();
+}
+
 // ═══════════════════════════════════════════════════════
 //  BUTTONS
 // ═══════════════════════════════════════════════════════
@@ -2903,6 +3149,8 @@ document.getElementById('btn-profile-ok').onclick = function(){
 };
 var resumeProfileBtn = document.getElementById('btn-resume-game-from-profile');
 if (resumeProfileBtn) resumeProfileBtn.onclick = resumeGameFromProfile;
+var vcoinWalletBtn = document.getElementById('btn-open-vcoin-wallet');
+if (vcoinWalletBtn) vcoinWalletBtn.onclick = toggleVcoinWalletPanel;
 document.getElementById('btn-back-song').onclick    = function(){ go('s-profile'); };
 document.getElementById('btn-start').onclick        = initGame;
 document.getElementById('btn-resume').onclick       = resumeGame;
@@ -3906,6 +4154,7 @@ function endGame() {
 var _unlockPinTarget = null;
 
 function openUnlockPanel() {
+  closeVcoinWalletPanel();
   if (typeof collapseProfileData === 'function') collapseProfileData();
   collapseProfileData();
   if (isProfileIdentityDirty()) {
