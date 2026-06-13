@@ -1180,6 +1180,196 @@ body.portrait-game #s-admin {
   height: 100% !important;
 }
 
+
+
+/* v2.6.1-rhythm-profile-ui-sync-test-4: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
+:root{
+  --ui-font:'Noto Sans TC','Microsoft JhengHei','微軟正黑體','PingFang TC','Nunito',sans-serif;
+  --display-font:'Fredoka One','Nunito',cursive;
+  --number-font:'Fredoka One','Nunito',cursive;
+}
+html,body{
+  font-family:var(--ui-font);
+  font-weight:700;
+  line-height:1.5;
+  letter-spacing:0;
+}
+button,input,select,textarea{
+  font-family:var(--ui-font);
+}
+.btn,
+.btn-outline,
+.btn-p,
+.btn-s,
+.btn-d,
+.btn-y,
+.btn-b,
+.btn-hero,
+.btn-main,
+.btn-small,
+.btn-sm,
+.home-profile-btn,
+.profile-floating-actions button,
+#btn-profile-ok,
+#btn-unlock-collection,
+#btn-profile-back,
+#btn-title-collection,
+#btn-change-base-avatar,
+#btn-change-display-avatar,
+#profile-data-toggle{
+  font-family:var(--ui-font)!important;
+  font-weight:900;
+  letter-spacing:.01em;
+  line-height:1.25;
+}
+.logo,
+.logo small,
+.title-deco,
+.stat-v,
+.grade,
+.hud-val,
+.lbr-rank,
+.lbr-score,
+#score,
+#combo,
+#hud-score,
+#hud-combo,
+#hud-acc,
+#r-grade,
+#r-score,
+#r-acc,
+#r-mc,
+#r-p,
+#r-g,
+#r-m,
+#cl-flash,
+#lv-flash,
+.mp-ttl,
+.mp-disc,
+.mp-nt,
+.mp-time,
+.mpb,
+.mc-btn{
+  font-family:var(--display-font)!important;
+}
+#s-profile,
+#s-profile h2,
+.profile-help,
+.profile-id-field,
+.profile-avatar-card,
+.profile-avatar-card h3,
+.profile-avatar-card p,
+.profile-preview-grid,
+.avatar-box,
+.avatar-box h3,
+.avatar-box p,
+.profile-data-card,
+.profile-data-toggle,
+.profile-data-toggle span,
+.profile-data-toggle small,
+.profile-data-toggle em,
+.profile-data-content,
+.profile-status-grid,
+.identity-box,
+.identity-box div,
+.identity-box strong,
+.profile-wallet-box,
+.profile-wallet-box span,
+.profile-title-panel,
+.profile-title-current,
+.profile-title-current span,
+.profile-title-current strong,
+#avatar-picker,
+#avatar-picker-title,
+#avatar-grid,
+#av-grid-wrap,
+#av-grid-title,
+.profile-floating-actions,
+.profile-floating-actions .btn{
+  font-family:var(--ui-font)!important;
+}
+#s-profile h2{
+  font-weight:900;
+  line-height:1.35;
+  letter-spacing:.02em;
+}
+.profile-help,
+#s-profile .muted,
+.avatar-box p,
+.profile-avatar-card p,
+.identity-box div,
+.profile-wallet-box span,
+.profile-title-current span,
+#av-grid-title,
+.picker-head,
+.picker-head strong{
+  font-weight:700;
+  line-height:1.6;
+  letter-spacing:0;
+}
+.profile-data-toggle span{
+  font-weight:900;
+  line-height:1.35;
+  letter-spacing:.01em;
+}
+.profile-data-toggle small,
+.profile-data-toggle em,
+#profile-data-toggle-hint{
+  font-weight:700;
+  line-height:1.45;
+  letter-spacing:0;
+}
+.identity-box strong,
+.profile-wallet-box strong,
+.profile-title-current strong,
+#profile-identity-label,
+#profile-vcoin-balance,
+#profile-equipped-title{
+  font-weight:900;
+  line-height:1.45;
+  letter-spacing:0;
+}
+.identity-box code,
+#profile-player-key{
+  font-family:'Nunito','Noto Sans TC','Microsoft JhengHei','PingFang TC',sans-serif!important;
+  font-weight:700;
+  line-height:1.45;
+  letter-spacing:0;
+}
+#player-id-input{
+  font-family:var(--ui-font)!important;
+  font-weight:800;
+  line-height:1.35;
+  letter-spacing:0;
+}
+#s-title .btn,
+.title-card .btn,
+#btn-start,
+#btn-lb,
+#btn-change-profile,
+#btn-profile-entry,
+#btn-profile-home,
+#btn-r-profile,
+#btn-music-title,
+#btn-game-menu,
+#btn-how{
+  font-family:var(--ui-font)!important;
+  font-weight:900;
+  letter-spacing:.01em;
+  line-height:1.25;
+}
+#btn-change-profile,
+#btn-profile-entry,
+#btn-profile-home{
+  color:#fff;
+}
+@media(max-width:520px){
+  .btn{letter-spacing:0;}
+  #s-profile h2{line-height:1.3;}
+  .profile-data-toggle small,
+  .profile-data-toggle em,
+  #profile-data-toggle-hint{font-size:10px;}
+}
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1193,7 +1383,7 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1-rhythm-profile-ui-sync-test-3</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1-rhythm-profile-ui-sync-test-4</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
