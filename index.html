@@ -1301,7 +1301,7 @@ body.portrait-game #s-admin {
 
 
 
-/* v2.6.3: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
+/* v2.6.4: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
 :root{
   --ui-font:'Noto Sans TC','Microsoft JhengHei','微軟正黑體','PingFang TC','Nunito',sans-serif;
   --display-font:'Fredoka One','Nunito',cursive;
@@ -1491,7 +1491,7 @@ button,input,select,textarea{
 }
 
 
-/* v2.6.3-test-1: V幣錢包 UI（只顯示餘額與任務狀態，不讀 vCoinLogs 明細） */
+/* v2.6.4-test-1: V幣錢包 UI（只顯示餘額與任務狀態，不讀 vCoinLogs 明細） */
 .vcoin-wallet-panel{
   width:min(480px,94vw);
   margin:12px auto 124px;
@@ -1584,7 +1584,7 @@ button,input,select,textarea{
 }
 
 
-/* v2.6.3-test-2: 頭像收藏改為角色設定頁內展開式面板（只改呈現，不改解鎖資料邏輯） */
+/* v2.6.4-test-2: 頭像收藏改為角色設定頁內展開式面板（只改呈現，不改解鎖資料邏輯） */
 .profile-avatar-collection-panel{
   width:min(600px,94vw);
   margin:12px auto 124px;
@@ -1652,7 +1652,7 @@ button,input,select,textarea{
 }
 
 
-/* v2.6.3: 首頁 / 歌曲選擇頁 今日挑戰提示（只讀狀態，不改發幣） */
+/* v2.6.4: 首頁 / 歌曲選擇頁 今日挑戰提示（只讀狀態，不改發幣） */
 .rhythm-daily-hint-card{
   width:min(380px,88vw);
   margin:10px auto 2px;
@@ -1729,6 +1729,143 @@ button,input,select,textarea{
   .rhythm-daily-hint-status{font-size:10px;padding:4px 8px;white-space:normal;text-align:center;line-height:1.25;}
 }
 
+
+
+/* v2.6.4-test-1: 共用稱號收藏面板（移植問答/方塊既有稱號規格，不新增節奏專屬稱號） */
+.profile-title-collection-panel{
+  width:min(600px,94vw);
+  margin:12px auto 124px;
+  background:#fff;
+  border:1.5px solid var(--purple-lt);
+  border-radius:22px;
+  box-shadow:0 8px 24px rgba(155,93,229,.13),var(--shadow-sm);
+  padding:14px;
+  color:var(--text);
+  font-family:var(--ui-font)!important;
+}
+.profile-title-collection-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.profile-title-collection-title{
+  font-size:15px;
+  font-weight:900;
+  color:var(--purple);
+  line-height:1.35;
+}
+.profile-title-collection-current{
+  background:var(--purple-bg);
+  border:1.5px solid var(--purple-lt);
+  border-radius:16px;
+  padding:9px 11px;
+  font-size:12px;
+  color:var(--text2);
+  font-weight:800;
+  line-height:1.55;
+  margin-bottom:10px;
+}
+.profile-title-collection-current strong{color:var(--purple);font-weight:900;}
+.profile-title-collection-note{
+  font-size:10px;
+  color:var(--text2);
+  font-weight:800;
+  line-height:1.55;
+  margin-top:4px;
+}
+#title-grid{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height:min(420px,52vh);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:4px 2px 8px;
+}
+.title-filter-row{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px;}
+.title-filter-btn{
+  border:1.5px solid var(--purple-lt);
+  background:#fff;
+  color:var(--purple);
+  border-radius:999px;
+  padding:6px 10px;
+  font-family:var(--ui-font)!important;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:var(--shadow-sm);
+}
+.title-filter-btn.active{background:linear-gradient(135deg,var(--purple),var(--pink2));color:#fff;border-color:transparent;}
+.title-empty-msg{
+  color:var(--text2);
+  font-size:12px;
+  font-weight:800;
+  text-align:center;
+  line-height:1.6;
+  padding:18px 10px;
+  background:var(--pink-bg);
+  border-radius:16px;
+}
+.title-item{
+  background:#fff;
+  border:1.5px solid var(--purple-lt);
+  border-radius:16px;
+  padding:10px 12px;
+  transition:border-color .16s,background .16s,opacity .16s;
+}
+.title-item.locked{opacity:.58;background:#faf7ff;}
+.title-item.equipped{border-color:var(--purple);background:var(--purple-bg);}
+.title-name{font-size:13px;font-weight:900;color:var(--purple);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.title-source{font-size:10px;color:var(--text2);font-weight:900;margin-top:3px;}
+.title-condition{font-size:10px;color:var(--text2);margin-top:3px;line-height:1.45;font-weight:800;}
+.title-status{font-size:10px;font-weight:900;margin-top:5px;color:var(--purple);}
+.title-actions{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;}
+.title-badge{font-size:10px;font-weight:900;color:var(--purple);background:#fff;border:1.5px solid var(--purple-lt);border-radius:999px;padding:4px 10px;}
+.title-equip-btn,.title-clear-btn{
+  padding:6px 14px;
+  border-radius:999px;
+  border:0;
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
+  color:#fff;
+  font-family:var(--ui-font)!important;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+}
+.title-clear-btn{background:#fff;color:var(--purple);border:1.5px solid var(--purple-lt);}
+.title-equip-btn:active,.title-clear-btn:active{transform:scale(.96);}
+.lbr-title{font-size:10px;color:var(--purple);font-weight:900;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+@media(max-width:520px){
+  .profile-title-collection-panel{margin-bottom:154px;padding:12px;}
+  .profile-title-collection-head{align-items:center;}
+  #title-grid{max-height:46vh;}
+}
+
+
+/* v2.6.4-test-3: 節奏稱號解鎖提示（只新增稱號提示，不改結算/V幣核心） */
+#r-title-unlock-msg{
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.02em;
+  color:var(--purple);
+  background:linear-gradient(135deg,#fff,#f8f0ff);
+  border:1.5px solid var(--purple-lt);
+  border-radius:var(--r-md);
+  padding:9px 14px;
+  box-shadow:var(--shadow-sm);
+  text-align:center;
+  max-width:min(420px,90vw);
+  line-height:1.6;
+}
+#r-title-unlock-msg.ok{
+  color:var(--purple);
+  background:linear-gradient(135deg,#fff,#f8f0ff);
+  border-color:var(--purple-lt);
+}
+#r-title-unlock-msg strong{color:var(--pink2);}
+
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1742,7 +1879,7 @@ button,input,select,textarea{
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.3</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.4</div>
   <div id="home-daily-challenge-hint" class="rhythm-daily-hint-card need-profile">
     <div class="rhythm-daily-hint-top">
       <div>
@@ -1874,6 +2011,20 @@ button,input,select,textarea{
     </div>
   </div>
 
+
+
+  <div id="profile-title-collection-panel" class="profile-title-collection-panel" style="display:none;">
+    <div class="profile-title-collection-head">
+      <div class="profile-title-collection-title">🏷️ 稱號收藏</div>
+      <button class="btn btn-d" id="btn-title-collection-close" style="font-size:10px;padding:5px 12px;" type="button">× 收起</button>
+    </div>
+    <div class="profile-title-collection-current">
+      目前稱號：<strong id="title-collection-current">未裝備</strong>
+      <div class="profile-title-collection-note">稱號會顯示在玩家資料卡、遊戲中玩家卡與排行榜紀錄中。排行榜採當場結算快照，不會回頭修改舊成績。</div>
+    </div>
+    <div id="title-grid"></div>
+  </div>
+
   <div id="vcoin-wallet-panel" class="vcoin-wallet-panel" style="display:none;">
     <div class="vcoin-wallet-title">🪙 V幣錢包</div>
     <div id="vcoin-wallet-summary" class="vcoin-wallet-summary">目前餘額：—</div>
@@ -1905,12 +2056,13 @@ button,input,select,textarea{
     <button class="btn btn-p hidden" id="btn-resume-game-from-profile">▶ 繼續遊戲</button>
     <button class="btn btn-p" id="btn-profile-ok">🎀 確認身份</button>
     <button class="btn btn-outline" id="btn-open-unlock" onclick="openUnlockPanel()">🏆 頭像收藏</button>
+    <button class="btn btn-outline" id="btn-title-collection" type="button">🏷️ 稱號收藏</button>
     <button class="btn btn-outline" id="btn-open-vcoin-wallet" type="button">🪙 V幣錢包</button>
     <button class="btn btn-outline" id="btn-profile-back">← 返回</button>
   </div>
 </div>
 
-<!-- UNLOCK PANEL（v2.6.3-test-2：主要入口已改為角色設定頁內展開面板，保留空 screen 避免舊流程引用錯誤） -->
+<!-- UNLOCK PANEL（v2.6.4-test-2：主要入口已改為角色設定頁內展開面板，保留空 screen 避免舊流程引用錯誤） -->
 <div id="s-unlock" class="screen off" aria-hidden="true"></div>
 
 <!-- SONG LIST -->
@@ -2013,6 +2165,7 @@ button,input,select,textarea{
   </div>
   <div id="r-rec" class="newrec hidden">🎉 NEW RECORD！</div>
   <div id="r-vcoin-msg" class="hidden"></div>
+  <div id="r-title-unlock-msg" class="hidden"></div>
   <div id="r-unlock-notify" style="display:none;margin-top:10px;padding:12px 16px;background:linear-gradient(135deg,#06d6a0,#118ab2);border-radius:14px;text-align:center;">
     <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">🎉 恭喜解鎖新頭像！</div>
     <div style="font-size:12px;color:rgba(255,255,255,.9);margin-bottom:4px;">你已解鎖：</div>
@@ -2173,6 +2326,246 @@ var AVATARS = AVATAR_KEYS.map(function(key) {
 });
 var SONGS = [];
 var lbSongId = "song001";
+var playerEquippedTitleName = '未裝備';
+var titleCollectionFilter = 'rhythm';
+var currentEquippedTitleData = null;
+
+// v2.6.4-test-3：節奏遊戲本機稱號 catalog。sharedCatalogs/titles/rhythm 本版只讀不寫。
+var RHYTHM_TITLES = {
+  rhythm_first_stage: {
+    titleKey: 'rhythm_first_stage',
+    key: 'rhythm_first_stage',
+    gameId: 'rhythm',
+    name: '魔法初登場',
+    description: '第一次站上氣球小V的節奏舞台。',
+    conditionText: '完成任一首歌。',
+    unlockText: '完成任一首歌。',
+    source: 'first_clear',
+    sort: 10,
+    enabled: true
+  },
+  rhythm_rank_b: {
+    titleKey: 'rhythm_rank_b',
+    key: 'rhythm_rank_b',
+    gameId: 'rhythm',
+    name: '節奏小新星',
+    description: '在節奏舞台上展現穩定表現，拿下 B 以上成績。',
+    conditionText: '任一首歌達 B 以上。',
+    unlockText: '任一首歌達 B 以上。',
+    source: 'rank_b',
+    sort: 20,
+    enabled: true
+  },
+  rhythm_rank_a: {
+    titleKey: 'rhythm_rank_a',
+    key: 'rhythm_rank_a',
+    gameId: 'rhythm',
+    name: '派對節拍手',
+    description: '能準確跟上派對節奏，拿下 A 以上成績。',
+    conditionText: '任一首歌達 A 以上。',
+    unlockText: '任一首歌達 A 以上。',
+    source: 'rank_a',
+    sort: 30,
+    enabled: true
+  },
+  rhythm_rank_s: {
+    titleKey: 'rhythm_rank_s',
+    key: 'rhythm_rank_s',
+    gameId: 'rhythm',
+    name: '魔法節奏家',
+    description: '在節奏舞台上打出接近完美的魔法表演。',
+    conditionText: '任一首歌達 S 以上。',
+    unlockText: '任一首歌達 S 以上。',
+    source: 'rank_s',
+    sort: 40,
+    enabled: true
+  },
+  rhythm_hard_clear: {
+    titleKey: 'rhythm_hard_clear',
+    key: 'rhythm_hard_clear',
+    gameId: 'rhythm',
+    name: '困難模式挑戰者',
+    description: '勇敢完成 hard 難度的節奏挑戰。',
+    conditionText: '完成任一 hard 難度歌曲。',
+    unlockText: '完成任一 hard 難度歌曲。',
+    source: 'hard_clear',
+    sort: 50,
+    enabled: true
+  },
+  rhythm_full_combo: {
+    titleKey: 'rhythm_full_combo',
+    key: 'rhythm_full_combo',
+    gameId: 'rhythm',
+    name: 'Full Combo 挑戰者',
+    description: '未來將用於穩定 Full Combo 判斷完成後的挑戰稱號。',
+    conditionText: '任一首歌達成 Full Combo。',
+    unlockText: '任一首歌達成 Full Combo。',
+    source: 'full_combo',
+    sort: 60,
+    enabled: true,
+    lockedFuture: true,
+    autoUnlock: false,
+    futureText: '條件確認中'
+  }
+};
+
+// v2.6.4-test-2：Firebase sharedCatalogs/titles + 內建 fallback 共用稱號 catalog foundation。
+// 本版只補稱號定義來源，不新增節奏專屬稱號與解鎖條件。
+var FALLBACK_TITLE_CATALOG = {
+  quiz: {
+    gameId: 'quiz',
+    gameName: '問答',
+    label: '問答遊戲',
+    emoji: '📚',
+    titles: {
+      v_academy_freshman: {
+        titleKey: 'v_academy_freshman',
+        gameId: 'quiz',
+        name: 'V學園新生',
+        description: '完成第一次 V學園問答挑戰，正式加入小V知識學園。',
+        unlockText: '完成問答遊戲 1 場',
+        conditionText: '完成問答遊戲 1 場',
+        source: 'quiz_first_clear',
+        sort: 10,
+        enabled: true
+      },
+      little_scholar: {
+        titleKey: 'little_scholar',
+        gameId: 'quiz',
+        name: '小小學霸',
+        description: '第一次在問答挑戰中拿下滿分，展現穩定知識力。',
+        unlockText: '問答遊戲首次滿分',
+        conditionText: '問答遊戲首次滿分',
+        source: 'quiz_first_perfect',
+        sort: 20,
+        enabled: true
+      },
+      brain_teaser_king: {
+        titleKey: 'brain_teaser_king',
+        gameId: 'quiz',
+        name: '冷笑話王',
+        description: '在腦筋急轉彎 / 冷笑話題型中完成滿分挑戰。',
+        unlockText: '問答遊戲 brain 科目滿分',
+        conditionText: '問答遊戲 brain 科目滿分',
+        source: 'quiz_brain_perfect',
+        sort: 30,
+        enabled: true
+      },
+      low_grade_graduate: {
+        titleKey: 'low_grade_graduate',
+        gameId: 'quiz',
+        name: '低年級畢業',
+        description: '完成低年級全部科目的知識挑戰。',
+        unlockText: '低年級完成全部科目',
+        conditionText: '低年級完成全部科目',
+        source: 'quiz_low_all_subjects',
+        sort: 40,
+        enabled: true
+      },
+      middle_grade_graduate: {
+        titleKey: 'middle_grade_graduate',
+        gameId: 'quiz',
+        name: '中年級畢業',
+        description: '完成中年級全部科目的知識挑戰。',
+        unlockText: '中年級完成全部科目',
+        conditionText: '中年級完成全部科目',
+        source: 'quiz_middle_all_subjects',
+        sort: 50,
+        enabled: true
+      },
+      high_grade_graduate: {
+        titleKey: 'high_grade_graduate',
+        gameId: 'quiz',
+        name: '高年級畢業',
+        description: '完成高年級全部科目的知識挑戰。',
+        unlockText: '高年級完成全部科目',
+        conditionText: '高年級完成全部科目',
+        source: 'quiz_high_all_subjects',
+        sort: 60,
+        enabled: true
+      }
+    }
+  },
+  tetris: {
+    gameId: 'tetris',
+    gameName: '方塊',
+    label: '方塊遊戲',
+    emoji: '🧱',
+    titles: {
+      tetris_first_clear: {
+        titleKey: 'tetris_first_clear',
+        gameId: 'tetris',
+        name: '初次堆疊者',
+        description: '完成第一次方塊遊戲。',
+        unlockText: '完成方塊遊戲 1 場',
+        conditionText: '完成方塊遊戲 1 場',
+        source: 'first_clear',
+        sort: 10,
+        enabled: true
+      },
+      tetris_score_1000: {
+        titleKey: 'tetris_score_1000',
+        gameId: 'tetris',
+        name: '方塊新星',
+        description: '在方塊遊戲中累積出第一次亮眼分數。',
+        unlockText: '單場分數達 1000',
+        conditionText: '單場分數達 1000',
+        source: 'score_1000',
+        sort: 20,
+        enabled: true
+      },
+      tetris_score_2000: {
+        titleKey: 'tetris_score_2000',
+        gameId: 'tetris',
+        name: '氣球堆疊師',
+        description: '能穩定堆疊方塊並突破高分門檻。',
+        unlockText: '單場分數達 2000',
+        conditionText: '單場分數達 2000',
+        source: 'score_2000',
+        sort: 30,
+        enabled: true
+      },
+      tetris_peak_combo_3: {
+        titleKey: 'tetris_peak_combo_3',
+        gameId: 'tetris',
+        name: '連消高手',
+        description: '在方塊遊戲中做出漂亮的連續消除。',
+        unlockText: '單場最高連消達 3',
+        conditionText: '單場最高連消達 3',
+        source: 'peak_combo_3',
+        sort: 40,
+        enabled: true
+      },
+      tetris_level_5: {
+        titleKey: 'tetris_level_5',
+        gameId: 'tetris',
+        name: '高塔建築師',
+        description: '在方塊遊戲中推進到更高關卡。',
+        unlockText: '單場 Level 達 5',
+        conditionText: '單場 Level 達 5',
+        source: 'level_5',
+        sort: 50,
+        enabled: true
+      }
+    }
+  },
+  rhythm: {
+    gameId: 'rhythm',
+    gameName: '節奏',
+    label: '節奏遊戲',
+    emoji: '🎵',
+    titles: RHYTHM_TITLES
+  },
+  adventure: {
+    gameId: 'adventure',
+    gameName: '冒險',
+    label: '冒險遊戲',
+    emoji: '🏝️',
+    titles: {}
+  }
+};
+var SHARED_TITLE_CATALOG_CACHE = null;
+var SHARED_TITLE_CATALOG_LOAD_PROMISE = null;
 var lbDiff = 'all';
 
 function normalizeDiff(value) {
@@ -2853,19 +3246,8 @@ function refreshProfileMetaInfo() {
     }).catch(function() {
       if (balanceEl) balanceEl.textContent = '暫時無法取得';
     });
-    var titlePaths = [
-      DB_PATHS.players + '/' + pKey + '/equippedTitle',
-      DB_PATHS.players + '/' + pKey + '/quizEquippedTitle',
-      DB_PATHS.players + '/' + pKey + '/profile/equippedTitle'
-    ];
-    Promise.all(titlePaths.map(function(path) {
-      return firebaseDb.ref(path).once('value').then(function(snap){ return snap.val(); }).catch(function(){ return null; });
-    })).then(function(vals) {
-      var picked = vals.find(function(v){ return !!v; });
-      var label = '未裝備';
-      if (typeof picked === 'string') label = picked;
-      else if (picked && typeof picked === 'object') label = picked.name || picked.title || picked.label || picked.key || '未裝備';
-      if (titleEl) titleEl.textContent = label;
+    loadEquippedTitleForCurrentPlayer().then(function(){
+      if (isTitleCollectionVisible()) renderSharedTitleCollection('rhythm');
       updateGamePlayerCard();
     });
   });
@@ -2874,6 +3256,7 @@ function refreshProfileMetaInfo() {
 function startEditBaseAvatar() {
   closeVcoinWalletPanel();
   closeAvatarCollectionPanel();
+  closeTitleCollectionPanel();
   if (profileOpenedFromGame) {
     alert('遊戲進行中不可變更玩家身份，避免成績歸屬錯誤。請結束本局或回首頁後再變更玩家 ID / 身份頭像。');
     return;
@@ -2891,6 +3274,7 @@ function startEditBaseAvatar() {
 function startEditDisplayAvatar() {
   closeVcoinWalletPanel();
   closeAvatarCollectionPanel();
+  closeTitleCollectionPanel();
   if (isProfileIdentityDirty()) {
     alert('你已變更玩家身份。\n請先按「確認」完成身份切換，再更換顯示頭像。');
     return;
@@ -3180,6 +3564,697 @@ function go(id) {
 }
 
 
+
+
+// ═══════════════════════════════════════════════════════
+//  SHARED TITLE COLLECTION（沿用方塊 / 問答共用稱號路徑）
+// ═══════════════════════════════════════════════════════
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function(ch) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]);
+  });
+}
+function cloneTitleCatalog(src){
+  var out = {};
+  Object.keys(src || {}).forEach(function(gameId){
+    var g = src[gameId] || {};
+    out[gameId] = {
+      gameId: g.gameId || gameId,
+      gameName: g.gameName || g.label || gameId,
+      label: g.label || g.gameName || gameId,
+      emoji: g.emoji || '🎖',
+      titles: {}
+    };
+    Object.keys(g.titles || {}).forEach(function(titleKey){
+      out[gameId].titles[titleKey] = Object.assign({}, g.titles[titleKey] || {});
+    });
+  });
+  return out;
+}
+function normalizeTitleCatalogEntry(raw, gameId, titleKey){
+  raw = raw || {};
+  var enabled = raw.enabled;
+  if (enabled === false) return null;
+  var key = raw.titleKey || raw.key || titleKey;
+  var name = raw.name || raw.title || raw.label || '';
+  if (!name) return null;
+  var desc = raw.description || raw.desc || raw.detail || '';
+  var unlockText = raw.unlockText || raw.unlockHint || raw.conditionText || raw.requirement || raw.condition || '';
+  return {
+    titleKey: key,
+    key: key,
+    gameId: raw.gameId || gameId,
+    name: name,
+    description: desc,
+    unlockText: unlockText || '尚未設定條件',
+    conditionText: raw.conditionText || unlockText || '尚未設定條件',
+    source: raw.source || raw.badgeKey || '',
+    sort: Number(raw.sort != null ? raw.sort : (raw.order != null ? raw.order : 999)),
+    enabled: true
+  };
+}
+function normalizeRemoteTitleCatalog(raw){
+  var result = {};
+  raw = raw || {};
+  Object.keys(raw).forEach(function(gameId){
+    var gameNode = raw[gameId] || {};
+    var sourceTitles = gameNode.titles || gameNode;
+    var meta = {
+      gameId: gameNode.gameId || gameId,
+      gameName: gameNode.gameName || gameNode.label || getFallbackGameName(gameId),
+      label: gameNode.label || gameNode.gameName || getFallbackGameName(gameId),
+      emoji: gameNode.emoji || getFallbackGameEmoji(gameId),
+      titles: {}
+    };
+    Object.keys(sourceTitles || {}).forEach(function(titleKey){
+      if (['gameId','gameName','label','emoji','titles'].indexOf(titleKey) >= 0) return;
+      var normalized = normalizeTitleCatalogEntry(sourceTitles[titleKey], gameId, titleKey);
+      if (normalized) meta.titles[normalized.titleKey || titleKey] = normalized;
+    });
+    result[gameId] = meta;
+  });
+  return result;
+}
+function getFallbackGameName(gameId){
+  var g = FALLBACK_TITLE_CATALOG[gameId] || {};
+  return g.gameName || g.label || gameId || '未知遊戲';
+}
+function getFallbackGameEmoji(gameId){
+  var g = FALLBACK_TITLE_CATALOG[gameId] || {};
+  return g.emoji || '🎖';
+}
+function mergeTitleCatalogs(fallbackCatalog, remoteCatalog){
+  var merged = cloneTitleCatalog(fallbackCatalog || {});
+  Object.keys(remoteCatalog || {}).forEach(function(gameId){
+    var remoteGame = remoteCatalog[gameId] || {};
+    if (!merged[gameId]) {
+      merged[gameId] = {
+        gameId: remoteGame.gameId || gameId,
+        gameName: remoteGame.gameName || remoteGame.label || getFallbackGameName(gameId),
+        label: remoteGame.label || remoteGame.gameName || getFallbackGameName(gameId),
+        emoji: remoteGame.emoji || getFallbackGameEmoji(gameId),
+        titles: {}
+      };
+    } else {
+      merged[gameId].gameName = remoteGame.gameName || merged[gameId].gameName;
+      merged[gameId].label = remoteGame.label || merged[gameId].label;
+      merged[gameId].emoji = remoteGame.emoji || merged[gameId].emoji;
+    }
+    Object.keys(remoteGame.titles || {}).forEach(function(titleKey){
+      // Firebase 定義優先；fallback 僅補 Firebase 缺少的 titleKey。
+      merged[gameId].titles[titleKey] = Object.assign({}, remoteGame.titles[titleKey]);
+    });
+  });
+  merged.all = { gameId:'all', gameName:'全部', label:'全部', emoji:'🌟', titles:{} };
+  return merged;
+}
+function getFallbackTitleCatalog(){
+  var fallback = cloneTitleCatalog(FALLBACK_TITLE_CATALOG);
+  fallback.all = { gameId:'all', gameName:'全部', label:'全部', emoji:'🌟', titles:{} };
+  return fallback;
+}
+function getSharedTitleCatalog(){
+  return SHARED_TITLE_CATALOG_CACHE || getFallbackTitleCatalog();
+}
+function loadSharedTitleCatalog(force){
+  if (!force && SHARED_TITLE_CATALOG_CACHE) return Promise.resolve(SHARED_TITLE_CATALOG_CACHE);
+  if (!force && SHARED_TITLE_CATALOG_LOAD_PROMISE) return SHARED_TITLE_CATALOG_LOAD_PROMISE;
+  SHARED_TITLE_CATALOG_LOAD_PROMISE = ensureFirebaseReady().then(function(ok){
+    if (!ok || !firebaseDb) {
+      SHARED_TITLE_CATALOG_CACHE = getFallbackTitleCatalog();
+      return SHARED_TITLE_CATALOG_CACHE;
+    }
+    return firebaseDb.ref('sharedCatalogs/titles').once('value').then(function(snap){
+      var remote = snap.exists() ? normalizeRemoteTitleCatalog(snap.val() || {}) : {};
+      SHARED_TITLE_CATALOG_CACHE = mergeTitleCatalogs(FALLBACK_TITLE_CATALOG, remote);
+      return SHARED_TITLE_CATALOG_CACHE;
+    }).catch(function(e){
+      console.warn('[TitleCatalog] sharedCatalogs/titles load failed, fallback used:', e && e.message ? e.message : e);
+      SHARED_TITLE_CATALOG_CACHE = getFallbackTitleCatalog();
+      return SHARED_TITLE_CATALOG_CACHE;
+    });
+  }).catch(function(e){
+    console.warn('[TitleCatalog] load failed, fallback used:', e && e.message ? e.message : e);
+    SHARED_TITLE_CATALOG_CACHE = getFallbackTitleCatalog();
+    return SHARED_TITLE_CATALOG_CACHE;
+  });
+  return SHARED_TITLE_CATALOG_LOAD_PROMISE;
+}
+// v2.6.4-test-3：sharedCatalogs/titles/rhythm 只讀 foundation，不寫入、不 seed。
+function loadSharedRhythmTitleCatalog(force){
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb) {
+      return getEffectiveRhythmTitleCatalog();
+    }
+    return firebaseDb.ref('sharedCatalogs/titles/rhythm').once('value').then(function(snap){
+      var remote = snap.exists() ? normalizeRemoteTitleCatalog({ rhythm: snap.val() || {} }) : {};
+      var merged = mergeTitleCatalogs(FALLBACK_TITLE_CATALOG, remote);
+      SHARED_TITLE_CATALOG_CACHE = mergeTitleCatalogs(SHARED_TITLE_CATALOG_CACHE || FALLBACK_TITLE_CATALOG, remote);
+      return (merged && merged.rhythm) || getEffectiveRhythmTitleCatalog();
+    }).catch(function(e){
+      console.warn('[RhythmTitleCatalog] sharedCatalogs/titles/rhythm read failed, fallback used:', e && e.message ? e.message : e);
+      return getEffectiveRhythmTitleCatalog();
+    });
+  }).catch(function(e){
+    console.warn('[RhythmTitleCatalog] fallback used:', e && e.message ? e.message : e);
+    return getEffectiveRhythmTitleCatalog();
+  });
+}
+function getRhythmTitleCatalog(){
+  return getEffectiveRhythmTitleCatalog();
+}
+function getEffectiveRhythmTitleCatalog(){
+  var catalog = getSharedTitleCatalog();
+  var meta = catalog.rhythm || null;
+  if(!meta || !meta.titles || !Object.keys(meta.titles).length){
+    return cloneTitleCatalog({ rhythm: FALLBACK_TITLE_CATALOG.rhythm }).rhythm;
+  }
+  return meta;
+}
+function getRhythmTitleDef(titleKey){
+  var meta = getEffectiveRhythmTitleCatalog();
+  return (meta && meta.titles && meta.titles[titleKey]) || RHYTHM_TITLES[titleKey] || null;
+}
+
+function getTitleGameMeta(gameId){
+  var catalog = getSharedTitleCatalog();
+  return catalog[gameId] || { gameId:gameId || '', gameName:gameId || '未知遊戲', emoji:'🎖', titles:{} };
+}
+function getEquippedTitleKey(){
+  return (window.currentEquippedTitleData && window.currentEquippedTitleData.titleKey) || '';
+}
+function getEquippedTitleGameId(){
+  return (window.currentEquippedTitleData && window.currentEquippedTitleData.gameId) || '';
+}
+function getEquippedTitleName(){
+  var data = window.currentEquippedTitleData || currentEquippedTitleData || null;
+  if (data && data.name) return data.name;
+  var txt = getProfileText('profile-equipped-title','未裝備');
+  return txt && txt !== '—' ? txt : '未裝備';
+}
+function isTitleEquipped(gameId, titleKey){
+  return getEquippedTitleGameId() === gameId && getEquippedTitleKey() === titleKey;
+}
+function getTitleSnapshot(){
+  var data = window.currentEquippedTitleData || currentEquippedTitleData || null;
+  var key = data && data.titleKey ? data.titleKey : '';
+  var name = data && data.name ? data.name : '';
+  return {
+    equippedTitleKey: key,
+    equippedTitleName: name,
+    equippedTitleGameId: data && data.gameId ? data.gameId : '',
+    equippedTitleSource: data && data.source ? data.source : ''
+  };
+}
+function setEquippedTitleUI(data){
+  currentEquippedTitleData = data || null;
+  window.currentEquippedTitleData = data || null;
+  playerEquippedTitleName = data && data.name ? data.name : '未裝備';
+  var profileEl = document.getElementById('profile-equipped-title');
+  var currentEl = document.getElementById('title-collection-current');
+  if(profileEl) profileEl.textContent = playerEquippedTitleName;
+  if(currentEl) currentEl.textContent = playerEquippedTitleName;
+  updateGamePlayerCard();
+}
+function loadEquippedTitleForCurrentPlayer(){
+  var playerKey = PLAYER && (PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey));
+  if(!playerKey){
+    setEquippedTitleUI(null);
+    return Promise.resolve(null);
+  }
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb){
+      setEquippedTitleUI(window.currentEquippedTitleData || null);
+      return window.currentEquippedTitleData || null;
+    }
+    var basePath = DB_PATHS.players + '/' + playerKey;
+    return firebaseDb.ref(basePath + '/equippedTitle').once('value').then(function(equippedSnap){
+      var equipped = equippedSnap.val();
+      if(equipped && equipped.name){
+        setEquippedTitleUI(equipped);
+        return equipped;
+      }
+      // 兼容問答舊過渡欄位；主線仍是 players/{playerKey}/equippedTitle
+      return firebaseDb.ref(basePath + '/quizEquippedTitle').once('value').then(function(quizSnap){
+        var quizTitle = quizSnap.val();
+        var data = (quizTitle && quizTitle.name) ? quizTitle : null;
+        setEquippedTitleUI(data);
+        return data;
+      });
+    });
+  }).catch(function(e){
+    console.warn('[TitleCollection] equipped title load failed:', e && e.message ? e.message : e);
+    setEquippedTitleUI(null);
+    return null;
+  });
+}
+function loadUnlockedTitlesByGame(playerKey){
+  playerKey = playerKey || (PLAYER && PLAYER.playerKey);
+  var empty = { tetris:{}, quiz:{}, rhythm:{}, adventure:{} };
+  if(!playerKey) return Promise.resolve(empty);
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb) return empty;
+    var games = ['tetris','quiz','rhythm','adventure'];
+    var basePath = DB_PATHS.players + '/' + playerKey + '/titles';
+    return Promise.all(games.map(function(gameId){
+      return firebaseDb.ref(basePath + '/' + gameId).once('value').then(function(snap){
+        return [gameId, snap.val() || {}];
+      }).catch(function(e){
+        console.warn('[TitleCollection] load failed for', gameId, e && e.message ? e.message : e);
+        return [gameId, {}];
+      });
+    })).then(function(rows){
+      var result = { tetris:{}, quiz:{}, rhythm:{}, adventure:{} };
+      rows.forEach(function(row){ result[row[0]] = row[1] || {}; });
+      return result;
+    });
+  }).catch(function(e){
+    console.warn('[TitleCollection] load all failed:', e && e.message ? e.message : e);
+    return empty;
+  });
+}
+function getUnlockedTitleMapForGame(gameId, unlockedByGame){
+  return (unlockedByGame && unlockedByGame[gameId]) || {};
+}
+function isUnlockedTitleRecord(rec){
+  if (rec === true) return true;
+  if (!rec) return false;
+  return rec.unlocked === true || rec.claimed === true || rec.owned === true || rec.active === true;
+}
+function getTitleDisplayDescription(title){
+  title = title || {};
+  return title.description || title.desc || '';
+}
+function getTitleUnlockText(title){
+  title = title || {};
+  return title.unlockText || title.conditionText || title.unlockHint || title.requirement || '尚未設定條件';
+}
+function buildSharedTitleCollectionItems(filterGameId, unlockedByGame){
+  var catalog = getSharedTitleCatalog();
+  var games = filterGameId === 'all' ? ['quiz','tetris','rhythm','adventure'] : [filterGameId];
+  var items = [];
+  games.forEach(function(gameId){
+    var meta = catalog[gameId] || getTitleGameMeta(gameId);
+    var titles = Object.assign({}, meta.titles || {});
+    // 若問答等遊戲有已解鎖但 catalog 未在節奏檔內，仍用已解鎖資料顯示，不顯示 raw key。
+    var unlockedMap = getUnlockedTitleMapForGame(gameId, unlockedByGame);
+    Object.keys(unlockedMap || {}).forEach(function(titleKey){
+      var unlockedTitle = unlockedMap[titleKey] || {};
+      if(!titles[titleKey] && unlockedTitle && unlockedTitle.name){
+        titles[titleKey] = {
+          titleKey:titleKey,
+          name:unlockedTitle.name,
+          gameId:gameId,
+          source:unlockedTitle.source || '',
+          conditionText:unlockedTitle.conditionText || '已於其他遊戲解鎖'
+        };
+      }
+    });
+    Object.keys(titles).forEach(function(titleKey){
+      var title = titles[titleKey];
+      var isUnlocked = isUnlockedTitleRecord(unlockedMap[titleKey]);
+      items.push({
+        gameId: gameId,
+        gameName: meta.gameName,
+        emoji: meta.emoji,
+        titleKey: titleKey,
+        title: title,
+        unlocked: isUnlocked
+      });
+    });
+  });
+  items.sort(function(a,b){
+    var sa = Number((a.title && a.title.sort) || 999);
+    var sb = Number((b.title && b.title.sort) || 999);
+    if (a.gameId !== b.gameId) {
+      var order = {quiz:1,tetris:2,rhythm:3,adventure:4};
+      return (order[a.gameId] || 99) - (order[b.gameId] || 99);
+    }
+    if (sa !== sb) return sa - sb;
+    return String(a.titleKey || '').localeCompare(String(b.titleKey || ''));
+  });
+  return items;
+}
+function isTitleCollectionVisible(){
+  var panel = document.getElementById('profile-title-collection-panel');
+  return !!(panel && panel.style.display !== 'none' && panel.style.display !== '');
+}
+function closeTitleCollectionPanel(){
+  var panel = document.getElementById('profile-title-collection-panel');
+  if(panel) panel.style.display = 'none';
+}
+function renderSharedTitleCollection(filterGameId){
+  titleCollectionFilter = 'rhythm';
+  var grid = document.getElementById('title-grid');
+  var currentEl = document.getElementById('title-collection-current');
+  if(!grid) return Promise.resolve();
+  grid.innerHTML = '<div class="title-empty-msg">🎈 載入 V宇宙稱號中...</div>';
+  if(currentEl) currentEl.textContent = getEquippedTitleName();
+  return Promise.all([loadSharedTitleCatalog(), loadSharedRhythmTitleCatalog(), loadUnlockedTitlesByGame(PLAYER && PLAYER.playerKey), loadEquippedTitleForCurrentPlayer()]).then(function(values){
+    var catalog = values[0] || getSharedTitleCatalog();
+    var unlockedByGame = values[2] || {};
+    titleCollectionFilter = 'rhythm';
+    var items = buildSharedTitleCollectionItems('rhythm', unlockedByGame);
+    var tabHtml = '<div class="title-filter-row"><button class="title-filter-btn active" data-title-filter="rhythm">🎵 節奏稱號</button></div>';
+    var clearHtml = '<div class="title-actions" style="margin-bottom:10px;"><button class="title-clear-btn" id="title-clear-equipped" type="button">不裝備稱號</button></div>';
+    if(!items.length){
+      grid.innerHTML = tabHtml + clearHtml + '<div class="title-empty-msg">' + escapeHtml('節奏稱號載入中或暫時無資料。') + '</div>';
+    }else{
+      var itemHtml = items.map(function(item){
+        var title = item.title || {};
+        var isUnlocked = item.unlocked;
+        var isEquipped = isUnlocked && isTitleEquipped(item.gameId, item.titleKey);
+        var icon = isUnlocked ? '🎖' : '🔒';
+        var actionHtml = '';
+        if(isUnlocked){
+          actionHtml = isEquipped ? '<span class="title-badge">已裝備</span>' : '<button class="title-equip-btn" data-game-id="' + escapeHtml(item.gameId) + '" data-title-key="' + escapeHtml(item.titleKey) + '">裝備</button>';
+        }else{
+          actionHtml = '<span class="title-badge">🔒 尚未解鎖</span>';
+        }
+        return '<div class="title-item' + (isUnlocked ? '' : ' locked') + (isEquipped ? ' equipped' : '') + '" data-game-id="' + escapeHtml(item.gameId) + '" data-title-key="' + escapeHtml(item.titleKey) + '">' +
+          '<div class="title-name">' + escapeHtml(icon + ' ' + (title.name || '未命名稱號')) + '</div>' +
+          '<div class="title-source">' + escapeHtml((item.emoji || '🎖') + ' ' + (item.gameName || item.gameId || '未知遊戲')) + '</div>' +
+          (getTitleDisplayDescription(title) ? '<div class="title-condition">說明：' + escapeHtml(getTitleDisplayDescription(title)) + '</div>' : '') +
+          '<div class="title-condition">條件：' + escapeHtml(getTitleUnlockText(title)) + '</div>' +
+          '<div class="title-status">狀態：' + (title.lockedFuture ? (title.futureText || '條件確認中') : (isUnlocked ? '已解鎖' : '未解鎖')) + '</div>' +
+          '<div class="title-actions">' + actionHtml + '</div>' +
+        '</div>';
+      }).join('');
+      grid.innerHTML = tabHtml + clearHtml + itemHtml;
+    }
+    grid.querySelectorAll('.title-filter-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        setTitleCollectionFilter(btn.getAttribute('data-title-filter') || 'all');
+      });
+    });
+    grid.querySelectorAll('.title-equip-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        equipSharedTitle(btn.getAttribute('data-game-id'), btn.getAttribute('data-title-key'));
+      });
+    });
+    var clearBtn = document.getElementById('title-clear-equipped');
+    if(clearBtn) clearBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      clearEquippedTitle();
+    });
+    grid.querySelectorAll('.title-item.locked').forEach(function(item){
+      item.addEventListener('click', function(){
+        var gameId = item.getAttribute('data-game-id');
+        var titleKey = item.getAttribute('data-title-key');
+        var meta = getTitleGameMeta(gameId);
+        var title = meta.titles && meta.titles[titleKey];
+        toast('🔒 解鎖條件：' + (title ? getTitleUnlockText(title) : '尚未開放'));
+      });
+    });
+  }).catch(function(e){
+    console.warn('[TitleCollection] shared render failed:', e && e.message ? e.message : e);
+    grid.innerHTML = '<div class="title-empty-msg">⚠️ 稱號收藏暫時無法載入</div>';
+  });
+}
+function setTitleCollectionFilter(gameId){
+  titleCollectionFilter = 'rhythm';
+  return renderSharedTitleCollection('rhythm');
+}
+function openTitleCollectionPanel(){
+  closeAvatarEdit();
+  closeAvatarCollectionPanel();
+  closeVcoinWalletPanel();
+  collapseProfileData();
+  var panel = document.getElementById('profile-title-collection-panel');
+  if(!panel) return;
+  panel.style.display = 'block';
+  renderSharedTitleCollection('rhythm');
+  scrollProfilePanelTo(panel);
+}
+function toggleTitleCollectionPanel(){
+  if(isTitleCollectionVisible()) closeTitleCollectionPanel();
+  else openTitleCollectionPanel();
+}
+function equipSharedTitle(gameId, titleKey){
+  var playerKey = PLAYER && (PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey));
+  if(!playerKey){ toast('請先確認玩家身份'); return; }
+  return loadSharedTitleCatalog().then(function(){
+    var meta = getTitleGameMeta(gameId);
+    var title = meta.titles && meta.titles[titleKey];
+    return loadUnlockedTitlesByGame(playerKey).then(function(unlockedByGame){
+    var unlockedMap = getUnlockedTitleMapForGame(gameId, unlockedByGame);
+    var unlockedTitle = unlockedMap[titleKey] || null;
+    if(!title && unlockedTitle && unlockedTitle.name){
+      title = {
+        titleKey:titleKey,
+        name:unlockedTitle.name,
+        gameId:gameId,
+        source:unlockedTitle.source || '',
+        conditionText:unlockedTitle.conditionText || '已於其他遊戲解鎖'
+      };
+    }
+    if(!title || !unlockedTitle || !isUnlockedTitleRecord(unlockedTitle)){
+      toast('🔒 尚未解鎖：' + (title ? getTitleUnlockText(title) : '尚未開放'));
+      return null;
+    }
+    return ensureFirebaseReady().then(function(ok){
+      if(!ok || !firebaseDb) throw new Error('Firebase not ready');
+      var payload = {
+        titleKey: title.titleKey || titleKey,
+        name: title.name,
+        gameId: gameId,
+        source: title.source || unlockedTitle.source || '',
+        originPath: 'titles/' + gameId + '/' + titleKey,
+        equippedAt: Date.now()
+      };
+      return firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/equippedTitle').set(payload).then(function(){
+        setEquippedTitleUI(payload);
+        renderSharedTitleCollection(titleCollectionFilter || 'all');
+        refreshProfileMetaInfo();
+        toast('🎖 已裝備稱號：' + title.name);
+      });
+    });
+    });
+  }).catch(function(e){
+    console.warn('[TitleCollection] equip failed:', e && e.message ? e.message : e);
+    toast('⚠️ 稱號裝備失敗，請稍後再試');
+  });
+}
+function clearEquippedTitle(){
+  var playerKey = PLAYER && (PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey));
+  if(!playerKey){ setEquippedTitleUI(null); return Promise.resolve(); }
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb){ setEquippedTitleUI(null); return; }
+    return firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/equippedTitle').remove().then(function(){
+      setEquippedTitleUI(null);
+      renderSharedTitleCollection(titleCollectionFilter || 'all');
+      toast('已取消裝備稱號');
+    });
+  }).catch(function(e){
+    console.warn('[TitleCollection] clear failed:', e && e.message ? e.message : e);
+    toast('⚠️ 取消稱號失敗，請稍後再試');
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  RHYTHM TITLE UNLOCK FOUNDATION（v2.6.4-test-3）
+//  只寫 players/{playerKey}/titles/rhythm 與 titleLogs，不寫 sharedCatalogs。
+// ═══════════════════════════════════════════════════════
+function getRankValue(rank){
+  rank = String(rank || '').toUpperCase();
+  if(rank === 'S' || rank === 'SS' || rank === 'SSS' || rank === 'P') return 5;
+  if(rank === 'A+') return 4;
+  if(rank === 'A') return 3;
+  if(rank === 'B') return 2;
+  if(rank === 'C') return 1;
+  return 0;
+}
+function buildRhythmTitleResultSnapshot(grade, acc){
+  return {
+    songId: (G.song && G.song.id) || 'song001',
+    songTitle: (G.song && G.song.title) || '',
+    difficulty: normalizeDiff(G.diff || 'normal'),
+    score: Number(G.score || 0),
+    rank: grade || '',
+    grade: grade || '',
+    combo: Number(G.combo || 0),
+    maxCombo: Number(G.maxCombo || 0),
+    accuracy: Number(acc || 0),
+    miss: Number(G.miss || 0),
+    perfect: Number(G.perf || 0),
+    good: Number(G.good || 0)
+  };
+}
+function checkRhythmTitleUnlocks(result){
+  result = result || {};
+  var rankValue = getRankValue(result.rank || result.grade);
+  var diff = normalizeDiff(result.difficulty || 'normal');
+  var candidates = ['rhythm_first_stage'];
+  if(rankValue >= getRankValue('B')) candidates.push('rhythm_rank_b');
+  if(rankValue >= getRankValue('A')) candidates.push('rhythm_rank_a');
+  if(rankValue >= getRankValue('S')) candidates.push('rhythm_rank_s');
+  if(diff === 'hard') candidates.push('rhythm_hard_clear');
+  // rhythm_full_combo 暫不自動解鎖：目前不重構判定，也不冒用不完整條件。
+  return candidates.filter(function(titleKey){
+    var title = getRhythmTitleDef(titleKey);
+    return !!(title && title.enabled !== false && title.autoUnlock !== false && !title.lockedFuture);
+  });
+}
+function sanitizeTitleResultSnapshot(result){
+  result = result || {};
+  return {
+    songId: result.songId || '',
+    songTitle: result.songTitle || '',
+    difficulty: result.difficulty || '',
+    score: Number(result.score || 0),
+    rank: result.rank || result.grade || '',
+    combo: Number(result.combo || 0),
+    maxCombo: Number(result.maxCombo || 0),
+    accuracy: Number(result.accuracy || 0),
+    miss: Number(result.miss || 0)
+  };
+}
+function unlockRhythmTitle(titleKey, source, result){
+  var playerKey = PLAYER && (PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey));
+  if(!playerKey) return Promise.resolve(null);
+  return loadSharedRhythmTitleCatalog().then(function(){
+    var title = getRhythmTitleDef(titleKey);
+    if(!title || title.enabled === false || title.lockedFuture || title.autoUnlock === false) return null;
+    return ensureFirebaseReady().then(function(ok){
+      if(!ok || !firebaseDb) return null;
+      var titlePath = DB_PATHS.players + '/' + playerKey + '/titles/rhythm/' + titleKey;
+      return firebaseDb.ref(titlePath).once('value').then(function(snap){
+        var existed = snap.val();
+        if(isUnlockedTitleRecord(existed)) return null;
+        var payload = {
+          unlocked: true,
+          claimed: true,
+          titleKey: title.titleKey || titleKey,
+          name: title.name,
+          gameId: 'rhythm',
+          source: source || title.source || '',
+          conditionText: title.conditionText || title.unlockText || '',
+          unlockText: title.unlockText || title.conditionText || '',
+          unlockedAt: Date.now(),
+          result: sanitizeTitleResultSnapshot(result)
+        };
+        return firebaseDb.ref(titlePath).set(payload).then(function(){
+          var profile = PLAYER || {};
+          var logPayload = {
+            type: 'title_unlock',
+            titleKey: payload.titleKey,
+            name: payload.name,
+            gameId: 'rhythm',
+            source: payload.source,
+            playerKey: playerKey,
+            id: profile.id || profile.name || '',
+            baseAvatarKey: profile.baseAvatarKey || '',
+            displayAvatarKey: profile.displayAvatarKey || profile.avatarKey || '',
+            createdAt: Date.now(),
+            result: payload.result
+          };
+          return firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/titleLogs').push(logPayload).catch(function(e){
+            console.warn('[RhythmTitleUnlock] titleLogs write failed:', e && e.message ? e.message : e);
+          }).then(function(){
+            return payload;
+          });
+        });
+      });
+    });
+  }).catch(function(e){
+    console.warn('[RhythmTitleUnlock] unlock failed for ' + titleKey + ':', e && e.message ? e.message : e);
+    return null;
+  });
+}
+function canAutoEquipNewRhythmTitle(playerKey){
+  if(!playerKey) return Promise.resolve(false);
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb) return false;
+    var basePath = DB_PATHS.players + '/' + playerKey;
+    return firebaseDb.ref(basePath + '/equippedTitle').once('value').then(function(equippedSnap){
+      if(equippedSnap.exists() && equippedSnap.val()) return false;
+      return firebaseDb.ref(basePath + '/quizEquippedTitle').once('value').then(function(quizSnap){
+        if(quizSnap.exists() && quizSnap.val()) return false;
+        return true;
+      });
+    });
+  }).catch(function(){ return false; });
+}
+function autoEquipRhythmTitleIfNeeded(newTitles){
+  newTitles = (newTitles || []).filter(Boolean);
+  if(!newTitles.length) return Promise.resolve(null);
+  var playerKey = PLAYER && (PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey));
+  if(!playerKey) return Promise.resolve(null);
+  return canAutoEquipNewRhythmTitle(playerKey).then(function(canEquip){
+    if(!canEquip) return null;
+    var first = newTitles[0];
+    var payload = {
+      titleKey: first.titleKey,
+      name: first.name,
+      gameId: 'rhythm',
+      source: first.source || '',
+      originPath: 'titles/rhythm/' + first.titleKey,
+      equippedAt: Date.now()
+    };
+    return firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/equippedTitle').set(payload).then(function(){
+      setEquippedTitleUI(payload);
+      refreshProfileMetaInfo();
+      if(isTitleCollectionVisible()) renderSharedTitleCollection('rhythm');
+      return payload;
+    });
+  }).catch(function(e){
+    console.warn('[RhythmTitleUnlock] auto equip failed:', e && e.message ? e.message : e);
+    return null;
+  });
+}
+function checkAndUnlockRhythmTitles(result){
+  var playerKey = PLAYER && (PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey));
+  if(!playerKey) return Promise.resolve({ unlocked: [], autoEquipped: null });
+  var snapshot = result || {};
+  return loadSharedRhythmTitleCatalog().then(function(){
+    var candidates = checkRhythmTitleUnlocks(snapshot);
+    var chain = Promise.resolve([]);
+    candidates.forEach(function(titleKey){
+      chain = chain.then(function(list){
+        var def = getRhythmTitleDef(titleKey);
+        return unlockRhythmTitle(titleKey, def && def.source, snapshot).then(function(newPayload){
+          if(newPayload) list.push(newPayload);
+          return list;
+        });
+      });
+    });
+    return chain.then(function(newTitles){
+      return autoEquipRhythmTitleIfNeeded(newTitles).then(function(autoEquipped){
+        return { unlocked: newTitles, autoEquipped: autoEquipped };
+      });
+    });
+  }).catch(function(e){
+    console.warn('[RhythmTitleUnlock] check failed:', e && e.message ? e.message : e);
+    return { unlocked: [], autoEquipped: null };
+  });
+}
+function setResultTitleUnlockMessage(result){
+  var el = document.getElementById('r-title-unlock-msg');
+  if(!el) return;
+  result = result || {};
+  var unlocked = (result.unlocked || []).filter(Boolean);
+  if(!unlocked.length){
+    el.className = 'hidden';
+    el.textContent = '';
+    return;
+  }
+  var names = unlocked.map(function(t){ return t.name || ''; }).filter(Boolean);
+  var msg = '🎖 新稱號解鎖：' + names.join('、');
+  if(result.autoEquipped && result.autoEquipped.name){
+    msg += '｜已自動裝備：' + result.autoEquipped.name;
+  }else{
+    msg += '｜已加入稱號收藏，可到玩家設定頁裝備。';
+  }
+  el.innerHTML = escapeHtml(msg);
+  el.className = 'ok';
+}
+function toast(msg){
+  // 節奏頁沒有全域 toast 元件，使用輕量 alert fallback，避免未定義錯誤。
+  try { console.log('[Toast]', msg); } catch(e) {}
+}
+
 // ═══════════════════════════════════════════════════════
 //  VCOIN WALLET UI FOUNDATION（顯示餘額與每日狀態，不讀 vCoinLogs 明細）
 // ═══════════════════════════════════════════════════════
@@ -3233,6 +4308,7 @@ function closeVcoinWalletPanel() {
   if (panel) panel.style.display = 'none';
 }
 function closeAvatarEditForWallet() {
+  closeTitleCollectionPanel();
   try { closeAvatarEdit(); } catch(e) {
     var el = document.getElementById('avatar-edit-section');
     if (el) el.style.display = 'none';
@@ -3368,6 +4444,7 @@ function updateRhythmDailyChallengeHint() {
   });
 }
 function openVcoinWalletPanel() {
+  closeTitleCollectionPanel();
   closeAvatarEditForWallet();
   collapseProfileData();
   var panel = document.getElementById('vcoin-wallet-panel');
@@ -3421,6 +4498,10 @@ var resumeProfileBtn = document.getElementById('btn-resume-game-from-profile');
 if (resumeProfileBtn) resumeProfileBtn.onclick = resumeGameFromProfile;
 var vcoinWalletBtn = document.getElementById('btn-open-vcoin-wallet');
 if (vcoinWalletBtn) vcoinWalletBtn.onclick = toggleVcoinWalletPanel;
+var titleCollectionBtn = document.getElementById('btn-title-collection');
+if (titleCollectionBtn) titleCollectionBtn.onclick = toggleTitleCollectionPanel;
+var titleCollectionCloseBtn = document.getElementById('btn-title-collection-close');
+if (titleCollectionCloseBtn) titleCollectionCloseBtn.onclick = closeTitleCollectionPanel;
 document.getElementById('btn-back-song').onclick    = function(){ go('s-profile'); };
 document.getElementById('btn-start').onclick        = initGame;
 document.getElementById('btn-resume').onclick       = resumeGame;
@@ -3792,7 +4873,7 @@ function updateGamePlayerCard() {
   var vcoin = document.getElementById('game-player-vcoin');
   var card = document.getElementById('player-card');
   var displayName = PLAYER.id || '玩家';
-  var titleText = getProfileText('profile-equipped-title', '未裝備').replace(/^稱號[:：]?\s*/, '') || '未裝備';
+  var titleText = getEquippedTitleName().replace(/^稱號[:：]?\s*/, '') || '未裝備';
   var vc = getProfileText('profile-vcoin-balance', '—');
   var vcoinText = vc.replace(/^🪙\s*V幣[:：]?\s*/, '').replace(/\s*V幣$/, '');
   if (vc.indexOf('V幣') < 0 && vc !== '—' && vc !== '暫時無法取得') vcoinText += ' V幣';
@@ -3850,6 +4931,7 @@ function openProfileFromGameCard() {
 function resumeGameFromProfile() {
   var shouldResume = shouldResumeMediaFromProfile;
   var keepPaused = wasPausedBeforeProfile;
+  refreshProfileMetaInfo();
   updateGamePlayerCard();
   setProfileOpenedFromGameUI(false);
   go('s-game');
@@ -3952,6 +5034,7 @@ function initGame() {
   document.getElementById('hud-score').textContent = '0';
   document.getElementById('hud-combo').textContent = '0';
   document.getElementById('hud-acc').textContent = '100%';
+  loadEquippedTitleForCurrentPlayer().then(updateGamePlayerCard);
   updateGamePlayerCard();
   document.getElementById('prog').style.width = '0%';
   document.getElementById('lyric-main').textContent = '♪';
@@ -4379,8 +5462,16 @@ function endGame() {
   // Grade encouragement message
   var msgEl = document.getElementById('r-grade-msg');
   if (msgEl) msgEl.textContent = getGradeMsg(g);
-  var isNew = saveScore(g, acc);
-  document.getElementById('r-rec').classList.toggle('hidden', !isNew);
+  setResultTitleUnlockMessage(null);
+  checkAndUnlockRhythmTitles(buildRhythmTitleResultSnapshot(g, acc)).then(function(titleResult){
+    setResultTitleUnlockMessage(titleResult);
+    var isNew = saveScore(g, acc);
+    document.getElementById('r-rec').classList.toggle('hidden', !isNew);
+  }).catch(function(e){
+    console.warn('[RhythmTitleUnlock] result hook failed:', e && e.message ? e.message : e);
+    var isNew = saveScore(g, acc);
+    document.getElementById('r-rec').classList.toggle('hidden', !isNew);
+  });
   setResultVCoinMessage('V幣同步中...', 'loading');
   claimRhythmVCoinRewardsAfterSong().then(function(result) {
     setResultVCoinMessage(buildRhythmVCoinResultMessage(result), result && result.totalClaimed > 0 ? 'ok' : 'claimed');
@@ -4431,6 +5522,7 @@ var _unlockPinTarget = null;
 
 function openUnlockPanel() {
   closeVcoinWalletPanel();
+  closeTitleCollectionPanel();
   closeAvatarEdit();
   collapseProfileData();
   if (isProfileIdentityDirty()) {
@@ -4869,6 +5961,7 @@ function saveScore(grade, acc) {
   var songId = (G.song && G.song.id) || 'song001';
   var diff = G.diff || 'normal';
   var now = Date.now();
+  var titleSnapshot = getTitleSnapshot();
 
   var logEntry = {
     gameId:           'rhythm',
@@ -4878,6 +5971,9 @@ function saveScore(grade, acc) {
     displayAvatarKey: PLAYER.displayAvatarKey || PLAYER.avatarKey,
     avatarKey:        PLAYER.avatarKey,
     avatarSrc:        PLAYER.avatarSrc,
+    equippedTitleKey: titleSnapshot.equippedTitleKey || '',
+    equippedTitleName:titleSnapshot.equippedTitleName || '',
+    equippedTitleGameId:titleSnapshot.equippedTitleGameId || '',
     score:            G.score,
     diff:             diff,
     grade:            grade,
@@ -4897,6 +5993,9 @@ function saveScore(grade, acc) {
     displayAvatarKey: PLAYER.displayAvatarKey || PLAYER.avatarKey,
     avatarKey:        PLAYER.avatarKey,
     avatarSrc:        PLAYER.avatarSrc,
+    equippedTitleKey: titleSnapshot.equippedTitleKey || '',
+    equippedTitleName:titleSnapshot.equippedTitleName || '',
+    equippedTitleGameId:titleSnapshot.equippedTitleGameId || '',
     bestScore:        G.score,
     diff:             diff,
     grade:            grade,
@@ -5034,6 +6133,8 @@ function renderLBFromFirebase() {
       displayAvatarKey: v.displayAvatarKey || v.avatarKey || 'boy1',
       avatarKey:        v.avatarKey || 'boy1',
       avatarSrc:        v.avatarSrc || '',
+      equippedTitleKey: v.equippedTitleKey || (v.equippedTitle && v.equippedTitle.titleKey) || '',
+      equippedTitleName:v.equippedTitleName || (v.equippedTitle && v.equippedTitle.name) || '',
       bestScore:        v.bestScore || v.score || 0,
       score:            v.score || v.bestScore || 0,
       songId:           v.songId || songId,
@@ -5254,9 +6355,10 @@ function renderLBRows(el, scores) {
     var displayScore = (s.bestScore || s.score || 0);
     return '<div class="lbr">' +
       '<div class="lbr-rank ' + (rc[i]||'') + '">' + (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)) + '</div>' +
-      '<img class="lbr-av" src="' + avSrc + '" alt="' + s.name + '" onerror="this.style.display=\'none\'">' +
+      '<img class="lbr-av" src="' + avSrc + '" alt="' + escapeHtml(s.name || '') + '" onerror="this.style.display=\'none\'">' +
       '<div class="lbr-info">' +
-        '<div class="lbr-name">' + s.name + '</div>' +
+        '<div class="lbr-name">' + escapeHtml(s.name || '玩家') + '</div>' +
+        ((s.equippedTitleName && s.equippedTitleName !== '未裝備') ? '<div class="lbr-title">🏷️ ' + escapeHtml(s.equippedTitleName) + '</div>' : '') +
         '<div class="lbr-meta">' + (s.song||s.songTitle||'') + ' · ' + (s.date||s.updatedAt&&new Date(s.updatedAt).toLocaleDateString('zh-TW')||'') + ' · ACC ' + (s.acc||0) + '%</div>' +
       '</div>' +
       '<div class="lbr-diff">' + (s.diff||'').toUpperCase() + '</div>' +
