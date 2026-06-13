@@ -511,6 +511,33 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 #profile-action-bar .btn-p {
   min-width:126px;
 }
+#btn-resume-game-from-profile {
+  background:linear-gradient(135deg,#3ecf8e,#2ab377);
+  color:#fff;
+  border:none;
+  box-shadow:0 8px 22px rgba(62,207,142,.22);
+}
+#btn-resume-game-from-profile.hidden { display:none!important; }
+.profile-game-lock-hint {
+  display:none;
+  width:min(480px,94vw);
+  margin:-4px auto 12px;
+  padding:9px 12px;
+  border-radius:16px;
+  border:1.5px solid rgba(155,93,229,.25);
+  background:var(--purple-bg);
+  color:var(--purple);
+  font-size:11px;
+  font-weight:800;
+  line-height:1.55;
+  text-align:center;
+}
+body.profile-from-game .profile-game-lock-hint { display:block; }
+body.profile-from-game #player-id-input,
+body.profile-from-game #btn-change-base-avatar {
+  opacity:.58;
+  cursor:not-allowed;
+}
 @media (max-width:520px) {
   #s-profile { padding:12px 10px 150px 10px; }
   .profile-avatar-cards,
@@ -645,14 +672,67 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 .hud-block { text-align:center; width:100%; }
 .hud-lbl { font-size:9px; color:var(--pink2); letter-spacing:.1em; margin-bottom:2px;
   font-weight:800; font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive; }
-#player-card { display:flex; flex-direction:column; align-items:center; gap:4px; }
-#sb-avatar {
-  width:46px; height:46px; border-radius:50%;
-  border:3px solid #fff; object-fit:cover;
+#player-card,
+.game-player-card {
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 7px;
+  border:1.5px solid rgba(255,182,215,.65);
+  border-radius:18px;
+  background:rgba(255,255,255,.86);
+  box-shadow:0 6px 18px rgba(232,111,154,.15);
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,filter .16s ease;
+}
+#player-card:hover,
+.game-player-card:hover {
+  transform:translateY(-1px);
+  border-color:var(--pink);
+  box-shadow:0 9px 24px rgba(232,111,154,.24);
+  filter:brightness(1.02);
+}
+#player-card:active,
+.game-player-card:active { transform:scale(.98); }
+#player-card:focus-visible,
+.game-player-card:focus-visible {
+  outline:3px solid rgba(255,133,161,.35);
+  outline-offset:3px;
+}
+#sb-avatar,
+.game-player-avatar {
+  width:42px; height:42px; border-radius:50%;
+  border:3px solid #fff; object-fit:cover; flex-shrink:0;
+  background:var(--pink-bg);
   box-shadow:0 0 0 2px var(--pink), 0 4px 12px rgba(232,111,154,.3);
 }
-#sb-name { font-size:10px; color:var(--text); font-weight:800; max-width:100%;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.game-player-main {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+  line-height:1.15;
+}
+#sb-name,
+.game-player-name {
+  font-size:11px; color:var(--text); font-weight:900; max-width:100%;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.game-player-title,
+.game-player-vcoin {
+  font-size:9px;
+  color:var(--text2);
+  font-weight:800;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.game-player-title { color:var(--purple); }
+.game-player-vcoin { color:#d59a00; }
 #hud-score {
   font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive; font-size:clamp(12px,2vw,20px);
   color:var(--pink2); word-break:break-all; text-shadow:0 2px 8px rgba(232,111,154,.3);
@@ -1182,7 +1262,7 @@ body.portrait-game #s-admin {
 
 
 
-/* v2.6.1-rhythm-profile-ui-sync-test-4: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
+/* v2.6.1-rhythm-player-card-foundation-test-1: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
 :root{
   --ui-font:'Noto Sans TC','Microsoft JhengHei','微軟正黑體','PingFang TC','Nunito',sans-serif;
   --display-font:'Fredoka One','Nunito',cursive;
@@ -1383,7 +1463,7 @@ button,input,select,textarea{
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1-rhythm-profile-ui-sync-test-4</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1-rhythm-player-card-foundation-test-1</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -1412,6 +1492,10 @@ button,input,select,textarea{
     <div id="profile-identity-dirty-hint" style="display:none;font-size:10px;color:var(--pink2);margin-top:6px;text-align:center;font-weight:800;">
       ⚠️ 你正在變更玩家身份，請按「確認身份」完成切換。
     </div>
+  </div>
+
+  <div id="profile-game-lock-hint" class="profile-game-lock-hint">
+    遊戲進行中不可變更玩家 ID 或身份頭像，避免成績歸屬錯誤。你仍可更換顯示頭像，完成後按「▶ 繼續遊戲」。
   </div>
 
   <div class="profile-avatar-cards profile-preview-grid">
@@ -1478,6 +1562,7 @@ button,input,select,textarea{
   </div>
 
   <div id="profile-action-bar">
+    <button class="btn btn-p hidden" id="btn-resume-game-from-profile">▶ 繼續遊戲</button>
     <button class="btn btn-p" id="btn-profile-ok">🎀 確認身份</button>
     <button class="btn btn-outline" id="btn-open-unlock" onclick="openUnlockPanel()">🏆 頭像收藏</button>
     <button class="btn btn-outline" id="btn-profile-back">← 返回</button>
@@ -1549,9 +1634,13 @@ button,input,select,textarea{
   </div>
   <button id="mv-btn" onclick="toggleMV()">▶ MV</button>
   <div id="sidebar">
-    <div id="player-card">
-      <img id="sb-avatar" src="" alt="">
-      <div id="sb-name"></div>
+    <div id="player-card" class="game-player-card" role="button" tabindex="0" title="開啟角色設定">
+      <img id="sb-avatar" class="game-player-avatar" src="" alt="玩家頭像">
+      <div class="game-player-main">
+        <div id="sb-name" class="game-player-name"></div>
+        <div id="game-player-title" class="game-player-title">稱號：未裝備</div>
+        <div id="game-player-vcoin" class="game-player-vcoin">🪙 V幣：—</div>
+      </div>
     </div>
     <div class="hud-block"><div class="hud-lbl">✨ 分數</div><div id="hud-score">0</div></div>
     <div class="hud-block"><div id="hud-combo">0</div><div class="hud-lbl">🔥 COMBO</div></div>
@@ -2338,6 +2427,7 @@ function validateDisplayAvatarForCurrentIdentity() {
     if (dispPrev) dispPrev.src = PLAYER.avatarSrc;
     var sbAv = document.getElementById('sb-avatar');
     if (sbAv) sbAv.src = PLAYER.avatarSrc;
+    if (typeof updateGamePlayerCard === 'function') updateGamePlayerCard();
     if (FIREBASE_ENABLED && firebaseDb && PLAYER.playerKey) {
       firebaseDb.ref(DB_PATHS.players + '/' + PLAYER.playerKey + '/profile').update({
         displayAvatarKey: PLAYER.displayAvatarKey,
@@ -2405,6 +2495,7 @@ function toggleProfileDataCard(forceOpen) {
 
 function refreshProfileMetaInfo() {
   updateProfileDataStatic();
+  updateGamePlayerCard();
   var balanceEl = document.getElementById('profile-vcoin-balance');
   var titleEl = document.getElementById('profile-equipped-title');
   if (balanceEl) balanceEl.textContent = '—';
@@ -2420,6 +2511,7 @@ function refreshProfileMetaInfo() {
     firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/wallet/balance').once('value').then(function(snap) {
       var v = snap.val();
       if (balanceEl) balanceEl.textContent = (v === null || typeof v === 'undefined') ? '0 V幣' : (Number(v || 0) + ' V幣');
+      updateGamePlayerCard();
     }).catch(function() {
       if (balanceEl) balanceEl.textContent = '暫時無法取得';
     });
@@ -2436,11 +2528,16 @@ function refreshProfileMetaInfo() {
       if (typeof picked === 'string') label = picked;
       else if (picked && typeof picked === 'object') label = picked.name || picked.title || picked.label || picked.key || '未裝備';
       if (titleEl) titleEl.textContent = label;
+      updateGamePlayerCard();
     });
   });
 }
 
 function startEditBaseAvatar() {
+  if (profileOpenedFromGame) {
+    alert('遊戲進行中不可變更玩家身份，避免成績歸屬錯誤。請結束本局或回首頁後再變更玩家 ID / 身份頭像。');
+    return;
+  }
   // dirty 時仍允許變更身份頭像（可同次一起確認）
   profileAvatarEditMode = 'base';
   collapseProfileData();
@@ -2660,6 +2757,7 @@ function _applyDisplayAvatar(key, src) {
   _updateProfileUI();
   var sbAv = document.getElementById('sb-avatar');
   if (sbAv) sbAv.src = PLAYER.avatarSrc;
+  updateGamePlayerCard();
   // 同步 Firebase profile
   if (FIREBASE_ENABLED) {
     ensureFirebaseReady().then(function(ok) {
@@ -2708,8 +2806,7 @@ function initProfile() {
 function saveProfile() {
   return Promise.resolve(savePlayerProfile()).then(function(ok) {
     if (!ok) return false;
-    document.getElementById('sb-avatar').src = PLAYER.avatarSrc;
-    document.getElementById('sb-name').textContent = PLAYER.id;
+    updateGamePlayerCard();
     var dirtyHint = document.getElementById('profile-identity-dirty-hint');
     if (dirtyHint) dirtyHint.style.display = 'none';
     updateProfileDataStatic();
@@ -2728,6 +2825,7 @@ function go(id) {
   var fsbtn = document.getElementById('fs-btn');
   if (fsbtn) fsbtn.style.display = (id === 's-game') ? 'none' : 'flex';
   // Scroll to top when entering LB or result
+  if (id === 's-game') updateGamePlayerCard();
   if (id === 's-lb' || id === 's-result' || id === 's-admin' || id === 's-profile') {
     var el = document.getElementById(id);
     if (el) setTimeout(function(){ el.scrollTop = 0; }, 50);
@@ -2740,21 +2838,32 @@ function go(id) {
 // ═══════════════════════════════════════════════════════
 //  BUTTONS
 // ═══════════════════════════════════════════════════════
-document.getElementById('btn-play').onclick        = function(){ initProfile(); go('s-profile'); };
-document.getElementById('btn-profile-go').onclick  = function(){ initProfile(); go('s-profile'); };
+document.getElementById('btn-play').onclick        = function(){ setProfileOpenedFromGameUI(false); initProfile(); go('s-profile'); };
+document.getElementById('btn-profile-go').onclick  = function(){ setProfileOpenedFromGameUI(false); initProfile(); go('s-profile'); };
 document.getElementById('btn-lb-go').onclick = function(){
   lbSongId = (selectedSong && selectedSong.id) || 'song001';
   lbDiff = 'all';
   ensureSongsLoaded().then(function() { renderLB(); go('s-lb'); });
 };
-document.getElementById('btn-profile-back').onclick = function(){ go('s-title'); };
+document.getElementById('btn-profile-back').onclick = function(){
+  if (profileOpenedFromGame) resumeGameFromProfile();
+  else go('s-title');
+};
 document.getElementById('btn-profile-ok').onclick = function(){
   saveProfile().then(function(ok) {
     if (!ok) return;
+    updateGamePlayerCard();
+    if (profileOpenedFromGame) {
+      refreshProfileMetaInfo();
+      alert('角色設定已更新。要回到本局請按「▶ 繼續遊戲」。');
+      return;
+    }
     loadSongs();
     go('s-songlist');
   });
 };
+var resumeProfileBtn = document.getElementById('btn-resume-game-from-profile');
+if (resumeProfileBtn) resumeProfileBtn.onclick = resumeGameFromProfile;
 document.getElementById('btn-back-song').onclick    = function(){ go('s-profile'); };
 document.getElementById('btn-start').onclick        = initGame;
 document.getElementById('btn-resume').onclick       = resumeGame;
@@ -2767,6 +2876,17 @@ document.getElementById('btn-r-lb').onclick = function(){
 };
 document.getElementById('btn-r-home').onclick       = function(){ go('s-title'); };
 document.getElementById('btn-lb-home').onclick      = function(){ go('s-title'); };
+
+var gamePlayerCardEl = document.getElementById('player-card');
+if (gamePlayerCardEl) {
+  gamePlayerCardEl.addEventListener('click', openProfileFromGameCard);
+  gamePlayerCardEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openProfileFromGameCard();
+    }
+  });
+}
 
 document.getElementById('btn-unlock-back').onclick = function(){ go('s-profile'); };
 
@@ -3096,6 +3216,98 @@ function mkG() {
 }
 var G = mkG();
 
+var profileOpenedFromGame = false;
+var wasPausedBeforeProfile = false;
+var shouldResumeMediaFromProfile = false;
+
+function getProfileText(id, fallback) {
+  var el = document.getElementById(id);
+  var text = el ? (el.textContent || '').trim() : '';
+  return text || fallback || '';
+}
+function updateGamePlayerCard() {
+  var avatarKey = PLAYER.displayAvatarKey || PLAYER.avatarKey || PLAYER.baseAvatarKey || 'boy1';
+  var av = getAvatarByKey(avatarKey);
+  var avatar = document.getElementById('sb-avatar');
+  var name = document.getElementById('sb-name');
+  var title = document.getElementById('game-player-title');
+  var vcoin = document.getElementById('game-player-vcoin');
+  if (avatar) avatar.src = (PLAYER.avatarSrc || (av && av.src) || (av && av.url) || '');
+  if (name) name.textContent = PLAYER.id || '玩家';
+  if (title) title.textContent = '稱號：' + getProfileText('profile-equipped-title', '未裝備').replace(/^稱號[:：]?\s*/, '');
+  var vc = getProfileText('profile-vcoin-balance', '—');
+  if (vcoin) vcoin.textContent = '🪙 V幣：' + vc.replace(/^🪙\s*V幣[:：]?\s*/, '').replace(/\s*V幣$/, '') + (vc.indexOf('V幣') >= 0 ? '' : (vc === '—' || vc === '暫時無法取得' ? '' : ' V幣'));
+}
+function setProfileOpenedFromGameUI(active) {
+  profileOpenedFromGame = !!active;
+  document.body.classList.toggle('profile-from-game', profileOpenedFromGame);
+  var resumeBtn = document.getElementById('btn-resume-game-from-profile');
+  if (resumeBtn) resumeBtn.classList.toggle('hidden', !profileOpenedFromGame);
+  var idInput = document.getElementById('player-id-input');
+  var baseBtn = document.getElementById('btn-change-base-avatar');
+  if (idInput) idInput.disabled = profileOpenedFromGame;
+  if (baseBtn) baseBtn.disabled = profileOpenedFromGame;
+}
+function pauseVideoForProfile() {
+  var bgVid = document.getElementById('bg-video');
+  if (bgVid && bgVid.style.display !== 'none') {
+    try { bgVid.pause(); } catch(e) {}
+  }
+  try { ytPause(); } catch(e2) {}
+}
+function resumeVideoFromProfile() {
+  var bgVid = document.getElementById('bg-video');
+  if (bgVid && bgVid.style.display !== 'none' && bgVid.src) {
+    try { bgVid.play().catch(function(){}); } catch(e) {}
+  }
+  try { ytResume(audioPauseOffset || (G.gt / 1000) || 0); } catch(e2) {
+    try { ytPlayFrom(audioPauseOffset || (G.gt / 1000) || 0); } catch(e3) {}
+  }
+}
+function pauseGameForProfile() {
+  wasPausedBeforeProfile = !!G.paused;
+  shouldResumeMediaFromProfile = !!(G.running && !G.paused);
+  if (G.running) {
+    G.paused = true;
+    var ov = document.getElementById('pause-ov');
+    if (ov) ov.classList.add('off');
+  }
+  pauseAudio();
+  pauseVideoForProfile();
+}
+function openProfileFromGameCard() {
+  if (!G.running) return;
+  pauseGameForProfile();
+  initProfile();
+  setProfileOpenedFromGameUI(true);
+  refreshProfileMetaInfo();
+  go('s-profile');
+}
+function resumeGameFromProfile() {
+  updateGamePlayerCard();
+  setProfileOpenedFromGameUI(false);
+  go('s-game');
+  if (G.running) {
+    if (wasPausedBeforeProfile) {
+      G.paused = true;
+      var ov = document.getElementById('pause-ov');
+      if (ov) ov.classList.remove('off');
+    } else {
+      G.paused = false;
+      var ov2 = document.getElementById('pause-ov');
+      if (ov2) ov2.classList.add('off');
+      if (shouldResumeMediaFromProfile) {
+        resumeAudio();
+        resumeVideoFromProfile();
+      }
+      G.lastRafTs = performance.now();
+      G.raf = requestAnimationFrame(loop);
+    }
+  }
+  wasPausedBeforeProfile = false;
+  shouldResumeMediaFromProfile = false;
+}
+
 // ═══════════════════════════════════════════════════════
 //  LANES
 // ═══════════════════════════════════════════════════════
@@ -3148,8 +3360,8 @@ function initGame() {
   document.getElementById('hud-score').textContent = '0';
   document.getElementById('hud-combo').textContent = '0';
   document.getElementById('hud-acc').textContent = '100%';
-  document.getElementById('sb-avatar').src = PLAYER.avatarSrc;
-  document.getElementById('sb-name').textContent = PLAYER.id;
+  updateGamePlayerCard();
+  refreshProfileMetaInfo();
   document.getElementById('prog').style.width = '0%';
   document.getElementById('lyric-main').textContent = '♪';
   document.getElementById('lyric-sub').textContent = '';
@@ -3631,6 +3843,7 @@ function endGame() {
 var _unlockPinTarget = null;
 
 function openUnlockPanel() {
+  if (typeof collapseProfileData === 'function') collapseProfileData();
   collapseProfileData();
   if (isProfileIdentityDirty()) {
     alert('你已變更玩家身份。\n請先按「確認」完成身份切換，再查看頭像收藏。');
