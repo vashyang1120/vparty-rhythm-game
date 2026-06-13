@@ -733,6 +733,45 @@ body.profile-from-game #btn-change-base-avatar {
 }
 .game-player-title { color:var(--purple); }
 .game-player-vcoin { color:#d59a00; }
+@media(max-width:900px){
+  #player-card,
+  .game-player-card{
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    padding:6px 4px;
+    border-radius:16px;
+  }
+  #sb-avatar,
+  .game-player-avatar{
+    width:40px;
+    height:40px;
+  }
+  .game-player-main{
+    width:100%;
+    align-items:center;
+    text-align:center;
+  }
+  #sb-name,
+  .game-player-name{
+    width:100%;
+    max-width:76px;
+    font-size:10px;
+    font-weight:800;
+    line-height:1.2;
+  }
+  .game-player-title,
+  .game-player-vcoin{
+    display:none;
+  }
+}
+@media(min-width:901px){
+  #player-card,
+  .game-player-card{
+    min-height:62px;
+  }
+}
 #hud-score {
   font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive; font-size:clamp(12px,2vw,20px);
   color:var(--pink2); word-break:break-all; text-shadow:0 2px 8px rgba(232,111,154,.3);
@@ -1262,7 +1301,7 @@ body.portrait-game #s-admin {
 
 
 
-/* v2.6.1-rhythm-player-card-foundation-test-1: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
+/* v2.6.1-rhythm-player-card-foundation-test-2: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
 :root{
   --ui-font:'Noto Sans TC','Microsoft JhengHei','微軟正黑體','PingFang TC','Nunito',sans-serif;
   --display-font:'Fredoka One','Nunito',cursive;
@@ -1463,7 +1502,7 @@ button,input,select,textarea{
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1-rhythm-player-card-foundation-test-1</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1-rhythm-player-card-foundation-test-2</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
@@ -3219,6 +3258,7 @@ var G = mkG();
 var profileOpenedFromGame = false;
 var wasPausedBeforeProfile = false;
 var shouldResumeMediaFromProfile = false;
+var isResumeCountingDown = false;
 
 function getProfileText(id, fallback) {
   var el = document.getElementById(id);
@@ -3232,11 +3272,17 @@ function updateGamePlayerCard() {
   var name = document.getElementById('sb-name');
   var title = document.getElementById('game-player-title');
   var vcoin = document.getElementById('game-player-vcoin');
-  if (avatar) avatar.src = (PLAYER.avatarSrc || (av && av.src) || (av && av.url) || '');
-  if (name) name.textContent = PLAYER.id || '玩家';
-  if (title) title.textContent = '稱號：' + getProfileText('profile-equipped-title', '未裝備').replace(/^稱號[:：]?\s*/, '');
+  var card = document.getElementById('player-card');
+  var displayName = PLAYER.id || '玩家';
+  var titleText = getProfileText('profile-equipped-title', '未裝備').replace(/^稱號[:：]?\s*/, '') || '未裝備';
   var vc = getProfileText('profile-vcoin-balance', '—');
-  if (vcoin) vcoin.textContent = '🪙 V幣：' + vc.replace(/^🪙\s*V幣[:：]?\s*/, '').replace(/\s*V幣$/, '') + (vc.indexOf('V幣') >= 0 ? '' : (vc === '—' || vc === '暫時無法取得' ? '' : ' V幣'));
+  var vcoinText = vc.replace(/^🪙\s*V幣[:：]?\s*/, '').replace(/\s*V幣$/, '');
+  if (vc.indexOf('V幣') < 0 && vc !== '—' && vc !== '暫時無法取得') vcoinText += ' V幣';
+  if (avatar) avatar.src = (PLAYER.avatarSrc || (av && av.src) || (av && av.url) || '');
+  if (name) name.textContent = displayName;
+  if (title) title.textContent = '稱號：' + titleText;
+  if (vcoin) vcoin.textContent = '🪙 V幣：' + vcoinText;
+  if (card) card.title = displayName + '｜稱號：' + titleText + '｜V幣：' + vcoinText + '｜開啟角色設定';
 }
 function setProfileOpenedFromGameUI(active) {
   profileOpenedFromGame = !!active;
@@ -3284,29 +3330,57 @@ function openProfileFromGameCard() {
   go('s-profile');
 }
 function resumeGameFromProfile() {
+  var shouldResume = shouldResumeMediaFromProfile;
+  var keepPaused = wasPausedBeforeProfile;
   updateGamePlayerCard();
   setProfileOpenedFromGameUI(false);
   go('s-game');
   if (G.running) {
-    if (wasPausedBeforeProfile) {
+    if (keepPaused) {
       G.paused = true;
       var ov = document.getElementById('pause-ov');
       if (ov) ov.classList.remove('off');
     } else {
-      G.paused = false;
-      var ov2 = document.getElementById('pause-ov');
-      if (ov2) ov2.classList.add('off');
-      if (shouldResumeMediaFromProfile) {
-        resumeAudio();
-        resumeVideoFromProfile();
-      }
-      G.lastRafTs = performance.now();
-      G.raf = requestAnimationFrame(loop);
+      resumeGameWithCountdown(shouldResume);
     }
   }
   wasPausedBeforeProfile = false;
   shouldResumeMediaFromProfile = false;
 }
+
+function resumeGameWithCountdown(shouldResumeMedia) {
+  if (!G.running || isResumeCountingDown) return;
+  isResumeCountingDown = true;
+  G.paused = true;
+  pauseAudio();
+  pauseVideoForProfile();
+  var ov = document.getElementById('pause-ov');
+  if (ov) ov.classList.add('off');
+  var el = document.getElementById('countdown');
+  var n = 3;
+  function done() {
+    isResumeCountingDown = false;
+    if (!G.running) return;
+    G.paused = false;
+    if (shouldResumeMedia !== false) {
+      resumeAudio();
+      resumeVideoFromProfile();
+    }
+    G.lastRafTs = performance.now();
+    if (G.raf) cancelAnimationFrame(G.raf);
+    G.raf = requestAnimationFrame(loop);
+  }
+  function step() {
+    if (!G.running) { isResumeCountingDown = false; return; }
+    if (n === 0) {
+      showCnt(el, 'GO!', '#06d6a0', done);
+      return;
+    }
+    showCnt(el, String(n), '#fff', function(){ n--; step(); });
+  }
+  step();
+}
+
 
 // ═══════════════════════════════════════════════════════
 //  LANES
@@ -3361,7 +3435,6 @@ function initGame() {
   document.getElementById('hud-combo').textContent = '0';
   document.getElementById('hud-acc').textContent = '100%';
   updateGamePlayerCard();
-  refreshProfileMetaInfo();
   document.getElementById('prog').style.width = '0%';
   document.getElementById('lyric-main').textContent = '♪';
   document.getElementById('lyric-sub').textContent = '';
@@ -3584,16 +3657,16 @@ function finishHold(n) {
 document.addEventListener('keydown', function(e){
   if (e.repeat) return;
   var i = KEYS.indexOf(e.key.toLowerCase());
-  if (i !== -1 && G.running && !G.paused) press(i, true);
+  if (i !== -1 && G.running && !G.paused && !isResumeCountingDown) press(i, true);
   if (e.key === 'Escape' && G.running) togglePause();
 });
 document.addEventListener('keyup', function(e){
   var i = KEYS.indexOf(e.key.toLowerCase());
-  if (i !== -1 && G.running && !G.paused) press(i, false);
+  if (i !== -1 && G.running && !G.paused && !isResumeCountingDown) press(i, false);
 });
 
 function press(lane, down) {
-  if (!G.running || G.paused) return;
+  if (!G.running || G.paused || isResumeCountingDown) return;
   G.holding[lane] = down;
   laneEls[lane].classList.toggle('pressing', down);
   if (!down) return;
@@ -3692,29 +3765,19 @@ function updateLyrics() {
 //  PAUSE / QUIT
 // ═══════════════════════════════════════════════════════
 function togglePause() {
-  if (!G.running) return;
-  G.paused = !G.paused;
-  document.getElementById('pause-ov').classList.toggle('off', !G.paused);
-  if (G.paused) {
+  if (!G.running || isResumeCountingDown) return;
+  if (!G.paused) {
+    G.paused = true;
+    document.getElementById('pause-ov').classList.remove('off');
     pauseAudio();
-    ytPause();   // MV 同步暫停
+    pauseVideoForProfile();
   } else {
-    resumeAudio();
-  ytPlayFrom(audioPauseOffset);
-  ytPlayFrom(audioPauseOffset);
-    ytPlay();    // MV 同步繼續
-    G.lastRafTs = performance.now();
-    requestAnimationFrame(loop);
+    resumeGameWithCountdown(true);
   }
 }
 function resumeGame() {
-  G.paused = false;
-  document.getElementById('pause-ov').classList.add('off');
-  resumeAudio();
-  ytPlayFrom(audioPauseOffset);
-  ytPlayFrom(audioPauseOffset);
-  G.lastRafTs = performance.now();
-  requestAnimationFrame(loop);
+  if (!G.running || isResumeCountingDown) return;
+  resumeGameWithCountdown(true);
 }
 function quitGame() {
   G.running = false;
