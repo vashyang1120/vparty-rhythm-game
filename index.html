@@ -164,7 +164,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 ════════════════════════════════════ */
 #s-profile {
   background:linear-gradient(160deg,#fff5fb 0%,#fff8ff 100%);
-  gap:0; padding:16px 16px 80px 16px; overflow-y:auto !important;
+  gap:0; padding:16px 16px 132px 16px; overflow-y:auto !important;
   -webkit-overflow-scrolling:touch !important;
   justify-content:flex-start;
 }
@@ -221,6 +221,351 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
   box-shadow:0 0 0 3px var(--pink), 0 6px 18px rgba(232,111,154,.4);
   transform:scale(1.12);
 }
+
+
+
+.profile-note {
+  width:min(620px,92vw);
+  color:var(--text2);
+  font-size:12px;
+  font-weight:700;
+  line-height:1.65;
+  text-align:left;
+  background:#fff;
+  border:1.5px solid rgba(255,182,215,.45);
+  border-radius:20px;
+  padding:12px 14px;
+  box-shadow:var(--shadow-sm);
+  margin:0 auto 14px;
+}
+.profile-id-box {
+  width:min(480px,94vw);
+  margin:0 auto 14px;
+}
+.profile-id-box label {
+  display:block;
+  font-size:12px;
+  color:var(--text2);
+  font-weight:900;
+  letter-spacing:.06em;
+  margin-bottom:6px;
+}
+.profile-avatar-cards,
+.profile-preview-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  width:min(480px,94vw);
+  margin:0 auto 14px;
+}
+.profile-avatar-card,
+.avatar-box {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  background:#fff;
+  border:1.5px solid var(--pink-lt);
+  border-radius:20px;
+  box-shadow:var(--shadow-sm);
+  padding:14px 12px;
+  text-align:center;
+}
+.profile-avatar-card-title,
+.avatar-box h3 {
+  margin:0;
+  font-size:13px;
+  font-weight:900;
+  color:var(--pink2);
+  letter-spacing:.04em;
+}
+.profile-avatar-preview-wrap {
+  width:70px;
+  height:70px;
+  padding:0;
+}
+.profile-avatar-preview-img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:50%;
+  border:4px solid #fff;
+  background:var(--pink-bg);
+  box-shadow:0 0 0 3px var(--pink), 0 6px 18px rgba(232,111,154,.25);
+}
+.profile-avatar-label {
+  min-height:18px;
+  font-size:11px;
+  color:var(--text);
+  font-weight:900;
+  text-align:center;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:100%;
+}
+.profile-avatar-desc {
+  min-height:38px;
+  font-size:10px;
+  color:var(--text2);
+  text-align:center;
+  line-height:1.45;
+  font-weight:700;
+}
+.profile-mini-btn {
+  font-size:11px;
+  padding:7px 13px;
+}
+.btn-profile-entry {
+  background:linear-gradient(135deg,#C86BFF 0%,#FF7FB5 100%);
+  color:#fff;
+  border:none;
+  box-shadow:0 10px 24px rgba(200,107,255,.22),0 4px 14px rgba(255,127,181,.22);
+}
+.btn-profile-entry:hover {
+  transform:translateY(-1px);
+  box-shadow:0 12px 28px rgba(200,107,255,.30),0 5px 16px rgba(255,127,181,.28);
+}
+.profile-data-card {
+  width:min(480px,94vw);
+  margin:0 auto 14px;
+  overflow:visible;
+  flex:0 0 auto;
+}
+.profile-data-toggle {
+  width:100%;
+  min-height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:13px 16px;
+  background:#fff;
+  border:1.8px solid var(--pink-lt);
+  border-radius:22px;
+  color:var(--text);
+  font-family:'Nunito','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,sans-serif;
+  font-weight:900;
+  cursor:pointer;
+  text-align:left;
+  box-shadow:0 6px 18px rgba(232,111,154,.13),var(--shadow-sm);
+}
+.profile-data-toggle-main {
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-width:0;
+}
+.profile-data-toggle-title {
+  font-size:14px;
+  color:var(--text);
+  line-height:1.2;
+}
+.profile-data-toggle-hint {
+  font-size:10px;
+  color:var(--text2);
+  line-height:1.2;
+}
+.profile-data-toggle-icon {
+  flex-shrink:0;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--pink-bg);
+  color:var(--pink2);
+  font-size:16px;
+  font-weight:900;
+}
+.profile-data-content {
+  margin-top:8px;
+  max-height:min(300px,42vh);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:12px;
+  background:#fff;
+  border:1.5px solid rgba(255,182,215,.45);
+  border-radius:20px;
+  box-shadow:var(--shadow-sm);
+}
+.profile-data-card.collapsed .profile-data-content {
+  display:none;
+}
+.profile-status-grid {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.profile-data-row,
+.identity-box,
+.profile-wallet-box,
+.profile-title-panel {
+  display:block;
+  background:linear-gradient(135deg,#fff,var(--pink-bg));
+  border:1.5px solid rgba(255,182,215,.55);
+  border-radius:16px;
+  padding:10px 12px;
+  font-size:12px;
+  color:var(--text2);
+  font-weight:900;
+}
+.profile-data-row span,
+.identity-box > div,
+.profile-wallet-box span,
+.profile-title-current span {
+  display:block;
+  font-size:11px;
+  color:var(--text2);
+  font-weight:900;
+  letter-spacing:.06em;
+  margin-bottom:4px;
+}
+.profile-data-row strong,
+.identity-box strong,
+.profile-wallet-box strong,
+.profile-title-current strong {
+  display:block;
+  color:var(--pink2);
+  font-size:15px;
+  font-weight:900;
+  text-align:left;
+  overflow-wrap:anywhere;
+}
+.profile-wallet-box strong,
+.profile-data-vcoin strong {
+  font-family:'Fredoka One','M PLUS Rounded 1c',cursive;
+  color:#d59a00;
+  font-size:20px;
+}
+.profile-title-current strong,
+.profile-data-title strong {
+  color:var(--purple);
+}
+.profile-player-key-debug {
+  display:none;
+  margin-top:6px;
+  font-size:9px;
+  color:var(--text2);
+  word-break:break-all;
+  background:var(--pink-bg);
+  border-radius:10px;
+  padding:6px 8px;
+}
+.profile-unlock-hint {
+  font-size:10px;
+  color:var(--text2);
+  text-align:center;
+  margin:6px auto 0;
+  width:min(480px,94vw);
+  font-weight:800;
+}
+#avatar-edit-section {
+  width:min(480px,94vw);
+  margin:0 auto 14px;
+  background:#fff;
+  border:1.5px solid rgba(255,182,215,.45);
+  border-radius:20px;
+  box-shadow:var(--shadow-sm);
+  padding:14px;
+}
+#avatar-grid-label {
+  color:var(--pink2)!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+#avatar-grid-hint {
+  background:var(--pink-bg);
+  border-radius:14px;
+  padding:8px 10px;
+  color:var(--text2)!important;
+  font-size:10px!important;
+  font-weight:800;
+  line-height:1.55;
+}
+#profile-action-bar {
+  position:fixed;
+  left:50%;
+  bottom:14px;
+  transform:translateX(-50%);
+  width:min(540px,calc(100vw - 24px));
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:10px 12px;
+  background:rgba(255,255,255,.94);
+  border:1.5px solid rgba(255,182,215,.62);
+  border-radius:22px;
+  box-shadow:0 10px 30px rgba(155,93,229,.18);
+  backdrop-filter:blur(12px);
+  z-index:50;
+}
+#profile-action-bar .btn {
+  font-size:12px;
+  padding:9px 14px;
+}
+#profile-action-bar .btn-p {
+  min-width:126px;
+}
+#btn-resume-game-from-profile {
+  background:linear-gradient(135deg,#3ecf8e,#2ab377);
+  color:#fff;
+  border:none;
+  box-shadow:0 8px 22px rgba(62,207,142,.22);
+}
+#btn-resume-game-from-profile.hidden { display:none!important; }
+.profile-game-lock-hint {
+  display:none;
+  width:min(480px,94vw);
+  margin:-4px auto 12px;
+  padding:9px 12px;
+  border-radius:16px;
+  border:1.5px solid rgba(155,93,229,.25);
+  background:var(--purple-bg);
+  color:var(--purple);
+  font-size:11px;
+  font-weight:800;
+  line-height:1.55;
+  text-align:center;
+}
+body.profile-from-game .profile-game-lock-hint { display:block; }
+body.profile-from-game #player-id-input,
+body.profile-from-game #btn-change-base-avatar {
+  opacity:.58;
+  cursor:not-allowed;
+}
+@media (max-width:520px) {
+  #s-profile { padding:12px 10px 150px 10px; }
+  .profile-avatar-cards,
+  .profile-preview-grid { gap:8px; }
+  .profile-avatar-card,
+  .avatar-box {
+    padding:11px 8px;
+  }
+  .profile-avatar-card-title,
+  .avatar-box h3 { font-size:12px; }
+  .profile-avatar-preview-wrap { width:62px; height:62px; }
+  .profile-avatar-desc { font-size:9px; min-height:42px; }
+  .profile-data-toggle{min-height:58px;padding:12px 14px;}
+  .profile-data-content { max-height:38vh; }
+  #profile-action-bar {
+    bottom:10px;
+    width:calc(100vw - 18px);
+    padding:8px;
+    gap:6px;
+  }
+  #profile-action-bar .btn {
+    flex:1 1 auto;
+    min-width:92px;
+    font-size:11px;
+    padding:8px 8px;
+  }
+}
+
 
 /* ════════════════════════════════════
    SONG LIST
@@ -327,14 +672,106 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
 .hud-block { text-align:center; width:100%; }
 .hud-lbl { font-size:9px; color:var(--pink2); letter-spacing:.1em; margin-bottom:2px;
   font-weight:800; font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive; }
-#player-card { display:flex; flex-direction:column; align-items:center; gap:4px; }
-#sb-avatar {
-  width:46px; height:46px; border-radius:50%;
-  border:3px solid #fff; object-fit:cover;
+#player-card,
+.game-player-card {
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 7px;
+  border:1.5px solid rgba(255,182,215,.65);
+  border-radius:18px;
+  background:rgba(255,255,255,.86);
+  box-shadow:0 6px 18px rgba(232,111,154,.15);
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,filter .16s ease;
+}
+#player-card:hover,
+.game-player-card:hover {
+  transform:translateY(-1px);
+  border-color:var(--pink);
+  box-shadow:0 9px 24px rgba(232,111,154,.24);
+  filter:brightness(1.02);
+}
+#player-card:active,
+.game-player-card:active { transform:scale(.98); }
+#player-card:focus-visible,
+.game-player-card:focus-visible {
+  outline:3px solid rgba(255,133,161,.35);
+  outline-offset:3px;
+}
+#sb-avatar,
+.game-player-avatar {
+  width:42px; height:42px; border-radius:50%;
+  border:3px solid #fff; object-fit:cover; flex-shrink:0;
+  background:var(--pink-bg);
   box-shadow:0 0 0 2px var(--pink), 0 4px 12px rgba(232,111,154,.3);
 }
-#sb-name { font-size:10px; color:var(--text); font-weight:800; max-width:100%;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.game-player-main {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+  line-height:1.15;
+}
+#sb-name,
+.game-player-name {
+  font-size:11px; color:var(--text); font-weight:900; max-width:100%;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.game-player-title,
+.game-player-vcoin {
+  font-size:9px;
+  color:var(--text2);
+  font-weight:800;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.game-player-title { color:var(--purple); }
+.game-player-vcoin { color:#d59a00; }
+@media(max-width:900px){
+  #player-card,
+  .game-player-card{
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    padding:6px 4px;
+    border-radius:16px;
+  }
+  #sb-avatar,
+  .game-player-avatar{
+    width:40px;
+    height:40px;
+  }
+  .game-player-main{
+    width:100%;
+    align-items:center;
+    text-align:center;
+  }
+  #sb-name,
+  .game-player-name{
+    width:100%;
+    max-width:76px;
+    font-size:10px;
+    font-weight:800;
+    line-height:1.2;
+  }
+  .game-player-title,
+  .game-player-vcoin{
+    display:none;
+  }
+}
+@media(min-width:901px){
+  #player-card,
+  .game-player-card{
+    min-height:62px;
+  }
+}
 #hud-score {
   font-family:'Fredoka One','M PLUS Rounded 1c','Noto Sans TC','Microsoft JhengHei','微軟正黑體',PingFang TC,cursive; font-size:clamp(12px,2vw,20px);
   color:var(--pink2); word-break:break-all; text-shadow:0 2px 8px rgba(232,111,154,.3);
@@ -862,6 +1299,196 @@ body.portrait-game #s-admin {
   height: 100% !important;
 }
 
+
+
+/* v2.6.1: 中文 UI 字體修正，只調整字體/字重/行距/字距，不改結構 */
+:root{
+  --ui-font:'Noto Sans TC','Microsoft JhengHei','微軟正黑體','PingFang TC','Nunito',sans-serif;
+  --display-font:'Fredoka One','Nunito',cursive;
+  --number-font:'Fredoka One','Nunito',cursive;
+}
+html,body{
+  font-family:var(--ui-font);
+  font-weight:700;
+  line-height:1.5;
+  letter-spacing:0;
+}
+button,input,select,textarea{
+  font-family:var(--ui-font);
+}
+.btn,
+.btn-outline,
+.btn-p,
+.btn-s,
+.btn-d,
+.btn-y,
+.btn-b,
+.btn-hero,
+.btn-main,
+.btn-small,
+.btn-sm,
+.home-profile-btn,
+.profile-floating-actions button,
+#btn-profile-ok,
+#btn-unlock-collection,
+#btn-profile-back,
+#btn-title-collection,
+#btn-change-base-avatar,
+#btn-change-display-avatar,
+#profile-data-toggle{
+  font-family:var(--ui-font)!important;
+  font-weight:900;
+  letter-spacing:.01em;
+  line-height:1.25;
+}
+.logo,
+.logo small,
+.title-deco,
+.stat-v,
+.grade,
+.hud-val,
+.lbr-rank,
+.lbr-score,
+#score,
+#combo,
+#hud-score,
+#hud-combo,
+#hud-acc,
+#r-grade,
+#r-score,
+#r-acc,
+#r-mc,
+#r-p,
+#r-g,
+#r-m,
+#cl-flash,
+#lv-flash,
+.mp-ttl,
+.mp-disc,
+.mp-nt,
+.mp-time,
+.mpb,
+.mc-btn{
+  font-family:var(--display-font)!important;
+}
+#s-profile,
+#s-profile h2,
+.profile-help,
+.profile-id-field,
+.profile-avatar-card,
+.profile-avatar-card h3,
+.profile-avatar-card p,
+.profile-preview-grid,
+.avatar-box,
+.avatar-box h3,
+.avatar-box p,
+.profile-data-card,
+.profile-data-toggle,
+.profile-data-toggle span,
+.profile-data-toggle small,
+.profile-data-toggle em,
+.profile-data-content,
+.profile-status-grid,
+.identity-box,
+.identity-box div,
+.identity-box strong,
+.profile-wallet-box,
+.profile-wallet-box span,
+.profile-title-panel,
+.profile-title-current,
+.profile-title-current span,
+.profile-title-current strong,
+#avatar-picker,
+#avatar-picker-title,
+#avatar-grid,
+#av-grid-wrap,
+#av-grid-title,
+.profile-floating-actions,
+.profile-floating-actions .btn{
+  font-family:var(--ui-font)!important;
+}
+#s-profile h2{
+  font-weight:900;
+  line-height:1.35;
+  letter-spacing:.02em;
+}
+.profile-help,
+#s-profile .muted,
+.avatar-box p,
+.profile-avatar-card p,
+.identity-box div,
+.profile-wallet-box span,
+.profile-title-current span,
+#av-grid-title,
+.picker-head,
+.picker-head strong{
+  font-weight:700;
+  line-height:1.6;
+  letter-spacing:0;
+}
+.profile-data-toggle span{
+  font-weight:900;
+  line-height:1.35;
+  letter-spacing:.01em;
+}
+.profile-data-toggle small,
+.profile-data-toggle em,
+#profile-data-toggle-hint{
+  font-weight:700;
+  line-height:1.45;
+  letter-spacing:0;
+}
+.identity-box strong,
+.profile-wallet-box strong,
+.profile-title-current strong,
+#profile-identity-label,
+#profile-vcoin-balance,
+#profile-equipped-title{
+  font-weight:900;
+  line-height:1.45;
+  letter-spacing:0;
+}
+.identity-box code,
+#profile-player-key{
+  font-family:'Nunito','Noto Sans TC','Microsoft JhengHei','PingFang TC',sans-serif!important;
+  font-weight:700;
+  line-height:1.45;
+  letter-spacing:0;
+}
+#player-id-input{
+  font-family:var(--ui-font)!important;
+  font-weight:800;
+  line-height:1.35;
+  letter-spacing:0;
+}
+#s-title .btn,
+.title-card .btn,
+#btn-start,
+#btn-lb,
+#btn-change-profile,
+#btn-profile-entry,
+#btn-profile-home,
+#btn-r-profile,
+#btn-music-title,
+#btn-game-menu,
+#btn-how{
+  font-family:var(--ui-font)!important;
+  font-weight:900;
+  letter-spacing:.01em;
+  line-height:1.25;
+}
+#btn-change-profile,
+#btn-profile-entry,
+#btn-profile-home{
+  color:#fff;
+}
+@media(max-width:520px){
+  .btn{letter-spacing:0;}
+  #s-profile h2{line-height:1.3;}
+  .profile-data-toggle small,
+  .profile-data-toggle em,
+  #profile-data-toggle-hint{font-size:10px;}
+}
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -875,12 +1502,13 @@ body.portrait-game #s-admin {
   <div class="title-deco">🎈 ✨ 🌸</div>
   <div class="logo" onclick="handleLogoClick()" style="cursor:default;user-select:none">氣球小V魔法派對<small>BALLOON V MAGIC PARTY</small></div>
   <div class="title-hint">Suno AI × YouTube MV</div>
-  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.0</div>
+  <div id="game-version" style="font-size:9px;color:rgba(155,93,229,.35);letter-spacing:.12em;margin-top:3px;">v2.6.1</div>
   <div class="btn-row">
     <button class="btn btn-p" id="btn-play">開始遊戲</button>
     <button class="btn btn-s" id="btn-lb-go">排行榜</button>
   </div>
   <div class="btn-row" style="margin-top:8px;">
+    <button class="btn btn-profile-entry" id="btn-profile-go">👤 角色設定</button>
     <button class="btn btn-b" onclick="window.open('https://youtube.com/playlist?list=PLCxWyaG1VhB7wvvXJtJ3T8qfxNM6wOUQx&si=EosteOeSS8U4zSjG','_blank')">🎬 觀看MV</button>
     <button class="btn btn-y" style="color:#7a5500;" onclick="history.back()">← 回到遊戲選單</button>
   </div>
@@ -892,64 +1520,91 @@ body.portrait-game #s-admin {
 
 <!-- PROFILE -->
 <div id="s-profile" class="screen off">
-  <h2>🎀 玩家設定</h2>
-
-  <!-- 雙頭像區塊 -->
-  <div style="display:flex;gap:12px;justify-content:center;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;">
-    <!-- 身份頭像 -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:130px;">
-      <div style="font-size:10px;font-weight:700;color:var(--pink2);letter-spacing:.05em;">身份頭像</div>
-      <div class="avatar-preview-wrap" style="width:64px;height:64px;">
-        <img id="base-avatar-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-      </div>
-      <div style="font-size:9px;color:var(--text2);text-align:center;" id="profile-base-label">boy1</div>
-      <div style="font-size:8px;color:var(--text2);text-align:center;line-height:1.4;">
-        代表玩家身份。<br>ID + 身份頭像決定解鎖進度。
-      </div>
-      <button class="btn btn-s" style="font-size:10px;padding:4px 10px;" onclick="startEditBaseAvatar()">變更身份頭像</button>
-    </div>
-    <!-- 顯示頭像 -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:130px;">
-      <div style="font-size:10px;font-weight:700;color:var(--pink2);letter-spacing:.05em;">顯示頭像</div>
-      <div class="avatar-preview-wrap" style="width:64px;height:64px;">
-        <img id="display-avatar-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-      </div>
-      <div style="font-size:9px;color:var(--text2);text-align:center;" id="profile-display-label">boy1</div>
-      <div style="font-size:8px;color:var(--text2);text-align:center;line-height:1.4;">
-        只影響外觀。<br>可選排行榜顯示的頭像。
-      </div>
-      <button class="btn btn-b" style="font-size:10px;padding:4px 10px;" onclick="startEditDisplayAvatar()">變更顯示頭像</button>
-    </div>
+  <h2>👤 角色設定</h2>
+  <div class="profile-note">
+    ID + 身份頭像就像遊戲身分證，會決定成績、解鎖和排行榜歸在哪一個玩家身上；只要更換 ID 或身份頭像，就會變成另一個玩家身份。顯示頭像只是外觀造型，不會影響成績。
   </div>
 
-  <!-- ID 輸入 -->
-  <div class="id-box" style="text-align:center;margin-bottom:10px;">
+  <div class="id-box profile-id-box">
     <label>玩家 ID（最多 12 字）</label>
     <input type="text" id="player-id-input" placeholder="輸入你的名字" maxlength="12">
-    <div id="profile-identity-dirty-hint" style="display:none;font-size:9px;color:var(--pink2);margin-top:4px;text-align:center;">
-      ⚠️ 你正在變更玩家身份，請按「確認」完成切換。
+    <div id="profile-identity-dirty-hint" style="display:none;font-size:10px;color:var(--pink2);margin-top:6px;text-align:center;font-weight:800;">
+      ⚠️ 你正在變更玩家身份，請按「確認身份」完成切換。
     </div>
   </div>
 
-  <!-- 頭像選擇格（模式切換） -->
-  <div id="avatar-edit-section" style="display:none;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;justify-content:center;">
-      <label id="avatar-grid-label" style="font-weight:700;color:var(--text);font-size:13px;">選擇身份頭像</label>
-      <button class="btn btn-d" style="font-size:10px;padding:3px 10px;" onclick="closeAvatarEdit()">✕ 收起</button>
+  <div id="profile-game-lock-hint" class="profile-game-lock-hint">
+    遊戲進行中不可變更玩家 ID 或身份頭像，避免成績歸屬錯誤。你仍可更換顯示頭像，完成後按「▶ 繼續遊戲」。
+  </div>
+
+  <div class="profile-avatar-cards profile-preview-grid">
+    <div class="profile-avatar-card avatar-box">
+      <h3>🔑 身份頭像</h3>
+      <div class="avatar-preview-wrap profile-avatar-preview-wrap">
+        <img id="base-avatar-preview" src="" alt="身份頭像" class="profile-avatar-preview-img">
+      </div>
+      <div class="profile-avatar-label" id="profile-base-label">—</div>
+      <div class="profile-avatar-desc">遊戲身分證：ID + 身份頭像決定成績與解鎖歸屬</div>
+      <button class="btn btn-outline profile-mini-btn" onclick="startEditBaseAvatar()">選身份頭像</button>
     </div>
-    <div id="avatar-grid-hint" style="font-size:9px;color:var(--pink2);margin-bottom:6px;text-align:center;"></div>
+    <div class="profile-avatar-card avatar-box">
+      <h3>🎨 顯示頭像</h3>
+      <div class="avatar-preview-wrap profile-avatar-preview-wrap">
+        <img id="display-avatar-preview" src="" alt="顯示頭像" class="profile-avatar-preview-img">
+      </div>
+      <div class="profile-avatar-label" id="profile-display-label">—</div>
+      <div class="profile-avatar-desc">外觀造型：只改畫面顯示，不改變玩家身份</div>
+      <button class="btn btn-outline profile-mini-btn" onclick="startEditDisplayAvatar()">選顯示頭像</button>
+    </div>
+  </div>
+
+  <div class="profile-data-card" id="profile-data-card">
+    <button type="button" class="profile-data-toggle" id="profile-data-toggle" onclick="toggleProfileDataCard()" aria-expanded="true">
+      <span class="profile-data-toggle-main">
+        <span class="profile-data-toggle-title">👤 玩家資料</span>
+        <span class="profile-data-toggle-hint" id="profile-data-toggle-text">點擊可收合</span>
+      </span>
+      <span class="profile-data-toggle-icon" id="profile-data-toggle-icon">⌃</span>
+    </button>
+    <div class="profile-data-content" id="profile-data-content">
+      <div class="profile-status-grid">
+        <div class="identity-box profile-data-row">
+          <span>目前遊戲身份</span>
+          <strong id="profile-current-identity">身份：—</strong>
+          <code id="profile-player-key" class="profile-player-key-debug">—</code>
+        </div>
+        <div class="profile-wallet-box profile-data-row profile-data-vcoin">
+          <span>🪙 目前 V幣</span>
+          <strong id="profile-vcoin-balance">—</strong>
+        </div>
+        <div class="profile-title-panel profile-data-row profile-data-title">
+          <div class="profile-title-current">
+            <span>🎖 目前稱號</span>
+            <strong id="profile-equipped-title">未裝備</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="avatar-edit-section" style="display:none;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;justify-content:space-between;">
+      <label id="avatar-grid-label">選擇身份頭像</label>
+      <button class="btn btn-d" style="font-size:10px;padding:4px 10px;" onclick="closeAvatarEdit()">✕ 收起</button>
+    </div>
+    <div id="avatar-grid-hint"></div>
     <div id="avatar-grid"></div>
   </div>
 
-  <div style="font-size:9px;color:var(--text2);text-align:center;margin-top:6px;">
+  <div class="profile-unlock-hint">
     💡 想查看已解鎖與未解鎖頭像，請到「頭像收藏」
   </div>
-  <div class="btn-row" style="margin-top:8px;">
-    <button class="btn btn-p" id="btn-profile-ok">確認 🎀</button>
-    <button class="btn btn-d" id="btn-profile-back">返回</button>
-  </div>
-  <div style="margin-top:8px;">
-    <button class="btn btn-b" id="btn-open-unlock" onclick="openUnlockPanel()" style="font-size:12px;padding:6px 16px;">🏆 頭像收藏</button>
+
+  <div id="profile-action-bar">
+    <button class="btn btn-p hidden" id="btn-resume-game-from-profile">▶ 繼續遊戲</button>
+    <button class="btn btn-p" id="btn-profile-ok">🎀 確認身份</button>
+    <button class="btn btn-outline" id="btn-open-unlock" onclick="openUnlockPanel()">🏆 頭像收藏</button>
+    <button class="btn btn-outline" id="btn-profile-back">← 返回</button>
   </div>
 </div>
 
@@ -1018,9 +1673,13 @@ body.portrait-game #s-admin {
   </div>
   <button id="mv-btn" onclick="toggleMV()">▶ MV</button>
   <div id="sidebar">
-    <div id="player-card">
-      <img id="sb-avatar" src="" alt="">
-      <div id="sb-name"></div>
+    <div id="player-card" class="game-player-card" role="button" tabindex="0" title="開啟角色設定">
+      <img id="sb-avatar" class="game-player-avatar" src="" alt="玩家頭像">
+      <div class="game-player-main">
+        <div id="sb-name" class="game-player-name"></div>
+        <div id="game-player-title" class="game-player-title">稱號：未裝備</div>
+        <div id="game-player-vcoin" class="game-player-vcoin">🪙 V幣：—</div>
+      </div>
     </div>
     <div class="hud-block"><div class="hud-lbl">✨ 分數</div><div id="hud-score">0</div></div>
     <div class="hud-block"><div id="hud-combo">0</div><div class="hud-lbl">🔥 COMBO</div></div>
@@ -1807,6 +2466,7 @@ function validateDisplayAvatarForCurrentIdentity() {
     if (dispPrev) dispPrev.src = PLAYER.avatarSrc;
     var sbAv = document.getElementById('sb-avatar');
     if (sbAv) sbAv.src = PLAYER.avatarSrc;
+    if (typeof updateGamePlayerCard === 'function') updateGamePlayerCard();
     if (FIREBASE_ENABLED && firebaseDb && PLAYER.playerKey) {
       firebaseDb.ref(DB_PATHS.players + '/' + PLAYER.playerKey + '/profile').update({
         displayAvatarKey: PLAYER.displayAvatarKey,
@@ -1822,24 +2482,109 @@ function validateDisplayAvatarForCurrentIdentity() {
   return true;
 }
 
+
+function getAvatarDisplayName(key) {
+  var av = getAvatarByKey(key || 'boy1');
+  return (av && (av.name || av.label || av.key)) || key || '—';
+}
 function _updateProfileUI() {
   var baseLabel = document.getElementById('profile-base-label');
   var dispLabel = document.getElementById('profile-display-label');
-  if (baseLabel) baseLabel.textContent = PLAYER.baseAvatarKey;
-  if (dispLabel) dispLabel.textContent = PLAYER.displayAvatarKey;
+  if (baseLabel) baseLabel.textContent = getAvatarDisplayName(PLAYER.baseAvatarKey);
+  if (dispLabel) dispLabel.textContent = getAvatarDisplayName(PLAYER.displayAvatarKey);
   var basePrev = document.getElementById('base-avatar-preview');
   var dispPrev = document.getElementById('display-avatar-preview');
   if (basePrev) basePrev.src = getAvatarByKey(PLAYER.baseAvatarKey).src;
   if (dispPrev) dispPrev.src = getAvatarByKey(PLAYER.displayAvatarKey).src;
+  updateProfileDataStatic();
+}
+
+function updateProfileDataStatic() {
+  var pKey = PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+  var identityEl = document.getElementById('profile-current-identity');
+  var keyEl = document.getElementById('profile-player-key');
+  var id = normalizePlayerId(PLAYER.id);
+  var baseName = getAvatarDisplayName(PLAYER.baseAvatarKey || 'boy1');
+  if (identityEl) identityEl.textContent = '身份：' + id + ' + ' + baseName;
+  if (keyEl) keyEl.textContent = pKey || '—';
+}
+
+function setProfileDataCollapsed(collapsed) {
+  var card = document.getElementById('profile-data-card');
+  var text = document.getElementById('profile-data-toggle-text');
+  var icon = document.getElementById('profile-data-toggle-icon');
+  var toggle = document.getElementById('profile-data-toggle');
+  if (!card) return;
+  card.classList.toggle('collapsed', !!collapsed);
+  if (toggle) toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  if (text) text.textContent = collapsed ? '已收合，點擊展開' : '點擊可收合';
+  if (icon) icon.textContent = collapsed ? '⌄' : '⌃';
+}
+function collapseProfileData() { setProfileDataCollapsed(true); }
+function expandProfileData() { setProfileDataCollapsed(false); }
+function toggleProfileDataCard(forceOpen) {
+  var card = document.getElementById('profile-data-card');
+  if (!card) return;
+  if (typeof forceOpen === 'boolean') {
+    setProfileDataCollapsed(!forceOpen);
+  } else {
+    setProfileDataCollapsed(!card.classList.contains('collapsed'));
+  }
+}
+
+function refreshProfileMetaInfo() {
+  updateProfileDataStatic();
+  updateGamePlayerCard();
+  var balanceEl = document.getElementById('profile-vcoin-balance');
+  var titleEl = document.getElementById('profile-equipped-title');
+  if (balanceEl) balanceEl.textContent = '—';
+  if (titleEl) titleEl.textContent = '未裝備';
+  if (!FIREBASE_ENABLED) return;
+  var pKey = PLAYER.playerKey || makePlayerKey(PLAYER.id, PLAYER.baseAvatarKey);
+  if (!pKey) return;
+  ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) {
+      if (balanceEl) balanceEl.textContent = '暫時無法取得';
+      return;
+    }
+    firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/wallet/balance').once('value').then(function(snap) {
+      var v = snap.val();
+      if (balanceEl) balanceEl.textContent = (v === null || typeof v === 'undefined') ? '0 V幣' : (Number(v || 0) + ' V幣');
+      updateGamePlayerCard();
+    }).catch(function() {
+      if (balanceEl) balanceEl.textContent = '暫時無法取得';
+    });
+    var titlePaths = [
+      DB_PATHS.players + '/' + pKey + '/equippedTitle',
+      DB_PATHS.players + '/' + pKey + '/quizEquippedTitle',
+      DB_PATHS.players + '/' + pKey + '/profile/equippedTitle'
+    ];
+    Promise.all(titlePaths.map(function(path) {
+      return firebaseDb.ref(path).once('value').then(function(snap){ return snap.val(); }).catch(function(){ return null; });
+    })).then(function(vals) {
+      var picked = vals.find(function(v){ return !!v; });
+      var label = '未裝備';
+      if (typeof picked === 'string') label = picked;
+      else if (picked && typeof picked === 'object') label = picked.name || picked.title || picked.label || picked.key || '未裝備';
+      if (titleEl) titleEl.textContent = label;
+      updateGamePlayerCard();
+    });
+  });
 }
 
 function startEditBaseAvatar() {
+  if (profileOpenedFromGame) {
+    alert('遊戲進行中不可變更玩家身份，避免成績歸屬錯誤。請結束本局或回首頁後再變更玩家 ID / 身份頭像。');
+    return;
+  }
   // dirty 時仍允許變更身份頭像（可同次一起確認）
   profileAvatarEditMode = 'base';
+  collapseProfileData();
   document.getElementById('avatar-edit-section').style.display = 'block';
   document.getElementById('avatar-grid-label').textContent = '選擇身份頭像';
   document.getElementById('avatar-grid-hint').textContent = '更換身份頭像＝切換玩家身份，解鎖頭像會依新身份重新讀取。';
   _renderAvatarGrid();
+  setTimeout(function(){ var el = document.getElementById('avatar-edit-section'); if (el) el.scrollIntoView({behavior:'smooth', block:'center'}); }, 50);
 }
 
 function startEditDisplayAvatar() {
@@ -1848,12 +2593,14 @@ function startEditDisplayAvatar() {
     return;
   }
   profileAvatarEditMode = 'display';
+  collapseProfileData();
   document.getElementById('avatar-edit-section').style.display = 'block';
   document.getElementById('avatar-grid-label').textContent = '選擇顯示頭像';
   document.getElementById('avatar-grid-hint').textContent = '更換顯示頭像只改變外觀，不會改變玩家身份。';
   // 確保 catalog 已讀取後再渲染
   loadAvatarCatalog().then(function() {
     _renderAvatarGrid();
+    setTimeout(function(){ var el = document.getElementById('avatar-edit-section'); if (el) el.scrollIntoView({behavior:'smooth', block:'center'}); }, 50);
   });
 }
 
@@ -1886,7 +2633,7 @@ function _renderAvatarGrid() {
           var basePrev = document.getElementById('base-avatar-preview');
           if (basePrev) basePrev.src = av.src;
           var baseLabel = document.getElementById('profile-base-label');
-          if (baseLabel) baseLabel.textContent = av.key;
+          if (baseLabel) baseLabel.textContent = getAvatarDisplayName(av.key);
           // 更新 dirty hint
           var dirtyHint = document.getElementById('profile-identity-dirty-hint');
           if (dirtyHint) dirtyHint.style.display = isProfileIdentityDirty() ? 'block' : 'none';
@@ -2049,6 +2796,7 @@ function _applyDisplayAvatar(key, src) {
   _updateProfileUI();
   var sbAv = document.getElementById('sb-avatar');
   if (sbAv) sbAv.src = PLAYER.avatarSrc;
+  updateGamePlayerCard();
   // 同步 Firebase profile
   if (FIREBASE_ENABLED) {
     ensureFirebaseReady().then(function(ok) {
@@ -2078,7 +2826,10 @@ function initProfile() {
     validateDisplayAvatarForCurrentIdentity();
     ensurePlayerProfile();
     _updateProfileUI();
+    refreshProfileMetaInfo();
   });
+  updateProfileDataStatic();
+  setProfileDataCollapsed(false);
 
   document.getElementById('player-id-input').value = PLAYER.id;
 
@@ -2094,10 +2845,11 @@ function initProfile() {
 function saveProfile() {
   return Promise.resolve(savePlayerProfile()).then(function(ok) {
     if (!ok) return false;
-    document.getElementById('sb-avatar').src = PLAYER.avatarSrc;
-    document.getElementById('sb-name').textContent = PLAYER.id;
+    updateGamePlayerCard();
     var dirtyHint = document.getElementById('profile-identity-dirty-hint');
     if (dirtyHint) dirtyHint.style.display = 'none';
+    updateProfileDataStatic();
+    refreshProfileMetaInfo();
     return true;
   });
 }
@@ -2112,7 +2864,8 @@ function go(id) {
   var fsbtn = document.getElementById('fs-btn');
   if (fsbtn) fsbtn.style.display = (id === 's-game') ? 'none' : 'flex';
   // Scroll to top when entering LB or result
-  if (id === 's-lb' || id === 's-result' || id === 's-admin') {
+  if (id === 's-game') updateGamePlayerCard();
+  if (id === 's-lb' || id === 's-result' || id === 's-admin' || id === 's-profile') {
     var el = document.getElementById(id);
     if (el) setTimeout(function(){ el.scrollTop = 0; }, 50);
     // Hide the scroll-to-top btn
@@ -2124,20 +2877,32 @@ function go(id) {
 // ═══════════════════════════════════════════════════════
 //  BUTTONS
 // ═══════════════════════════════════════════════════════
-document.getElementById('btn-play').onclick        = function(){ initProfile(); go('s-profile'); };
+document.getElementById('btn-play').onclick        = function(){ setProfileOpenedFromGameUI(false); initProfile(); go('s-profile'); };
+document.getElementById('btn-profile-go').onclick  = function(){ setProfileOpenedFromGameUI(false); initProfile(); go('s-profile'); };
 document.getElementById('btn-lb-go').onclick = function(){
   lbSongId = (selectedSong && selectedSong.id) || 'song001';
   lbDiff = 'all';
   ensureSongsLoaded().then(function() { renderLB(); go('s-lb'); });
 };
-document.getElementById('btn-profile-back').onclick = function(){ go('s-title'); };
+document.getElementById('btn-profile-back').onclick = function(){
+  if (profileOpenedFromGame) resumeGameFromProfile();
+  else go('s-title');
+};
 document.getElementById('btn-profile-ok').onclick = function(){
   saveProfile().then(function(ok) {
     if (!ok) return;
+    updateGamePlayerCard();
+    if (profileOpenedFromGame) {
+      refreshProfileMetaInfo();
+      alert('角色設定已更新。要回到本局請按「▶ 繼續遊戲」。');
+      return;
+    }
     loadSongs();
     go('s-songlist');
   });
 };
+var resumeProfileBtn = document.getElementById('btn-resume-game-from-profile');
+if (resumeProfileBtn) resumeProfileBtn.onclick = resumeGameFromProfile;
 document.getElementById('btn-back-song').onclick    = function(){ go('s-profile'); };
 document.getElementById('btn-start').onclick        = initGame;
 document.getElementById('btn-resume').onclick       = resumeGame;
@@ -2150,6 +2915,17 @@ document.getElementById('btn-r-lb').onclick = function(){
 };
 document.getElementById('btn-r-home').onclick       = function(){ go('s-title'); };
 document.getElementById('btn-lb-home').onclick      = function(){ go('s-title'); };
+
+var gamePlayerCardEl = document.getElementById('player-card');
+if (gamePlayerCardEl) {
+  gamePlayerCardEl.addEventListener('click', openProfileFromGameCard);
+  gamePlayerCardEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openProfileFromGameCard();
+    }
+  });
+}
 
 document.getElementById('btn-unlock-back').onclick = function(){ go('s-profile'); };
 
@@ -2479,6 +3255,133 @@ function mkG() {
 }
 var G = mkG();
 
+var profileOpenedFromGame = false;
+var wasPausedBeforeProfile = false;
+var shouldResumeMediaFromProfile = false;
+var isResumeCountingDown = false;
+
+function getProfileText(id, fallback) {
+  var el = document.getElementById(id);
+  var text = el ? (el.textContent || '').trim() : '';
+  return text || fallback || '';
+}
+function updateGamePlayerCard() {
+  var avatarKey = PLAYER.displayAvatarKey || PLAYER.avatarKey || PLAYER.baseAvatarKey || 'boy1';
+  var av = getAvatarByKey(avatarKey);
+  var avatar = document.getElementById('sb-avatar');
+  var name = document.getElementById('sb-name');
+  var title = document.getElementById('game-player-title');
+  var vcoin = document.getElementById('game-player-vcoin');
+  var card = document.getElementById('player-card');
+  var displayName = PLAYER.id || '玩家';
+  var titleText = getProfileText('profile-equipped-title', '未裝備').replace(/^稱號[:：]?\s*/, '') || '未裝備';
+  var vc = getProfileText('profile-vcoin-balance', '—');
+  var vcoinText = vc.replace(/^🪙\s*V幣[:：]?\s*/, '').replace(/\s*V幣$/, '');
+  if (vc.indexOf('V幣') < 0 && vc !== '—' && vc !== '暫時無法取得') vcoinText += ' V幣';
+  if (avatar) avatar.src = (PLAYER.avatarSrc || (av && av.src) || (av && av.url) || '');
+  if (name) name.textContent = displayName;
+  if (title) title.textContent = '稱號：' + titleText;
+  if (vcoin) vcoin.textContent = '🪙 V幣：' + vcoinText;
+  if (card) card.title = displayName + '｜稱號：' + titleText + '｜V幣：' + vcoinText + '｜開啟角色設定';
+}
+function setProfileOpenedFromGameUI(active) {
+  profileOpenedFromGame = !!active;
+  document.body.classList.toggle('profile-from-game', profileOpenedFromGame);
+  var resumeBtn = document.getElementById('btn-resume-game-from-profile');
+  if (resumeBtn) resumeBtn.classList.toggle('hidden', !profileOpenedFromGame);
+  var idInput = document.getElementById('player-id-input');
+  var baseBtn = document.getElementById('btn-change-base-avatar');
+  if (idInput) idInput.disabled = profileOpenedFromGame;
+  if (baseBtn) baseBtn.disabled = profileOpenedFromGame;
+}
+function pauseVideoForProfile() {
+  var bgVid = document.getElementById('bg-video');
+  if (bgVid && bgVid.style.display !== 'none') {
+    try { bgVid.pause(); } catch(e) {}
+  }
+  try { ytPause(); } catch(e2) {}
+}
+function resumeVideoFromProfile() {
+  var bgVid = document.getElementById('bg-video');
+  if (bgVid && bgVid.style.display !== 'none' && bgVid.src) {
+    try { bgVid.play().catch(function(){}); } catch(e) {}
+  }
+  try { ytResume(audioPauseOffset || (G.gt / 1000) || 0); } catch(e2) {
+    try { ytPlayFrom(audioPauseOffset || (G.gt / 1000) || 0); } catch(e3) {}
+  }
+}
+function pauseGameForProfile() {
+  wasPausedBeforeProfile = !!G.paused;
+  shouldResumeMediaFromProfile = !!(G.running && !G.paused);
+  if (G.running) {
+    G.paused = true;
+    var ov = document.getElementById('pause-ov');
+    if (ov) ov.classList.add('off');
+  }
+  pauseAudio();
+  pauseVideoForProfile();
+}
+function openProfileFromGameCard() {
+  if (!G.running) return;
+  pauseGameForProfile();
+  initProfile();
+  setProfileOpenedFromGameUI(true);
+  refreshProfileMetaInfo();
+  go('s-profile');
+}
+function resumeGameFromProfile() {
+  var shouldResume = shouldResumeMediaFromProfile;
+  var keepPaused = wasPausedBeforeProfile;
+  updateGamePlayerCard();
+  setProfileOpenedFromGameUI(false);
+  go('s-game');
+  if (G.running) {
+    if (keepPaused) {
+      G.paused = true;
+      var ov = document.getElementById('pause-ov');
+      if (ov) ov.classList.remove('off');
+    } else {
+      resumeGameWithCountdown(shouldResume);
+    }
+  }
+  wasPausedBeforeProfile = false;
+  shouldResumeMediaFromProfile = false;
+}
+
+function resumeGameWithCountdown(shouldResumeMedia) {
+  if (!G.running || isResumeCountingDown) return;
+  isResumeCountingDown = true;
+  G.paused = true;
+  pauseAudio();
+  pauseVideoForProfile();
+  var ov = document.getElementById('pause-ov');
+  if (ov) ov.classList.add('off');
+  var el = document.getElementById('countdown');
+  var n = 3;
+  function done() {
+    isResumeCountingDown = false;
+    if (!G.running) return;
+    G.paused = false;
+    if (shouldResumeMedia !== false) {
+      resumeAudio();
+      resumeVideoFromProfile();
+    }
+    G.lastRafTs = performance.now();
+    if (G.raf) cancelAnimationFrame(G.raf);
+    G.raf = requestAnimationFrame(loop);
+  }
+  function step() {
+    if (!G.running) { isResumeCountingDown = false; return; }
+    if (n === 0) {
+      showCnt(el, 'GO!', '#06d6a0', done);
+      return;
+    }
+    showCnt(el, String(n), '#fff', function(){ n--; step(); });
+  }
+  step();
+}
+
+
 // ═══════════════════════════════════════════════════════
 //  LANES
 // ═══════════════════════════════════════════════════════
@@ -2531,8 +3434,7 @@ function initGame() {
   document.getElementById('hud-score').textContent = '0';
   document.getElementById('hud-combo').textContent = '0';
   document.getElementById('hud-acc').textContent = '100%';
-  document.getElementById('sb-avatar').src = PLAYER.avatarSrc;
-  document.getElementById('sb-name').textContent = PLAYER.id;
+  updateGamePlayerCard();
   document.getElementById('prog').style.width = '0%';
   document.getElementById('lyric-main').textContent = '♪';
   document.getElementById('lyric-sub').textContent = '';
@@ -2755,16 +3657,16 @@ function finishHold(n) {
 document.addEventListener('keydown', function(e){
   if (e.repeat) return;
   var i = KEYS.indexOf(e.key.toLowerCase());
-  if (i !== -1 && G.running && !G.paused) press(i, true);
+  if (i !== -1 && G.running && !G.paused && !isResumeCountingDown) press(i, true);
   if (e.key === 'Escape' && G.running) togglePause();
 });
 document.addEventListener('keyup', function(e){
   var i = KEYS.indexOf(e.key.toLowerCase());
-  if (i !== -1 && G.running && !G.paused) press(i, false);
+  if (i !== -1 && G.running && !G.paused && !isResumeCountingDown) press(i, false);
 });
 
 function press(lane, down) {
-  if (!G.running || G.paused) return;
+  if (!G.running || G.paused || isResumeCountingDown) return;
   G.holding[lane] = down;
   laneEls[lane].classList.toggle('pressing', down);
   if (!down) return;
@@ -2863,29 +3765,19 @@ function updateLyrics() {
 //  PAUSE / QUIT
 // ═══════════════════════════════════════════════════════
 function togglePause() {
-  if (!G.running) return;
-  G.paused = !G.paused;
-  document.getElementById('pause-ov').classList.toggle('off', !G.paused);
-  if (G.paused) {
+  if (!G.running || isResumeCountingDown) return;
+  if (!G.paused) {
+    G.paused = true;
+    document.getElementById('pause-ov').classList.remove('off');
     pauseAudio();
-    ytPause();   // MV 同步暫停
+    pauseVideoForProfile();
   } else {
-    resumeAudio();
-  ytPlayFrom(audioPauseOffset);
-  ytPlayFrom(audioPauseOffset);
-    ytPlay();    // MV 同步繼續
-    G.lastRafTs = performance.now();
-    requestAnimationFrame(loop);
+    resumeGameWithCountdown(true);
   }
 }
 function resumeGame() {
-  G.paused = false;
-  document.getElementById('pause-ov').classList.add('off');
-  resumeAudio();
-  ytPlayFrom(audioPauseOffset);
-  ytPlayFrom(audioPauseOffset);
-  G.lastRafTs = performance.now();
-  requestAnimationFrame(loop);
+  if (!G.running || isResumeCountingDown) return;
+  resumeGameWithCountdown(true);
 }
 function quitGame() {
   G.running = false;
@@ -3014,6 +3906,8 @@ function endGame() {
 var _unlockPinTarget = null;
 
 function openUnlockPanel() {
+  if (typeof collapseProfileData === 'function') collapseProfileData();
+  collapseProfileData();
   if (isProfileIdentityDirty()) {
     alert('你已變更玩家身份。\n請先按「確認」完成身份切換，再查看頭像收藏。');
     return;
