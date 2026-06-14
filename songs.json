@@ -12,13 +12,34 @@
     "beatmapUrl": "songs/song001/beatmap.json",
     "srtUrl": "songs/song001/subtitles.srt",
     "lyrics": [
-      {"t": 4, "text": "在小V派對裡夢想 🎈"},
-      {"t": 14, "text": "跟著節奏一起跳！"},
-      {"t": 36, "text": "副歌要來了——"},
-      {"t": 52, "text": "魔法降臨！衝！"},
-      {"t": 68, "text": "再來一段！"},
-      {"t": 84, "text": "最強高潮！🌟"},
-      {"t": 100, "text": "最後衝刺！"}
+      {
+        "t": 4,
+        "text": "在小V派對裡夢想 🎈"
+      },
+      {
+        "t": 14,
+        "text": "跟著節奏一起跳！"
+      },
+      {
+        "t": 36,
+        "text": "副歌要來了——"
+      },
+      {
+        "t": 52,
+        "text": "魔法降臨！衝！"
+      },
+      {
+        "t": 68,
+        "text": "再來一段！"
+      },
+      {
+        "t": 84,
+        "text": "最強高潮！🌟"
+      },
+      {
+        "t": 100,
+        "text": "最後衝刺！"
+      }
     ]
   },
   {
@@ -34,10 +55,22 @@
     "beatmapUrl": "songs/song002/beatmap.json",
     "srtUrl": "songs/song002/subtitles.srt",
     "lyrics": [
-      {"t": 4, "text": "🎈 V-MEN"},
-      {"t": 32, "text": "節奏起來！"},
-      {"t": 64, "text": "副歌！衝！🔥"},
-      {"t": 96, "text": "最後衝刺！💪"}
+      {
+        "t": 4,
+        "text": "🎈 V-MEN"
+      },
+      {
+        "t": 32,
+        "text": "節奏起來！"
+      },
+      {
+        "t": 64,
+        "text": "副歌！衝！🔥"
+      },
+      {
+        "t": 96,
+        "text": "最後衝刺！💪"
+      }
     ]
   },
   {
@@ -53,10 +86,22 @@
     "beatmapUrl": "songs/song003/beatmap.json",
     "srtUrl": "songs/song003/subtitles.srt",
     "lyrics": [
-      {"t": 4, "text": "掌心的初光 ✨"},
-      {"t": 32, "text": "節奏起來！"},
-      {"t": 64, "text": "副歌！衝！🔥"},
-      {"t": 96, "text": "最後衝刺！💪"}
+      {
+        "t": 4,
+        "text": "掌心的初光 ✨"
+      },
+      {
+        "t": 32,
+        "text": "節奏起來！"
+      },
+      {
+        "t": 64,
+        "text": "副歌！衝！🔥"
+      },
+      {
+        "t": 96,
+        "text": "最後衝刺！💪"
+      }
     ]
   },
   {
@@ -72,10 +117,22 @@
     "beatmapUrl": "songs/song004/beatmap.json",
     "srtUrl": "songs/song004/subtitles.srt",
     "lyrics": [
-      {"t": 4, "text": "一顆氣球的重量 🎈"},
-      {"t": 64, "text": "節奏起來！"},
-      {"t": 128, "text": "副歌！衝！🔥"},
-      {"t": 200, "text": "最後衝刺！💪"}
+      {
+        "t": 4,
+        "text": "一顆氣球的重量 🎈"
+      },
+      {
+        "t": 64,
+        "text": "節奏起來！"
+      },
+      {
+        "t": 128,
+        "text": "副歌！衝！🔥"
+      },
+      {
+        "t": 200,
+        "text": "最後衝刺！💪"
+      }
     ]
   },
   {
@@ -91,10 +148,22 @@
     "beatmapUrl": "songs/song005/beatmap.json",
     "srtUrl": "songs/song005/subtitles.srt",
     "lyrics": [
-      {"t": 4, "text": "夢想啟動時 🌟"},
-      {"t": 32, "text": "節奏起來！"},
-      {"t": 64, "text": "副歌！衝！🔥"},
-      {"t": 96, "text": "最後衝刺！💪"}
+      {
+        "t": 4,
+        "text": "夢想啟動時 🌟"
+      },
+      {
+        "t": 32,
+        "text": "節奏起來！"
+      },
+      {
+        "t": 64,
+        "text": "副歌！衝！🔥"
+      },
+      {
+        "t": 96,
+        "text": "最後衝刺！💪"
+      }
     ]
   },
   {
@@ -110,10 +179,53 @@
     "beatmapUrl": "songs/song006/beatmap.json",
     "srtUrl": "songs/song006/subtitles.srt",
     "lyrics": [
-      {"t": 4, "text": "掌心的初光2 ✨"},
-      {"t": 32, "text": "節奏起來！"},
-      {"t": 64, "text": "副歌！衝！🔥"},
-      {"t": 96, "text": "最後衝刺！💪"}
+      {
+        "t": 4,
+        "text": "掌心的初光2 ✨"
+      },
+      {
+        "t": 32,
+        "text": "節奏起來！"
+      },
+      {
+        "t": 64,
+        "text": "副歌！衝！🔥"
+      },
+      {
+        "t": 96,
+        "text": "最後衝刺！💪"
+      }
+    ]
+  },
+  {
+    "id": "song007",
+    "title": "把夢想轉成氣球",
+    "artist": "氣球小V",
+    "audioUrl": "songs/song007/audio.mp3",
+    "videoUrl": "",
+    "youtubeId": "Et6TapO_aCs",
+    "bpm": 93,
+    "duration": 193,
+    "cover": "",
+    "beatmapUrl": "songs/song007/beatmap.json",
+    "srtUrl": "songs/song007/subtitles.srt",
+    "lyrics": [
+      {
+        "t": 4,
+        "text": "把夢想轉成氣球 🎈"
+      },
+      {
+        "t": 48,
+        "text": "節奏起來！"
+      },
+      {
+        "t": 96,
+        "text": "副歌！衝！🔥"
+      },
+      {
+        "t": 144,
+        "text": "最後衝刺！💪"
+      }
     ]
   }
 ]
