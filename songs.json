@@ -227,5 +227,36 @@
         "text": "最後衝刺！💪"
       }
     ]
+  },
+  {
+    "id": "song008",
+    "title": "我們的氣球冒險",
+    "artist": "氣球小V",
+    "audioUrl": "songs/song008/audio.mp3",
+    "videoUrl": "",
+    "youtubeId": "nQIr9O1jR8g",
+    "bpm": 142,
+    "duration": 235,
+    "cover": "",
+    "beatmapUrl": "songs/song008/beatmap.json",
+    "srtUrl": "songs/song008/subtitles.srt",
+    "lyrics": [
+      {
+        "t": 4,
+        "text": "我們的氣球冒險 🎈"
+      },
+      {
+        "t": 48,
+        "text": "節奏起來！"
+      },
+      {
+        "t": 96,
+        "text": "副歌！衝！🔥"
+      },
+      {
+        "t": 144,
+        "text": "最後衝刺！💪"
+      }
+    ]
   }
 ]
