@@ -258,5 +258,36 @@
         "text": "最後衝刺！💪"
       }
     ]
-  }
+  },
+  {
+  "id": "song009",
+  "title": "那間教室的氣球時光",
+  "artist": "氣球小V",
+  "audioUrl": "songs/song009/audio.mp3",
+  "videoUrl": "",
+  "youtubeId": "8L6NTgMjx_I",
+  "bpm": 94,
+  "duration": 392,
+  "cover": "",
+  "beatmapUrl": "songs/song009/beatmap.json",
+  "srtUrl": "songs/song009/subtitles.srt",
+  "lyrics": [
+    {
+      "t": 4,
+      "text": "那間教室的氣球時光 🎈"
+    },
+    {
+      "t": 98,
+      "text": "節奏起來！"
+    },
+    {
+      "t": 196,
+      "text": "回憶一起閃閃發光 ✨"
+    },
+    {
+      "t": 294,
+      "text": "最後衝刺！💪"
+    }
+  ]
+}
 ]
