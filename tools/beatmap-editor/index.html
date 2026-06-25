@@ -67,7 +67,7 @@
   <div class="hero">
     <div class="title">
       <h1>🎈 氣球小V Beatmap Editor</h1>
-      <div class="ver" id="version">beatmap-editor-v0.3.0-github-song-loader-waveform-test-1</div>
+      <div class="ver" id="version">beatmap-editor-v0.3.1-repo-path-fix-test-1</div>
     </div>
     <div class="badge">GitHub song loader + waveform timeline</div>
   </div>
@@ -89,7 +89,7 @@
       <div class="row"><label>srtUrl</label><input id="srtUrl" placeholder="songs/song009/subtitles.srt" /></div>
       <div class="row"><label>beatmapUrl</label><input id="beatmapUrl" placeholder="songs/song009/beatmap.json" /></div>
       <div class="btns"><button class="btn good" id="btnLoadSongAssets">載入音訊 / 字幕 / 既有 beatmap</button></div>
-      <div class="status" id="loadStatus">流程：讀 songs.json → 選 songId → 自動載入 GitHub 上的 audio / srt / beatmap。</div>
+      <div class="status" id="loadStatus">流程：讀 repo 根目錄 songs.json → 選 songId → 自動載入 GitHub 上的 audio / srt / beatmap。</div>
     </section>
 
     <section class="card">
@@ -168,7 +168,7 @@
 <script>
 (function(){
 'use strict';
-var EDITOR_VERSION = 'beatmap-editor-v0.3.0-github-song-loader-waveform-test-1';
+var EDITOR_VERSION = 'beatmap-editor-v0.3.1-repo-path-fix-test-1';
 var $ = function(id){ return document.getElementById(id); };
 var audio = $('audio');
 var songs = [];
@@ -189,11 +189,34 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,function(c){retu
 function fmt(t){ t = Number(t)||0; var m=Math.floor(t/60), s=(t%60).toFixed(3).padStart(6,'0'); return m+':'+s; }
 function sec(n){ return Math.max(0, Math.round((Number(n)||0)*1000)/1000); }
 function getYoutubeId(v){ v=String(v||'').trim(); if(!v) return ''; var m=v.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{6,})/); return m?m[1]:v; }
+function inferRepoBaseUrl(){
+  var href = location.href.split('#')[0].split('?')[0];
+  var u = new URL(href);
+  var path = u.pathname;
+  // GitHub Pages project root: /vparty-rhythm-game/
+  // Tool may live at /tools/beatmap-editor/index.html, so repo assets need the repo root, not the tool folder.
+  var marker = '/tools/beatmap-editor/';
+  var idx = path.indexOf(marker);
+  if(idx >= 0){
+    u.pathname = path.slice(0, idx + 1);
+    u.search = '';
+    u.hash = '';
+    return u.toString();
+  }
+  // If the file is placed in the repo root as beatmap-editor.html, use that root.
+  u.pathname = path.replace(/[^/]*$/, '');
+  u.search = '';
+  u.hash = '';
+  return u.toString();
+}
+function shouldResolveFromRepoRoot(url){
+  return /^(songs\.json|songs\/|assets\/|test\/)/i.test(String(url||'').trim());
+}
 function resolveUrl(url){
   url = String(url||'').trim();
   if(!url) return '';
   if(/^https?:\/\//i.test(url)) return url;
-  var base = location.href.split('#')[0].split('?')[0];
+  var base = shouldResolveFromRepoRoot(url) ? inferRepoBaseUrl() : location.href.split('#')[0].split('?')[0];
   return new URL(url, base).toString();
 }
 function safeFileName(name){ return String(name||'beatmap').replace(/[\\/:*?"<>|\s]+/g,'-').replace(/-+/g,'-'); }
@@ -222,7 +245,7 @@ function normalizeSongList(data){
 function songDisplay(s){ return (s.id||'')+'｜'+(s.title||'未命名'); }
 async function loadSongsJson(){
   try{
-    setStatus('讀取 songs.json 中...', 'warn');
+    setStatus('讀取 songs.json 中：'+resolveUrl($('songsJsonUrl').value || 'songs.json'), 'warn');
     var data = await fetchJson($('songsJsonUrl').value || 'songs.json');
     songs = normalizeSongList(data);
     var sel = $('songSelect'); sel.innerHTML = '';
@@ -279,7 +302,7 @@ function currentLyric(t){
 async function loadSongAssets(){
   try{
     selectedNoteId = null; notes = []; noteSerial = 1; waveformPeaks = null; subtitles=[];
-    setStatus('載入 audio / srt / beatmap 中...', 'warn');
+    setStatus('載入 audio / srt / beatmap 中...\n音訊實際路徑：'+resolveUrl($('audioUrl').value.trim()), 'warn');
     var audioUrl = $('audioUrl').value.trim();
     var srtUrl = $('srtUrl').value.trim();
     var beatmapUrl = $('beatmapUrl').value.trim();
